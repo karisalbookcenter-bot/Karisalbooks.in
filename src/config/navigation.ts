@@ -1,81 +1,107 @@
 import { ROUTES } from "@/constants/routes.constants";
-import type { NavigationItem, NavigationConfig } from "@/types/navigation.types";
+import type { NavigationItemRecord, NavigationMenu } from "@/types/navigation.types";
+import { buildNavigationTree } from "@/lib/helpers/menu.helpers";
 
 /**
- * Main header navigation, in required display order:
- * Home, Books, Competitive Exams, Publication Services, Offer Zone,
- * Pre Booking, Contact, About.
+ * Main header navigation — CMS Foundation (Day 4).
  *
- * This is pure configuration data — no component here renders it.
- * A future layout/header component will simply map over
- * `mainNavigation.items` to render menu links.
+ * This is a flat list of records, deliberately shaped like rows a future
+ * `navigation_items` database table would hold (see `NavigationItemRecord`).
+ * Today it is hardcoded here; later, an admin panel writes to that table
+ * instead, and this file's only remaining job is to provide a fallback/
+ * seed data set. See `docs/DYNAMIC_NAVIGATION_CMS.md` for the full plan.
+ *
+ * Required items, in order: Home, Books, Competitive Exams, Publication
+ * Services, Offer Zone, Pre Booking, About, Contact.
+ *
+ * All items are top-level today (`parent: null`), but the model supports
+ * unlimited nesting — e.g. "Books" could later get children built from the
+ * Day 2 `categories` table without any type or shape change here.
  */
-const mainNavigationItems: NavigationItem[] = [
+const mainNavigationItems: NavigationItemRecord[] = [
   {
     id: "home",
-    label: "Home",
-    href: ROUTES.HOME,
+    title: "Home",
+    slug: ROUTES.HOME,
+    icon: "home",
     order: 1,
-    isVisible: true,
+    visible: true,
+    parent: null,
   },
   {
     id: "books",
-    label: "Books",
-    href: ROUTES.BOOKS,
+    title: "Books",
+    slug: ROUTES.BOOKS,
+    icon: "book-open",
     order: 2,
-    isVisible: true,
-    // `children` intentionally left undefined for now. Once the categories
-    // feature reads from the Day 2 `categories`/`subcategories` tables, this
-    // can be populated for a dropdown/mega-menu without changing the type.
+    visible: true,
+    parent: null,
   },
   {
     id: "competitive-exams",
-    label: "Competitive Exams",
-    href: ROUTES.COMPETITIVE_EXAMS,
+    title: "Competitive Exams",
+    slug: ROUTES.COMPETITIVE_EXAMS,
+    icon: "graduation-cap",
     order: 3,
-    isVisible: true,
+    visible: true,
+    parent: null,
   },
   {
     id: "publication-services",
-    label: "Publication Services",
-    href: ROUTES.PUBLICATION_SERVICES,
+    title: "Publication Services",
+    slug: ROUTES.PUBLICATION_SERVICES,
+    icon: "printer",
     order: 4,
-    isVisible: true,
+    visible: true,
+    parent: null,
   },
   {
     id: "offer-zone",
-    label: "Offer Zone",
-    href: ROUTES.OFFER_ZONE,
+    title: "Offer Zone",
+    slug: ROUTES.OFFER_ZONE,
+    icon: "tag",
     order: 5,
-    isVisible: true,
+    visible: true,
+    parent: null,
   },
   {
     id: "pre-booking",
-    label: "Pre Booking",
-    href: ROUTES.PRE_BOOKING,
+    title: "Pre Booking",
+    slug: ROUTES.PRE_BOOKING,
+    icon: "calendar-clock",
     order: 6,
-    isVisible: true,
-  },
-  {
-    id: "contact",
-    label: "Contact",
-    href: ROUTES.CONTACT,
-    order: 7,
-    isVisible: true,
+    visible: true,
+    parent: null,
   },
   {
     id: "about",
-    label: "About",
-    href: ROUTES.ABOUT,
+    title: "About",
+    slug: ROUTES.ABOUT,
+    icon: "info",
+    order: 7,
+    visible: true,
+    parent: null,
+  },
+  {
+    id: "contact",
+    title: "Contact",
+    slug: ROUTES.CONTACT,
+    icon: "mail",
     order: 8,
-    isVisible: true,
+    visible: true,
+    parent: null,
   },
 ];
 
-export const mainNavigation: NavigationConfig = {
+export const mainNavigation: NavigationMenu = {
   id: "main",
   items: mainNavigationItems,
 };
 
-/** Convenience export for anything that only needs the raw item list. */
+/** Convenience export for anything that only needs the raw, flat record list. */
 export const MAIN_NAVIGATION_ITEMS = mainNavigationItems;
+
+/** Convenience export for anything that wants the pre-assembled tree without
+ *  running feature-flag filtering (use `resolveNavigationTree` from the menu
+ *  helpers instead if flag-gating is needed). */
+export const MAIN_NAVIGATION_TREE = buildNavigationTree(mainNavigationItems);
