@@ -4,3 +4,5 @@
  */
 export * from "./routes.constants";
 export * from "./app.constants";
+export * from "./roles.constants";
+export * from "./permissions.constants";

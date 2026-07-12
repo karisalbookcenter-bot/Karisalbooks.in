@@ -20,3 +20,9 @@ promoted to the shared top-level folder instead (`src/components`,
 
 This milestone (Day 3) creates the folder scaffolding only — no components,
 pages, hooks, or services are implemented inside any feature yet.
+
+**`auth/` (added Sprint 05)** is a cross-cutting feature rather than a
+product-facing one, and extends the standard shape with two extra
+subfolders: `context/` (the `AuthProvider` client state) and `middleware/`
+(request-level route protection logic used by the root `src/middleware.ts`).
+See `features/auth/README.md` and `docs/AUTH_ARCHITECTURE.md` for details.

@@ -19,6 +19,14 @@ export const ROUTES = {
   PRE_BOOKING: "/pre-booking",
   CONTACT: "/contact",
   ABOUT: "/about",
+
+  // Auth-related redirect targets (Sprint 05). These are path constants
+  // only — the login page, unauthorized page, etc. are NOT created in
+  // this milestone. Added here because the middleware architecture built
+  // today needs somewhere to redirect an unauthenticated/unauthorized
+  // request to; the pages themselves come later.
+  LOGIN: "/login",
+  UNAUTHORIZED: "/unauthorized",
 } as const;
 
 /**
