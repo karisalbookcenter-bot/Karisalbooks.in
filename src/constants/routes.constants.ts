@@ -27,6 +27,26 @@ export const ROUTES = {
   // request to; the pages themselves come later.
   LOGIN: "/login",
   UNAUTHORIZED: "/unauthorized",
+
+  // Admin route constants (Sprint 06). Added because the Admin Sidebar
+  // navigation config built today needs real link targets — no admin
+  // page/route actually exists at any of these paths yet (that's future
+  // work); this is only the centralized path list the sidebar points at.
+  ADMIN_DASHBOARD: "/admin",
+  ADMIN_BOOKS: "/admin/books",
+  ADMIN_CATEGORIES: "/admin/categories",
+  ADMIN_AUTHORS: "/admin/authors",
+  ADMIN_PUBLISHERS: "/admin/publishers",
+  ADMIN_COMPETITIVE_EXAMS: "/admin/competitive-exams",
+  ADMIN_PUBLICATION_SERVICES: "/admin/publication-services",
+  ADMIN_ORDERS: "/admin/orders",
+  ADMIN_CUSTOMERS: "/admin/customers",
+  ADMIN_COUPONS: "/admin/coupons",
+  ADMIN_OFFER_ZONE: "/admin/offer-zone",
+  ADMIN_PRE_BOOKING: "/admin/pre-booking",
+  ADMIN_SHIPPING: "/admin/shipping",
+  ADMIN_REPORTS: "/admin/reports",
+  ADMIN_SETTINGS: "/admin/settings",
 } as const;
 
 /**
