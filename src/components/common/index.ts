@@ -6,3 +6,5 @@
 export * from "./Breadcrumb";
 export * from "./EmptyState";
 export * from "./PageContainer";
+export * from "./SectionTitle";
+export * from "./WidgetContainer";

@@ -4,3 +4,4 @@
  * individual files.
  */
 export * from "./admin-layout.types";
+export * from "./dashboard.types";

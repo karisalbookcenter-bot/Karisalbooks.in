@@ -5,5 +5,6 @@
  */
 export * from "./layout";
 export * from "./skeletons";
+export * from "./dashboard";
 export * from "./UserProfileDropdown";
 export * from "./NotificationBell";

@@ -27,17 +27,27 @@ import {
   User,
   Circle,
   Inbox,
+  IndianRupee,
+  AlertTriangle,
+  Plus,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  Database,
+  Activity,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
 /**
- * Centralized icon registry — Sprint 06.
+ * Centralized icon registry — Sprint 06, extended Sprint 07.
  *
  * Every place in the app that needs an icon (sidebar nav, public nav from
- * Day 4, empty states, dropdowns) refers to an icon by a stable string key
- * — the same `icon: string | null` field already defined on
- * `NavigationItemRecord` back in Day 4 — rather than importing
- * `lucide-react` components directly all over the codebase. That means:
+ * Day 4, empty states, dropdowns, and now the Sprint 07 dashboard widgets)
+ * refers to an icon by a stable string key — the same `icon: string | null`
+ * field already defined on `NavigationItemRecord` back in Day 4 — rather
+ * than importing `lucide-react` components directly all over the codebase.
+ * That means:
  *
  *  - Swapping icon libraries later is a one-file change.
  *  - A future CMS-driven nav editor can offer a dropdown of icon *names*
@@ -78,6 +88,17 @@ export const ICONS = {
   "log-out": LogOut,
   user: User,
   inbox: Inbox,
+
+  // Dashboard framework icons (Sprint 07)
+  "indian-rupee": IndianRupee,
+  "alert-triangle": AlertTriangle,
+  plus: Plus,
+  "check-circle": CheckCircle2,
+  "x-circle": XCircle,
+  "help-circle": HelpCircle,
+  database: Database,
+  activity: Activity,
+  sparkles: Sparkles,
 
   // Fallback used whenever a string key doesn't match one above
   circle: Circle,

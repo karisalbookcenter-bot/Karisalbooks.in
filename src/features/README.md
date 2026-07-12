@@ -27,9 +27,11 @@ subfolders: `context/` (the `AuthProvider` client state) and `middleware/`
 (request-level route protection logic used by the root `src/middleware.ts`).
 See `features/auth/README.md` and `docs/AUTH_ARCHITECTURE.md` for details.
 
-**`admin/` (added Sprint 06)** is also cross-cutting: the reusable admin
-shell (sidebar, header, mobile nav, and supporting UI) every future admin
-screen renders inside. It has `components/` (with `layout/` and
-`skeletons/` subfolders), `hooks/`, and `types/`, but no `services/` —
-this sprint is layout-only, with no data access yet. See
-`features/admin/README.md` and `docs/ADMIN_LAYOUT.md` for details.
+**`admin/` (added Sprint 06, extended Sprint 07)** is also cross-cutting:
+the reusable admin shell (sidebar, header, mobile nav) plus a config-driven
+dashboard widget framework, that every future admin screen renders inside.
+It has `components/` (with `layout/`, `skeletons/`, and `dashboard/`
+subfolders), `hooks/`, and `types/`, but no `services/` — still layout/
+framework only, with no real data access yet. See
+`features/admin/README.md`, `docs/ADMIN_LAYOUT.md`, and
+`docs/DASHBOARD_FRAMEWORK.md` for details.
