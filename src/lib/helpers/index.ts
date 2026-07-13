@@ -9,3 +9,4 @@ export * from "./string.helpers";
 export * from "./format.helpers";
 export * from "./array.helpers";
 export * from "./menu.helpers";
+export * from "./category.helpers";

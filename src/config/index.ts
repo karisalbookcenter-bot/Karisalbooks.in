@@ -10,3 +10,4 @@ export * from "./featureFlags";
 export * from "./cms";
 export * from "./auth";
 export * from "./dashboard";
+export * from "./categoryManagement";

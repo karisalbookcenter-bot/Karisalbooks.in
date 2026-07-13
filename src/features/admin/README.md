@@ -1,10 +1,11 @@
 # `src/features/admin`
 
-Admin Shell (Layout, Sprint 06) + Admin Dashboard Framework (Sprint 07).
-The reusable chrome (sidebar, header, mobile navigation) every future
-admin screen renders inside, plus a reusable, config-driven dashboard
-widget system. No real dashboard data, CRUD, tables, charts, or business
-logic live here; this is layout/framework architecture only.
+Admin Shell (Layout, Sprint 06) + Admin Dashboard Framework (Sprint 07) +
+Category Management Framework (Sprint 08). The reusable chrome every
+future admin screen renders inside, a config-driven dashboard widget
+system, and a reusable, config-driven category table/tree UI. No real
+data, CRUD, tables (as in Supabase tables), APIs, or business logic live
+here; this is layout/framework architecture only.
 
 ## Structure
 
@@ -30,20 +31,41 @@ admin/
 │   │   ├── SystemStatus.tsx
 │   │   ├── DashboardSkeleton.tsx  # Composed from Sprint 06's skeletons
 │   │   └── DashboardEmptyState.tsx
+│   ├── categories/                 # Sprint 08
+│   │   ├── CategoryManagementOverview.tsx  # Composed category page architecture
+│   │   ├── CategoryToolbar.tsx     # Search + filters + view switch + Add button
+│   │   ├── CategoryFilters.tsx
+│   │   ├── CategoryTable.tsx       # Flat view, with Parent Category column
+│   │   ├── CategoryTreeView.tsx    # Nested, expand/collapse, unlimited depth
+│   │   ├── CategoryTreeRow.tsx     # Recursive row renderer used by CategoryTreeView
+│   │   ├── CategoryCard.tsx        # Card presentation of a single category
+│   │   ├── CategoryFormLayout.tsx  # Add/Edit form layout — UI only
+│   │   ├── CategoryEmptyState.tsx
+│   │   └── CategorySkeleton.tsx    # Reuses Sprint 06's TableSkeleton for table view
 │   ├── UserProfileDropdown.tsx   # UI only — no auth action wired up
 │   └── NotificationBell.tsx      # Placeholder — no real notifications
 ├── hooks/
 │   └── useSidebarState.ts        # Desktop collapse + mobile drawer open/close
 └── types/
     ├── admin-layout.types.ts
-    └── dashboard.types.ts         # Sprint 07 — component prop contracts
+    ├── dashboard.types.ts                 # Sprint 07 — component prop contracts
+    └── category-management.types.ts       # Sprint 08 — component prop contracts
 ```
 
-Two more generic pieces the dashboard framework relies on were promoted to
-`src/components/common/` (not admin-only, same reasoning as `PageContainer`):
-`SectionTitle` and `WidgetContainer`. Dashboard *data* (stat card
-definitions, quick action definitions, system status rows) lives in
-`src/config/dashboard.ts`, matching the `config/adminNavigation.ts` pattern.
+Generic pieces promoted to `src/components/common/` (not admin-only, same
+reasoning as `PageContainer`): `SectionTitle`, `WidgetContainer` (Sprint 07),
+and `StatusBadge`, `SearchBar`, `BulkActionBar` (Sprint 08). Four small
+shadcn-style primitives were also added to `src/components/ui/` this
+sprint — `Badge`, `Input`, `Label`, `Textarea`, `Select` — following Day 1's
+`button.tsx` pattern (hand-written, no new dependency).
+
+The shared `Category`/`CategoryTreeNode` entity types live in
+`src/types/category.types.ts` (top-level, not admin-only — mirrors
+`NavigationItemRecord`'s placement from Day 4), and the pure tree/filter/
+search helpers built on them live in `src/lib/helpers/category.helpers.ts`.
+Category *widget data* (bulk actions, status filter options, view
+options) lives in `src/config/categoryManagement.ts`, matching the
+`config/dashboard.ts` pattern.
 
 ## How a future admin page uses this
 
@@ -80,6 +102,40 @@ export default function AdminBooksPage() {
 }
 ```
 
+```tsx
+// A future app/admin/categories/page.tsx
+import { AdminShell } from "@/features/admin/components/layout";
+import { CategoryManagementOverview } from "@/features/admin/components/categories";
+
+export default function AdminCategoriesPage() {
+  return (
+    <AdminShell>
+      <CategoryManagementOverview categories={realCategories} />
+    </AdminShell>
+  );
+}
+```
+
+```tsx
+// Any other future admin page (Books, Orders, ...) still composes this way:
+import { AdminShell } from "@/features/admin/components/layout";
+import { Breadcrumb, PageContainer } from "@/components/common";
+
+export default function AdminBooksPage() {
+  return (
+    <AdminShell
+      breadcrumb={
+        <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Books" }]} />
+      }
+    >
+      <PageContainer title="Books" description="Manage your catalog.">
+        {/* a future Books table/CRUD goes here — not built this sprint */}
+      </PageContainer>
+    </AdminShell>
+  );
+}
+```
+
 Nothing above is created this sprint — no `app/admin/*` route exists yet.
 This is the intended usage once that route is built.
 
@@ -87,16 +143,20 @@ This is the intended usage once that route is built.
 
 - No `app/admin/layout.tsx` or any route — that wiring is a future
   sprint's job once real admin pages exist.
-- No `<AuthProvider>`/session check inside `AdminShell` or
-  `DashboardOverview` — access control belongs to Sprint 05's middleware
-  and page-level `session.service.ts` checks (see
-  `docs/AUTH_ARCHITECTURE.md`), not layout/framework components. A future
-  sprint wraps the future `app/admin/layout.tsx` in `<AuthProvider>` and
-  adds the server-side guard.
+- No `<AuthProvider>`/session check inside `AdminShell`,
+  `DashboardOverview`, or `CategoryManagementOverview` — access control
+  belongs to Sprint 05's middleware and page-level `session.service.ts`
+  checks (see `docs/AUTH_ARCHITECTURE.md`), not layout/framework
+  components. A future sprint wraps the future `app/admin/layout.tsx` in
+  `<AuthProvider>` and adds the server-side guard.
 - No real notification data, no real signed-in user, no real table data,
-  no real stats, no real activity feed, no real system health check — see
-  each component's own doc comment for exactly what's a placeholder and
-  why.
+  no real stats, no real activity feed, no real system health check, no
+  real category data, no CRUD, no API, no database query — see each
+  component's own doc comment for exactly what's a placeholder and why.
+- Category Tree View's search/filter applies only to Table view this
+  sprint (see `CategoryManagementOverview`'s doc comment for why filtering
+  a tree correctly is deferred, not faked).
 
-See `docs/ADMIN_LAYOUT.md` (Sprint 06) and `docs/DASHBOARD_FRAMEWORK.md`
-(Sprint 07) for the full explanation of every component.
+See `docs/ADMIN_LAYOUT.md` (Sprint 06), `docs/DASHBOARD_FRAMEWORK.md`
+(Sprint 07), and `docs/CATEGORY_MANAGEMENT.md` (Sprint 08) for the full
+explanation of every component.

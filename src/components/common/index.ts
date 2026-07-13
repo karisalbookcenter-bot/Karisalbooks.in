@@ -8,3 +8,6 @@ export * from "./EmptyState";
 export * from "./PageContainer";
 export * from "./SectionTitle";
 export * from "./WidgetContainer";
+export * from "./StatusBadge";
+export * from "./SearchBar";
+export * from "./BulkActionBar";

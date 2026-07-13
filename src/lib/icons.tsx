@@ -36,11 +36,15 @@ import {
   Database,
   Activity,
   Sparkles,
+  Table,
+  Filter,
+  Loader2,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 
 /**
- * Centralized icon registry — Sprint 06, extended Sprint 07.
+ * Centralized icon registry — Sprint 06, extended Sprint 07 and Sprint 08.
  *
  * Every place in the app that needs an icon (sidebar nav, public nav from
  * Day 4, empty states, dropdowns, and now the Sprint 07 dashboard widgets)
@@ -99,6 +103,12 @@ export const ICONS = {
   database: Database,
   activity: Activity,
   sparkles: Sparkles,
+
+  // Category management framework icons (Sprint 08)
+  table: Table,
+  filter: Filter,
+  loader: Loader2,
+  search: Search,
 
   // Fallback used whenever a string key doesn't match one above
   circle: Circle,
