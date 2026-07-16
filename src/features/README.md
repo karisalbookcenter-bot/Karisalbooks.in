@@ -27,13 +27,14 @@ subfolders: `context/` (the `AuthProvider` client state) and `middleware/`
 (request-level route protection logic used by the root `src/middleware.ts`).
 See `features/auth/README.md` and `docs/AUTH_ARCHITECTURE.md` for details.
 
-**`admin/` (added Sprint 06, extended Sprint 07 and Sprint 08)** is also
+**`admin/` (added Sprint 06, extended Sprint 07, 08, and 09)** is also
 cross-cutting: the reusable admin shell (sidebar, header, mobile nav), a
-config-driven dashboard widget framework, and a config-driven category
-management UI framework (table, tree, cards, forms), all rendered inside
-by every future admin screen. It has `components/` (with `layout/`,
-`skeletons/`, `dashboard/`, and `categories/` subfolders), `hooks/`, and
-`types/`, but no `services/` — still layout/framework only, with no real
-data access yet. See `features/admin/README.md`, `docs/ADMIN_LAYOUT.md`,
-`docs/DASHBOARD_FRAMEWORK.md`, and `docs/CATEGORY_MANAGEMENT.md` for
-details.
+config-driven dashboard widget framework, and config-driven category and
+subcategory management UI frameworks (tables, cards, forms, filters,
+pagination), all rendered inside by every future admin screen. It has
+`components/` (with `layout/`, `skeletons/`, `dashboard/`, `categories/`,
+and `subcategories/` subfolders), `hooks/`, and `types/`, but no
+`services/` — still layout/framework only, with no real data access yet.
+See `features/admin/README.md`, `docs/ADMIN_LAYOUT.md`,
+`docs/DASHBOARD_FRAMEWORK.md`, `docs/CATEGORY_MANAGEMENT.md`, and
+`docs/SUBCATEGORY_MANAGEMENT.md` for details.

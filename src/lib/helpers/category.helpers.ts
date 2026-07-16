@@ -119,3 +119,29 @@ export function searchCategories(categories: Category[], query: string): Categor
     )
   );
 }
+
+/**
+ * Flattens categories into a depth-ordered `{ category, depth }` list,
+ * suitable for populating a `<select>` with indented option labels (e.g.
+ * "— Fantasy" one level under "Fiction"). Added in Sprint 09 for
+ * `ParentCategorySelector` — reuses `buildCategoryTree` rather than
+ * re-walking `category_id`/`parent_id` relationships a second way, so a
+ * category picker's option order always matches `CategoryTreeView`'s
+ * rendering order exactly.
+ */
+export function getCategoryOptionList(
+  categories: Category[]
+): Array<{ category: Category; depth: number }> {
+  const result: Array<{ category: Category; depth: number }> = [];
+
+  function walk(nodes: CategoryTreeNode[]) {
+    for (const node of nodes) {
+      const { children, depth, ...category } = node;
+      result.push({ category, depth });
+      if (children.length > 0) walk(children);
+    }
+  }
+
+  walk(buildCategoryTree(categories));
+  return result;
+}

@@ -10,3 +10,4 @@ export * from "./format.helpers";
 export * from "./array.helpers";
 export * from "./menu.helpers";
 export * from "./category.helpers";
+export * from "./subcategory.helpers";

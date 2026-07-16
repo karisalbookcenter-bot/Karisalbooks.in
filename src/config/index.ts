@@ -11,3 +11,4 @@ export * from "./cms";
 export * from "./auth";
 export * from "./dashboard";
 export * from "./categoryManagement";
+export * from "./subcategoryManagement";

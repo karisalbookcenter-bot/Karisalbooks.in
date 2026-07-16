@@ -6,3 +6,4 @@
 export * from "./admin-layout.types";
 export * from "./dashboard.types";
 export * from "./category-management.types";
+export * from "./subcategory-management.types";

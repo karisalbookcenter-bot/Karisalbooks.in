@@ -11,3 +11,4 @@ export * from "./WidgetContainer";
 export * from "./StatusBadge";
 export * from "./SearchBar";
 export * from "./BulkActionBar";
+export * from "./Pagination";

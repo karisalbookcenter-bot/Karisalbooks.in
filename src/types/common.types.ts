@@ -53,3 +53,8 @@ export interface PaginatedResult<T> {
 export type Nullable<T> = T | null;
 export type Maybe<T> = T | undefined;
 export type ID = string; // UUID, kept as a distinct alias for readability
+
+/** Ascending/descending sort direction — shared by any sortable list
+ *  (Sprint 09's SubcategoryTable is the first consumer; a future
+ *  CategoryTable sort upgrade would reuse this same type). */
+export type SortDirection = "asc" | "desc";

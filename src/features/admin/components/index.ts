@@ -7,5 +7,6 @@ export * from "./layout";
 export * from "./skeletons";
 export * from "./dashboard";
 export * from "./categories";
+export * from "./subcategories";
 export * from "./UserProfileDropdown";
 export * from "./NotificationBell";

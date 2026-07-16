@@ -40,11 +40,13 @@ import {
   Filter,
   Loader2,
   Search,
+  ChevronUp,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 
 /**
- * Centralized icon registry — Sprint 06, extended Sprint 07 and Sprint 08.
+ * Centralized icon registry — Sprint 06, extended Sprint 07, 08, and 09.
  *
  * Every place in the app that needs an icon (sidebar nav, public nav from
  * Day 4, empty states, dropdowns, and now the Sprint 07 dashboard widgets)
@@ -109,6 +111,10 @@ export const ICONS = {
   filter: Filter,
   loader: Loader2,
   search: Search,
+
+  // Subcategory management framework icons (Sprint 09)
+  "chevron-up": ChevronUp,
+  grid: LayoutGrid,
 
   // Fallback used whenever a string key doesn't match one above
   circle: Circle,
