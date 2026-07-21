@@ -8,6 +8,9 @@
  */
 export const STORAGE_BUCKETS = {
   BOOK_COVERS: "book-covers",
+  /** Added Sprint 11, backing `authors.photo_url` via the same
+   *  bucket-parameterized Image Upload Service. */
+  AUTHOR_PHOTOS: "author-photos",
 } as const;
 
 export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];

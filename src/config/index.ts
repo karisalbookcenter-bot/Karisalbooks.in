@@ -12,3 +12,5 @@ export * from "./auth";
 export * from "./dashboard";
 export * from "./categoryManagement";
 export * from "./subcategoryManagement";
+export * from "./authorManagement";
+export * from "./publisherManagement";

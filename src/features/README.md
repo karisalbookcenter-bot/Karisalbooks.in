@@ -27,14 +27,31 @@ subfolders: `context/` (the `AuthProvider` client state) and `middleware/`
 (request-level route protection logic used by the root `src/middleware.ts`).
 See `features/auth/README.md` and `docs/AUTH_ARCHITECTURE.md` for details.
 
-**`admin/` (added Sprint 06, extended Sprint 07, 08, and 09)** is also
+**`books/` (real services added Sprint 10), `authors/` and `publishers/`
+(added Sprint 11)** are where each entity's actual repository/service/
+validation/hooks live — real Supabase-backed CRUD, unlike the mostly-empty
+Day 3 scaffolding every other product feature still has. `authors/` and
+`publishers/` are built on two new shared factories,
+`src/services/createSupabaseRepository.ts` and `createEntityService.ts`,
+so their repository/service files are thin config calls rather than
+hand-written duplicates of `books/`'s Sprint 10 code. Each still has an
+empty `components/` folder — their admin UI lives under
+`features/admin/components/{books,authors,publishers}/` instead (only
+`authors/` and `publishers/` have that UI built so far, Sprint 11's
+Tasks 14–15; Books' admin UI remains a future sprint). See each folder's
+own `README.md`, `docs/BOOK_CRUD_FOUNDATION.md` (Sprint 10), and
+`docs/AUTHOR_PUBLISHER_MANAGEMENT.md` (Sprint 11).
+
+**`admin/` (added Sprint 06, extended Sprint 07, 08, 09, and 11)** is also
 cross-cutting: the reusable admin shell (sidebar, header, mobile nav), a
-config-driven dashboard widget framework, and config-driven category and
-subcategory management UI frameworks (tables, cards, forms, filters,
-pagination), all rendered inside by every future admin screen. It has
-`components/` (with `layout/`, `skeletons/`, `dashboard/`, `categories/`,
-and `subcategories/` subfolders), `hooks/`, and `types/`, but no
-`services/` — still layout/framework only, with no real data access yet.
+config-driven dashboard widget framework, and config-driven catalog
+management UI for four entities (tables, cards, forms, filters,
+pagination). It has `components/` (with `layout/`, `skeletons/`,
+`dashboard/`, `categories/`, `subcategories/`, `authors/`, and
+`publishers/` subfolders), `hooks/`, and `types/`, but no `services/` —
+still layout/framework only; the real data access lives in each entity's
+own top-level feature folder above.
 See `features/admin/README.md`, `docs/ADMIN_LAYOUT.md`,
-`docs/DASHBOARD_FRAMEWORK.md`, `docs/CATEGORY_MANAGEMENT.md`, and
-`docs/SUBCATEGORY_MANAGEMENT.md` for details.
+`docs/DASHBOARD_FRAMEWORK.md`, `docs/CATEGORY_MANAGEMENT.md`,
+`docs/SUBCATEGORY_MANAGEMENT.md`, and `docs/AUTHOR_PUBLISHER_MANAGEMENT.md`
+for details.

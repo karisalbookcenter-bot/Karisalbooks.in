@@ -8,5 +8,7 @@ export * from "./skeletons";
 export * from "./dashboard";
 export * from "./categories";
 export * from "./subcategories";
+export * from "./authors";
+export * from "./publishers";
 export * from "./UserProfileDropdown";
 export * from "./NotificationBell";
