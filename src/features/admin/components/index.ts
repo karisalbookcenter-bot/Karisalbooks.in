@@ -10,5 +10,6 @@ export * from "./categories";
 export * from "./subcategories";
 export * from "./authors";
 export * from "./publishers";
+export * from "./customers";
 export * from "./UserProfileDropdown";
 export * from "./NotificationBell";

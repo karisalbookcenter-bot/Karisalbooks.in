@@ -9,3 +9,4 @@ export * from "./category-management.types";
 export * from "./subcategory-management.types";
 export * from "./author-management.types";
 export * from "./publisher-management.types";
+export * from "./customer-management.types";

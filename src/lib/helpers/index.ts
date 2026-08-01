@@ -11,3 +11,4 @@ export * from "./array.helpers";
 export * from "./menu.helpers";
 export * from "./category.helpers";
 export * from "./subcategory.helpers";
+export * from "./customer.helpers";

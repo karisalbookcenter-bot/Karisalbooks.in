@@ -14,3 +14,4 @@ export * from "./categoryManagement";
 export * from "./subcategoryManagement";
 export * from "./authorManagement";
 export * from "./publisherManagement";
+export * from "./customerManagement";

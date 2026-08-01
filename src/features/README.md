@@ -42,16 +42,27 @@ Tasks 14–15; Books' admin UI remains a future sprint). See each folder's
 own `README.md`, `docs/BOOK_CRUD_FOUNDATION.md` (Sprint 10), and
 `docs/AUTHOR_PUBLISHER_MANAGEMENT.md` (Sprint 11).
 
-**`admin/` (added Sprint 06, extended Sprint 07, 08, 09, and 11)** is also
-cross-cutting: the reusable admin shell (sidebar, header, mobile nav), a
-config-driven dashboard widget framework, and config-driven catalog
-management UI for four entities (tables, cards, forms, filters,
+**Customer (Sprint 12) has no top-level `features/customers/` folder at
+all** — deliberately. Unlike Book/Author/Publisher, this sprint is scoped
+to UI architecture only ("No Supabase queries, no CRUD implementation, no
+real data fetching"), so there is no repository/service/validation to
+house; `Customer`'s type lives directly in `src/types/customer.types.ts`
+and its pure search/filter helpers in
+`src/lib/helpers/customer.helpers.ts` (alongside `category.helpers.ts`,
+which started the same way in Sprint 08). A future backend sprint would
+add `features/customers/` at that point, following `features/authors/`'s
+exact shape.
+
+**`admin/` (added Sprint 06, extended Sprint 07, 08, 09, 11, and 12)** is
+also cross-cutting: the reusable admin shell (sidebar, header, mobile
+nav), a config-driven dashboard widget framework, and config-driven
+catalog management UI for five entities (tables, cards, forms, filters,
 pagination). It has `components/` (with `layout/`, `skeletons/`,
-`dashboard/`, `categories/`, `subcategories/`, `authors/`, and
-`publishers/` subfolders), `hooks/`, and `types/`, but no `services/` —
-still layout/framework only; the real data access lives in each entity's
-own top-level feature folder above.
+`dashboard/`, `categories/`, `subcategories/`, `authors/`, `publishers/`,
+and `customers/` subfolders), `hooks/`, and `types/`, but no `services/` —
+still layout/framework only; the real data access (where it exists) lives
+in each entity's own top-level feature folder above.
 See `features/admin/README.md`, `docs/ADMIN_LAYOUT.md`,
 `docs/DASHBOARD_FRAMEWORK.md`, `docs/CATEGORY_MANAGEMENT.md`,
-`docs/SUBCATEGORY_MANAGEMENT.md`, and `docs/AUTHOR_PUBLISHER_MANAGEMENT.md`
-for details.
+`docs/SUBCATEGORY_MANAGEMENT.md`, `docs/AUTHOR_PUBLISHER_MANAGEMENT.md`,
+and `docs/CUSTOMER_MANAGEMENT.md` for details.
