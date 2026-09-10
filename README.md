@@ -2,8 +2,18 @@
 
 Production-grade book eCommerce platform.
 
-**Status:** Day 1 — Project initialization only. No auth, database tables,
-products, cart, or payments yet. Those arrive in later milestones.
+**Status:** Sprint 13 complete (Day 1–4 + Sprints 05–13). Feature-based
+architecture, Supabase schema (categories/subcategories/authors/publishers/
+books), auth foundation, admin shell, and UI/backend for Dashboard,
+Categories, Subcategories, Books (backend only), Authors, Publishers,
+Customers, and Orders are all built. See `docs/` for the full per-sprint
+breakdown — each milestone has its own `*.md` file documenting exactly what
+was added and what was deliberately left out.
+
+**Not yet done:** admin routes were not mounted until Sprint 14 (see
+`docs/ADMIN_LAYOUT.md`, `docs/DASHBOARD_FRAMEWORK.md`, and the Sprint 14
+activation work); Category/Subcategory/Customer/Orders still need real
+Supabase backends; no storefront, cart, checkout, or payments yet.
 
 ## Tech Stack
 
@@ -15,6 +25,15 @@ products, cart, or payments yet. Those arrive in later milestones.
 - [Vercel](https://vercel.com/) (deployment target)
 
 ## Folder Structure
+
+The tree below reflects the **Day 1** starting point only. The project has
+since grown substantially (feature-based folders under `src/features/`,
+`src/config/`, `src/constants/`, `src/services/`, three SQL migrations
+under `supabase/migrations/`, and more) — rather than guess at an exact
+up-to-date tree here, refer to each file under `docs/` (`ARCHITECTURE.md`
+for the Day 3 feature-based layout, and each sprint doc's own "Files added
+this sprint" section) for the verified, exact structure as of that
+milestone.
 
 ```
 book-ecommerce/
@@ -52,53 +71,52 @@ book-ecommerce/
 
 1. **Install dependencies**
 
-   ```bash
-   npm install
-   ```
+```
+npm install
+```
 
 2. **Configure environment variables**
 
    Copy the example env file and fill in your Supabase project credentials
-   (found in Supabase dashboard → Project Settings → API):
+(found in Supabase dashboard → Project Settings → API):
 
-   ```bash
-   cp .env.local.example .env.local
-   ```
+```
+cp .env.local.example .env.local
+```
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
-   ```
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
+```
 
 3. **Run the dev server**
 
-   ```bash
-   npm run dev
-   ```
+```
+npm run dev
+```
 
-   Open [http://localhost:3000](http://localhost:3000) to see the placeholder
-   home page.
+   Open <http://localhost:3000> to see the placeholder home page. The admin
+   system now lives at `/admin` (see `docs/ADMIN_LAYOUT.md` and the Sprint 14
+   activation notes for what's required to sign in and view it).
 
 ## shadcn/ui
 
 The project is pre-configured for shadcn/ui (`components.json`, theme tokens
-in `globals.css`, `cn()` helper). A `Button` component is included as an
-example. To add more components once dependencies are installed:
+in `globals.css`, `cn()` helper). To add more components once dependencies
+are installed:
 
-```bash
+```
 npx shadcn@latest add card input dialog
 ```
 
 ## Supabase Client Usage
 
-Two ready-to-use client factories are provided:
+Three ready-to-use client factories are provided:
 
 - `@/lib/supabase/client` — for use inside Client Components (`"use client"`)
-- `@/lib/supabase/server` — for use inside Server Components, Route Handlers,
-  and Server Actions
-
-No tables, auth flows, or RLS policies have been created yet — this is
-intentionally scoped for a later milestone.
+- `@/lib/supabase/server` — for use inside Server Components, Server
+Actions, and Route Handlers
+- `@/lib/supabase/middleware` — for use inside `middleware.ts` (Sprint 05)
 
 ## Deployment
 
@@ -107,18 +125,27 @@ This project is designed to deploy on [Vercel](https://vercel.com/):
 1. Push this repository to GitHub/GitLab/Bitbucket.
 2. Import the repo in Vercel.
 3. Add the same environment variables from `.env.local` in the Vercel
-   project settings.
+project settings.
 4. Deploy.
 
-## Roadmap (Not Part of Day 1)
+## Roadmap
 
-- [ ] Authentication (Supabase Auth)
-- [ ] Database schema (books, categories, orders, etc.)
-- [ ] Product catalog & search
+- [x] Feature-based architecture (Day 3)
+- [x] Database schema — categories, subcategories, authors, publishers, books (Day 2, Sprint 10)
+- [x] Authentication foundation (Sprint 05)
+- [x] Admin shell & dashboard UI (Sprint 06–07)
+- [x] Category / Subcategory management UI (Sprint 08–09)
+- [x] Book CRUD backend (Sprint 10)
+- [x] Author & Publisher management — backend + UI (Sprint 11)
+- [x] Customer management UI (Sprint 12)
+- [x] Orders management UI (Sprint 13)
+- [x] Admin routes mounted, AuthProvider connected (Sprint 14)
+- [ ] Book admin UI (table/form) against the existing Sprint 10 backend
+- [ ] Category / Subcategory / Customer / Orders real backends
+- [ ] Product catalog & search (storefront)
 - [ ] Cart & checkout
 - [ ] Payments
-- [ ] Order management
-- [ ] Admin dashboard
+- [ ] Coupons, shipping, reports
 
 ## License
 
