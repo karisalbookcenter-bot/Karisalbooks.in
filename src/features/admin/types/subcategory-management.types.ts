@@ -65,6 +65,11 @@ export interface SubcategoryFormLayoutProps {
    *  can never itself be a category, so no such exclusion applies here). */
   categories: Category[];
   mode?: "create" | "edit";
+  /** Sprint 17: same reasoning as `CategoryFormLayoutProps.categoryId` —
+   *  `defaultValues` carries no id. Omit when `mode === "create"`. */
+  subcategoryId?: string;
+  /** Sprint 17: fired after a successful create/update. */
+  onSuccess?: (subcategory: Subcategory) => void;
   onCancel?: () => void;
   className?: string;
 }
@@ -108,6 +113,8 @@ export interface SubcategoryManagementOverviewProps {
   subcategories?: Subcategory[];
   categories?: Category[];
   loading?: boolean;
+  /** Sprint 17: same reasoning as `CategoryManagementOverviewProps.onDataChange`. */
+  onDataChange?: () => void;
   className?: string;
 }
 

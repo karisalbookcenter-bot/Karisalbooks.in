@@ -19,63 +19,37 @@ import type {
   SubcategorySortState,
   SubcategoryManagementOverviewProps,
 } from "@/features/admin/types/subcategory-management.types";
+import * as subcategoryService from "@/features/subcategories/services/subcategory.service";
 import { SubcategoryToolbar } from "./SubcategoryToolbar";
 import { SubcategoryTable } from "./SubcategoryTable";
 import { SubcategoryCard } from "./SubcategoryCard";
 import { SubcategoryEmptyState } from "./SubcategoryEmptyState";
+import { SubcategoryFormLayout } from "./SubcategoryFormLayout";
+import type { Subcategory } from "@/types/subcategory.types";
 
 const EMPTY_FILTERS: SubcategoryFiltersValue = { statuses: [], categoryId: null };
 const DEFAULT_SORT: SubcategorySortState = { key: "name", direction: "asc" };
 
+type Panel = { mode: "create" } | { mode: "edit"; subcategory: Subcategory };
+
 /**
- * SubcategoryManagementOverview — Sprint 09 (Task 1: Subcategory
- * Management page architecture).
+ * SubcategoryManagementOverview — Sprint 09 architecture, Sprint 17 write
+ * path. Same treatment as `CategoryManagementOverview`: `panel` state,
+ * `onEdit`/`onDelete` wired to Table/Card (already-existing prop
+ * contracts, simply never passed), `onAction` wired to `BulkActionBar`,
+ * `SubcategoryFormLayout` actually mounted. `subcategories`/`categories`
+ * remain plain props; `onDataChange` signals the owning page to refetch.
  *
- * Follows the exact composed-page shape `CategoryManagementOverview`
- * (Sprint 08) and `DashboardOverview` (Sprint 07) established: a
- * component ready to be the default export of a future
- * `app/admin/subcategories/page.tsx`, with no route wired up this
- * sprint.
- *
- *   // A future app/admin/subcategories/page.tsx
- *   import { AdminShell } from "@/features/admin/components/layout";
- *   import { SubcategoryManagementOverview } from "@/features/admin/components/subcategories";
- *
- *   export default function AdminSubcategoriesPage() {
- *     return (
- *       <AdminShell>
- *         <SubcategoryManagementOverview
- *           subcategories={realSubcategories}
- *           categories={realCategories}
- *         />
- *       </AdminShell>
- *     );
- *   }
- *
- * Owns search, status+category filters, sort, pagination, view mode, and
- * bulk selection — one more piece of state than `CategoryManagementOverview`
- * (sort, pagination), matching this sprint's additional "Sorting" and
- * "Pagination" future-ready requirements. Every derivation is a pure
- * helper call: `searchSubcategories` → `filterSubcategoriesByStatus` →
- * `filterSubcategoriesByCategory` → `sortByKey` → `paginate`, each from
- * this project's existing helpers (the last two extended/reused from
- * Day 3, not new for this sprint).
- *
- * Unlike `CategoryManagementOverview`, both Table and Card view use the
- * *same* filtered/sorted/paginated result — subcategories have no tree to
- * worry about orphaning (see `docs/SUBCATEGORY_MANAGEMENT.md` for the
- * comparison with Category's Table-only-filtering caveat), so there's no
- * equivalent limitation to document here.
- *
- * Requires both `subcategories` and `categories` — see
- * `docs/SUBCATEGORY_MANAGEMENT.md` §Category Linkage Strategy for why a
- * subcategory screen always needs the full category list alongside its
- * own data.
+ * The `!hasAnySubcategories` → `<SubcategoryEmptyState/>` gate is
+ * intentionally UNCHANGED from Sprint 09, same reasoning and same known
+ * consequence as `CategoryManagementOverview`'s — see that file's comment
+ * and docs/CATEGORY_SUBCATEGORY_ADMIN_CRUD.md.
  */
 export function SubcategoryManagementOverview({
   subcategories = [],
   categories = [],
   loading,
+  onDataChange,
   className,
 }: SubcategoryManagementOverviewProps) {
   const [view, setView] = useState<SubcategoryViewMode>("table");
@@ -85,6 +59,7 @@ export function SubcategoryManagementOverview({
   const [page, setPage] = useState(PAGINATION_DEFAULTS.PAGE);
   const [pageSize, setPageSize] = useState<number>(PAGINATION_DEFAULTS.PAGE_SIZE);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [panel, setPanel] = useState<Panel | null>(null);
 
   const filteredAndSorted = useMemo(() => {
     const searched = searchSubcategories(subcategories, searchValue);
@@ -118,6 +93,22 @@ export function SubcategoryManagementOverview({
     setPage(PAGINATION_DEFAULTS.PAGE);
   }
 
+  async function handleDelete(subcategory: Subcategory) {
+    await subcategoryService.deleteSubcategory(subcategory.id);
+    onDataChange?.();
+  }
+
+  async function handleBulkAction(actionId: string) {
+    if (actionId === "delete") {
+      await subcategoryService.deleteSubcategories(selectedIds);
+    } else {
+      const status = actionId === "activate" ? "active" : actionId === "deactivate" ? "inactive" : "archived";
+      await subcategoryService.updateSubcategoriesStatus(selectedIds, status as Subcategory["status"]);
+    }
+    setSelectedIds([]);
+    onDataChange?.();
+  }
+
   const hasAnySubcategories = subcategories.length > 0;
 
   return (
@@ -138,11 +129,39 @@ export function SubcategoryManagementOverview({
             categories={categories}
             view={view}
             onViewChange={setView}
+            onAddSubcategory={() => setPanel({ mode: "create" })}
           />
+
+          {panel && (
+            <div className="rounded-md border border-border bg-card p-4">
+              <SubcategoryFormLayout
+                mode={panel.mode}
+                subcategoryId={panel.mode === "edit" ? panel.subcategory.id : undefined}
+                defaultValues={
+                  panel.mode === "edit"
+                    ? {
+                        name: panel.subcategory.name,
+                        slug: panel.subcategory.slug,
+                        description: panel.subcategory.description ?? "",
+                        categoryId: panel.subcategory.category_id,
+                        status: panel.subcategory.status,
+                      }
+                    : undefined
+                }
+                categories={categories}
+                onCancel={() => setPanel(null)}
+                onSuccess={() => {
+                  setPanel(null);
+                  onDataChange?.();
+                }}
+              />
+            </div>
+          )}
 
           <BulkActionBar
             count={selectedIds.length}
             actions={SUBCATEGORY_BULK_ACTIONS}
+            onAction={handleBulkAction}
             onClear={() => setSelectedIds([])}
           />
 
@@ -155,6 +174,8 @@ export function SubcategoryManagementOverview({
               sort={sort}
               onSortChange={setSort}
               onClearFilters={clearFilters}
+              onEdit={(subcategory) => setPanel({ mode: "edit", subcategory })}
+              onDelete={handleDelete}
               loading={loading}
             />
           ) : loading ? (
@@ -170,6 +191,8 @@ export function SubcategoryManagementOverview({
                   categoryName={getSubcategoryCategoryName(subcategory, categories)}
                   selected={selectedIds.includes(subcategory.id)}
                   onToggleSelect={() => toggleSelect(subcategory.id)}
+                  onEdit={() => setPanel({ mode: "edit", subcategory })}
+                  onDelete={() => handleDelete(subcategory)}
                 />
               ))}
             </div>

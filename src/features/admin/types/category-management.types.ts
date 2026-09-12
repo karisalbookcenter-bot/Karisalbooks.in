@@ -86,6 +86,15 @@ export interface CategoryFormLayoutProps {
    *  `docs/CATEGORY_MANAGEMENT.md`. */
   parentOptions?: Category[];
   mode?: "create" | "edit";
+  /** Sprint 17: the category being edited. `defaultValues` is
+   *  `Partial<CategoryFormValues>` (form fields only, no id) — this is
+   *  needed separately so `handleSave` knows whether to call
+   *  `createCategory` or `updateCategory(categoryId, ...)`. Omit when
+   *  `mode === "create"`. */
+  categoryId?: string;
+  /** Sprint 17: fired after a successful create/update, so the caller
+   *  (`CategoryManagementOverview`) can close this form and refetch. */
+  onSuccess?: (category: Category) => void;
   onCancel?: () => void;
   className?: string;
 }
@@ -130,5 +139,11 @@ export interface CategorySkeletonProps {
 export interface CategoryManagementOverviewProps {
   categories?: Category[];
   loading?: boolean;
+  /** Sprint 17: called after any successful create/update/delete/bulk
+   *  action so the owning page (`app/admin/categories/page.tsx`) knows to
+   *  refetch. `CategoryManagementOverview` still does no fetching itself —
+   *  this keeps its documented "categories is a plain prop" contract
+   *  intact rather than making it self-fetching. */
+  onDataChange?: () => void;
   className?: string;
 }
