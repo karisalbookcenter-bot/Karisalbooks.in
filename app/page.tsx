@@ -101,4 +101,3 @@ export default function HomePage() {
     </MainLayout>
   );
 }
-npm run dev
