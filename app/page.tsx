@@ -1,4 +1,4 @@
-npm run dev"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -101,4 +101,3 @@ export default function HomePage() {
     </MainLayout>
   );
 }
-npm run dev
