@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import { createSupabaseRepository } from "@/services/createSupabaseRepository";
 import type { Author, AuthorInsert, AuthorUpdate } from "@/types/author.types";
 
