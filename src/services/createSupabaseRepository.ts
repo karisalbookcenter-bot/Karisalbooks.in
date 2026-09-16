@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import type { BaseEntity, PaginatedResult, RecordStatus, SortDirection } from "@/types/common.types";
 import { slugify } from "@/lib/helpers/string.helpers";
 
