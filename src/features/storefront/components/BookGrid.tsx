@@ -8,19 +8,10 @@ interface BookGridProps {
   emptyMessage?: string;
 }
 
-/**
- * BookGrid — Sprint 18. Name resolution is passed in as plain lookup
- * objects built once per page (via `.list({ pageSize: 1000 })` on
- * `authorService`/`publisherService`) rather than fetched per-card — the
- * same "fetch once, resolve many" shape `BookManagementOverview.tsx`
- * already established for its own author/publisher dropdowns.
- */
 export function BookGrid({ books, authorNamesById, publisherNamesById, emptyMessage }: BookGridProps) {
   if (books.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        {emptyMessage ?? "No books found."}
-      </p>
+      <p className="py-12 text-center text-sm text-muted-foreground">{emptyMessage ?? "No books found."}</p>
     );
   }
 

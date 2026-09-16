@@ -6,13 +6,6 @@ interface SubcategoryChipsProps {
   onSelect: (id: string | null) => void;
 }
 
-/**
- * SubcategoryChips — Sprint 18. Renders subcategories as clickable chips
- * that filter the same `/categories/[slug]` page in place — the whole
- * point of requirement 2 ("no nested routes"). Selecting a chip sets
- * local state on the category page, which refetches
- * `bookService.listBooks({ subcategoryId })`; it never navigates.
- */
 export function SubcategoryChips({ subcategories, selectedId, onSelect }: SubcategoryChipsProps) {
   if (subcategories.length === 0) return null;
 

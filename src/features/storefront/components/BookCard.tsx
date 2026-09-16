@@ -9,12 +9,9 @@ interface BookCardProps {
 }
 
 /**
- * BookCard — Sprint 18. Storefront-only, deliberately not reused from
- * `@/features/admin/components/books/BookCard.tsx` — that component's
- * props/styling are admin-specific (selection checkboxes, edit/delete
- * actions), and pulling it into the public site would couple the
- * storefront to the admin feature folder, the opposite of what a "clean
- * foundation" for future Cart/Checkout should do.
+ * BookCard — Sprint 18 (recreated). Storefront-only; not reused from the
+ * admin `BookCard.tsx` (admin-specific props: selection, edit/delete —
+ * reusing it would couple the public site to the admin feature folder).
  */
 export function BookCard({ book, authorName, publisherName }: BookCardProps) {
   const inStock = book.stock_quantity > 0;
@@ -37,9 +34,7 @@ export function BookCard({ book, authorName, publisherName }: BookCardProps) {
         {authorName && <p className="text-xs text-muted-foreground">{authorName}</p>}
         {publisherName && <p className="text-xs text-muted-foreground">{publisherName}</p>}
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="text-sm font-semibold text-foreground">
-            {formatCurrency(book.price)}
-          </span>
+          <span className="text-sm font-semibold text-foreground">{formatCurrency(book.price)}</span>
           <span className={`text-xs ${inStock ? "text-muted-foreground" : "text-destructive"}`}>
             {inStock ? "In stock" : "Out of stock"}
           </span>

@@ -1,165 +1,121 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BookGrid } from "@/features/storefront/components/BookGrid";
+import { SubcategoryChips } from "@/features/storefront/components/SubcategoryChips";
 import { buildNameMap } from "@/features/storefront/utils";
-import { PUBLIC_VISIBLE_STATUS } from "@/features/storefront/constants";
-
-import * as bookService from "@/features/books/services/book.service";
-import * as categoryService from "@/features/categories/services/category.service";
-import * as subcategoryService from "@/features/categories/services/subcategory.service";
-
-import { authorService } from "@/features/authors/services/author.service";
-import { publisherService } from "@/features/publishers/services/publisher.service";
-
-import type { Category } from "@/types/category.types";
+import { listPublicBooks } from "@/features/storefront/services/book.storefront";
+import { getPublicCategoryBySlug } from "@/features/storefront/services/category.storefront";
+import { listPublicSubcategoriesByCategory } from "@/features/storefront/services/subcategory.storefront";
+import { listPublicAuthorNames, listPublicPublisherNames } from "@/features/storefront/services/author-publisher.storefront";
 import type { Book } from "@/types/book.types";
+import type { Category } from "@/types/category.types";
+import type { Subcategory } from "@/types/subcategory.types";
 
+export default function CategoryPage() {
+  const params = useParams<{ slug: string }>();
 
-type Props = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
+  const [category, setCategory] = useState<Category | null>(null);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [authorNamesById, setAuthorNamesById] = useState<Record<string, string>>({});
+  const [publisherNamesById, setPublisherNamesById] = useState<Record<string, string>>({});
+  const [subcategoryId, setSubcategoryId] = useState<string | null>(null);
+  const [loadingCategory, setLoadingCategory] = useState(true);
+  const [loadingBooks, setLoadingBooks] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
+  useEffect(() => {
+    async function load() {
+      setLoadingCategory(true);
+      setNotFound(false);
+      setSubcategoryId(null);
 
-export default async function CategoryPage({ params }: Props) {
+      const match = await getPublicCategoryBySlug(params.slug);
+      if (!match) {
+        setNotFound(true);
+        setLoadingCategory(false);
+        return;
+      }
+      setCategory(match);
 
-  const { slug } = await params;
+      const [subs, authors, publishers] = await Promise.all([
+        listPublicSubcategoriesByCategory(match.id),
+        listPublicAuthorNames(),
+        listPublicPublisherNames(),
+      ]);
+      setSubcategories(subs);
+      setAuthorNamesById(buildNameMap(authors));
+      setPublisherNamesById(buildNameMap(publishers));
+      setLoadingCategory(false);
+    }
+    load();
+  }, [params.slug]);
 
+  const loadBooks = useCallback(async () => {
+    if (!category) return;
+    setLoadingBooks(true);
+    try {
+      const result = await listPublicBooks({
+        categoryId: category.id,
+        subcategoryId: subcategoryId ?? undefined,
+        pageSize: 100,
+      });
+      setBooks(result.items);
+    } finally {
+      setLoadingBooks(false);
+    }
+  }, [category, subcategoryId]);
 
-  const categoriesResult =
-    await categoryService.listCategories({
-      status: PUBLIC_VISIBLE_STATUS,
-      pageSize: 1000,
-    });
+  useEffect(() => {
+    loadBooks();
+  }, [loadBooks]);
 
-
-  const category =
-    categoriesResult.data?.items.find(
-      (c: Category) => c.slug === slug
-    );
-
-
-  if (!category) {
+  if (loadingCategory) {
     return (
       <MainLayout>
-        <div className="container py-16 text-center">
-          <h1 className="text-2xl font-semibold">
-            Category not found
-          </h1>
+        <div className="container py-16 text-center text-sm text-muted-foreground">Loading…</div>
+      </MainLayout>
+    );
+  }
+
+  if (notFound || !category) {
+    return (
+      <MainLayout>
+        <div className="container flex flex-col items-center gap-4 py-16 text-center">
+          <h1 className="text-2xl font-semibold">Category not found</h1>
+          <Link href="/books" className="text-sm text-primary underline">
+            Browse all books
+          </Link>
         </div>
       </MainLayout>
     );
   }
 
-
-  const [
-    booksResult,
-    subcategoriesResult,
-    authorsResult,
-    publishersResult,
-  ] = await Promise.all([
-
-    bookService.listBooks({
-      categoryId: category.id,
-      statuses: [PUBLIC_VISIBLE_STATUS],
-      page: 1,
-      pageSize: 50,
-    }),
-
-    subcategoryService.listSubcategories({
-      categoryId: category.id,
-      pageSize: 100,
-    }),
-
-    authorService.list({
-      pageSize: 1000,
-    }),
-
-    publisherService.list({
-      pageSize: 1000,
-    }),
-  ]);
-
-
-  const books: Book[] =
-    booksResult.data?.items ?? [];
-
-
-  const authorNamesById =
-    authorsResult.data
-      ? buildNameMap(authorsResult.data.items)
-      : {};
-
-
-  const publisherNamesById =
-    publishersResult.data
-      ? buildNameMap(publishersResult.data.items)
-      : {};
-
-
-
   return (
     <MainLayout>
+      <div className="container flex flex-col gap-6 py-8">
+        <div>
+          <h1 className="text-2xl font-semibold">{category.name}</h1>
+          {category.description && <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>}
+        </div>
 
-      <div className="container flex flex-col gap-8 py-8">
+        <SubcategoryChips subcategories={subcategories} selectedId={subcategoryId} onSelect={setSubcategoryId} />
 
-
-        <h1 className="text-3xl font-semibold">
-          {category.name}
-        </h1>
-
-
-        {subcategoryResultHasItems(subcategoriesResult.data?.items) && (
-
-          <div className="flex flex-wrap gap-2">
-
-            {subcategoriesResult.data!.items.map((sub) => (
-
-              <span
-                key={sub.id}
-                className="rounded-full border px-4 py-2 text-sm"
-              >
-                {sub.name}
-              </span>
-
-            ))}
-
-          </div>
-
+        {loadingBooks ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : (
+          <BookGrid
+            books={books}
+            authorNamesById={authorNamesById}
+            publisherNamesById={publisherNamesById}
+            emptyMessage="No books in this category yet."
+          />
         )}
-
-
-        <BookGrid
-          books={books}
-          authorNamesById={authorNamesById}
-          publisherNamesById={publisherNamesById}
-        />
-
-
-        {books.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No books found.
-          </p>
-        )}
-
-
-        <Link
-          href="/books"
-          className="text-sm text-primary underline"
-        >
-          View all books
-        </Link>
-
-
       </div>
-
     </MainLayout>
   );
-}
-
-
-
-function subcategoryResultHasItems(items: unknown[] | undefined) {
-  return !!items && items.length > 0;
 }

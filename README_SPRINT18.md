@@ -1,79 +1,77 @@
-# Sprint 18 — Public Storefront (Read-Only)
+# Sprint 18 (Recreated) — Public Storefront
 
-## What this delivers
-A read-only public catalog: home page, full book listing with search +
-category filter, book detail page, and single-route category browsing
-with subcategory chips as in-page filters. No login, cart, checkout,
-payment, orders, or customer backend — all explicitly out of scope, per
-the approved plan.
+## Why this version is different from the first Sprint 18 attempt
+The first attempt called the **admin** `book.service.ts`/`category.service.ts`/etc.
+directly from storefront pages. That surfaced a real, pre-existing (Day 1)
+bug: `book.repository.ts`, `author.repository.ts`, `publisher.repository.ts`,
+and `createSupabaseRepository.ts` all import the **server** Supabase client
+(`@/lib/supabase/server`), which cannot run in `"use client"` code — the
+`Module not found: next/headers` build error traced back to this.
 
-## Two requirements applied
-1. **No hardcoded `RecordStatus` values.** `src/features/storefront/constants.ts`
-   defines one typed constant, `PUBLIC_VISIBLE_STATUS: RecordStatus = "active"`,
-   imported by every storefront file that filters by status. No existing
-   shared runtime constant for this was found in any verified file
-   (`common.types.ts` was never uploaded) — this is a single source of
-   truth pending a real shared constant, not a guess at one that doesn't
-   exist. Verified: no `"active"`/`"inactive"`/`"archived"` string literal
-   appears anywhere else in this package.
-2. **Category browsing: `/categories/[slug]` only.** Confirmed no nested
-   route directory exists in this package. Subcategory selection is
-   local component state that refetches books on the same page.
+Per your explicit rules this time (don't touch the admin book repository,
+don't use the server client in client components), this version does
+**not** call any admin service or repository at all. Instead, every
+storefront page reads directly from Supabase via a brand-new,
+**storefront-owned** data-access layer, using only the confirmed-safe
+browser client (`@/lib/supabase/client`).
 
-## Files
+## Architecture
 
 ```
-NEW:
-  app/books/page.tsx
-  app/books/[slug]/page.tsx
-  app/categories/[slug]/page.tsx
-  src/features/storefront/constants.ts
-  src/features/storefront/utils.ts
-  src/features/storefront/components/BookCard.tsx
-  src/features/storefront/components/BookGrid.tsx
-  src/features/storefront/components/SubcategoryChips.tsx
+src/features/storefront/
+├── constants.ts                          # PUBLIC_VISIBLE_STATUS (typed, not a raw string)
+├── utils.ts                              # buildNameMap()
+├── services/
+│   ├── book.storefront.ts                # listPublicBooks, getPublicBookBySlug
+│   ├── category.storefront.ts            # listPublicCategories, getPublicCategoryBySlug
+│   ├── subcategory.storefront.ts         # listPublicSubcategoriesByCategory
+│   └── author-publisher.storefront.ts    # name-only lookups (see note below)
+└── components/
+    ├── BookCard.tsx
+    ├── BookGrid.tsx
+    └── SubcategoryChips.tsx
 
-REPLACED (real Day-1 placeholder — confirmed via your uploaded page.tsx,
-never touched since Day 1; not a completed Sprint 14–17 file):
-  app/page.tsx
+app/
+├── page.tsx                # replaces the real Day-1 placeholder
+├── books/page.tsx
+├── books/[slug]/page.tsx
+└── categories/[slug]/page.tsx
 ```
 
-**Nothing from Sprint 14–17 is in this package.** `app/layout.tsx`,
-`MainLayout`, `book.service.ts`, `category.service.ts`,
-`subcategory.service.ts`, `author.service.ts`, `publisher.service.ts` are
-all consumed exactly as confirmed, unmodified.
+Every `*.storefront.ts` file queries Supabase directly (`.from("books")`,
+`.from("categories")`, etc.) via `createClient()` from
+`@/lib/supabase/client` — the exact same table names and column shapes
+already confirmed from your uploaded `book.types.ts`/`category.types.ts`/
+`subcategory.types.ts`. **No admin repository, service, or component is
+imported anywhere in this package** (verified — see checklist).
 
-## Architecture decisions, stated plainly
-- Every page is a Client Component (`"use client"`), matching the
-  confirmed existing pattern — every service uses the browser Supabase
-  client. Trade-off: no server-side rendering for the public catalog in
-  this sprint. Flagged in the original plan as a deliberate
-  consistency-over-SEO choice, not an oversight.
-- `getCategoryBySlug` does not exist on `category.service.ts` — the
-  category page fetches the full category list once and matches by slug
-  client-side, rather than adding a method to a Sprint 16 file
-  unnecessarily. Fine at current scale.
-- Author/Publisher names: listing pages fetch the full list once and
-  build an id→name lookup (`buildNameMap`); the detail page instead uses
-  `.get(id)` for the two records it actually needs — the more efficient
-  choice for a single-item page.
-- Pagination on `/books` is a plain Prev/Next pair, not the shared
-  `Pagination` component — that component's prop contract was guessed at
-  two different ways across earlier sprints (never independently
-  verified), so a third guess was avoided in favor of two buttons built
-  directly on `listBooks`'s own `page`/`total` fields.
-- `BookCard.tsx` is storefront-only, not reused from the admin
-  `BookCard.tsx` — the admin version's props (selection, edit/delete) are
-  admin-specific, and reusing it would couple the public site to the
-  admin feature folder.
+## Rules verified, not just followed
 
-## Assumptions (unchanged from the approved plan, still open)
-- `Category`/`Subcategory` `status` gates public visibility — assumed,
-  not confirmed against a real access-control requirement.
-- `category.service.ts`/`subcategory.service.ts`'s `status` filter
-  (singular) and `book.service.ts`'s `statuses` filter (plural array) are
-  both used exactly per their real/self-authored signatures — this
-  inconsistency between the two services is real and pre-existing, not
-  introduced here.
-- `SearchBar`'s exact prop contract (`value`/`onChange`/`placeholder`) —
-  same assumption carried since Sprint 15, never independently verified.
+| Rule | How it's satisfied |
+|---|---|
+| Don't modify admin features | Zero admin files in this package |
+| Don't modify/reuse book admin repository/service | `book.storefront.ts` queries `books` table independently; `book.repository.ts`/`book.service.ts` never imported |
+| No server Supabase client in client components | Every service file uses `@/lib/supabase/client` only — grepped, zero matches for `lib/supabase/server` outside an explanatory comment |
+| Follow existing architecture | Same hand-written-repository pattern as `category.repository.ts` (Sprint 16); same "fetch once, resolve many" name-lookup pattern as `BookManagementOverview.tsx` |
+| No RecordStatus hardcoding | Single typed `PUBLIC_VISIBLE_STATUS` constant, imported everywhere |
+| No login/cart/payment/orders | Grepped — none present |
+
+## Honest note on `Author`/`Publisher`
+Their full type files were never uploaded in this conversation — only the
+`.name` field is confirmed (via `author.service.ts`'s doc comment).
+`author-publisher.storefront.ts` therefore only ever selects and returns
+`{ id, name }`, not a full `Author`/`Publisher` type, so nothing here
+asserts a shape that hasn't actually been confirmed.
+
+## Change from the first draft: no `SearchBar` reuse
+The book listing page now uses a plain `<input type="search">` instead of
+`@/components/common/SearchBar`. That component's exact prop contract was
+never independently verified (only assumed since Sprint 15) — given this
+sprint's stricter verification bar, a plain, self-contained input was
+preferred over repeating an unverified assumption a third time.
+
+## Build verification
+No network access in this sandbox, so `npm run build`/`tsc --noEmit`
+could not be run here — see `VERIFICATION_CHECKLIST.md` for exactly what
+was checked (grep-based, all passed) versus what still needs your local
+`npm run build` to confirm.
