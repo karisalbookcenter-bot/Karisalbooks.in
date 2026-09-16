@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import type { Book, BookInsert, BookUpdate } from "@/types/book.types";
 import type { PaginatedResult, RecordStatus, SortDirection } from "@/types/common.types";
 import { slugify } from "@/lib/helpers/string.helpers";
