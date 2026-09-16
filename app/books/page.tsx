@@ -25,6 +25,7 @@ export default function BooksPage() {
 
   const loadBooks = useCallback(async () => {
     setLoading(true);
+
     try {
       const result = await listPublicBooks({
         search: search || undefined,
@@ -32,8 +33,9 @@ export default function BooksPage() {
         page,
         pageSize: PAGE_SIZE,
       });
+
       setBooks(result.items);
-      setTotal(result.total);
+      setTotal(result.totalItems);
     } finally {
       setLoading(false);
     }
@@ -45,8 +47,12 @@ export default function BooksPage() {
 
   useEffect(() => {
     listPublicCategories().then(setCategories);
-    listPublicAuthorNames().then((items) => setAuthorNamesById(buildNameMap(items)));
-    listPublicPublisherNames().then((items) => setPublisherNamesById(buildNameMap(items)));
+    listPublicAuthorNames().then((items) =>
+      setAuthorNamesById(buildNameMap(items))
+    );
+    listPublicPublisherNames().then((items) =>
+      setPublisherNamesById(buildNameMap(items))
+    );
   }, []);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -67,6 +73,7 @@ export default function BooksPage() {
             placeholder="Search by title…"
             className="w-64 rounded-md border border-border bg-background px-3 py-2 text-sm"
           />
+
           <select
             value={categoryId}
             onChange={(e) => {
@@ -87,7 +94,11 @@ export default function BooksPage() {
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
-          <BookGrid books={books} authorNamesById={authorNamesById} publisherNamesById={publisherNamesById} />
+          <BookGrid
+            books={books}
+            authorNamesById={authorNamesById}
+            publisherNamesById={publisherNamesById}
+          />
         )}
 
         {!loading && totalPages > 1 && (
@@ -100,9 +111,11 @@ export default function BooksPage() {
             >
               Previous
             </button>
+
             <span className="text-sm text-muted-foreground">
               Page {page} of {totalPages}
             </span>
+
             <button
               type="button"
               disabled={page >= totalPages}
