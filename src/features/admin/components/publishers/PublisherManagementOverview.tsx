@@ -50,7 +50,7 @@ export function PublisherManagementOverview({
   const [view, setView] = useState<PublisherViewMode>("table");
   const [searchValue, setSearchValue] = useState("");
   const [filtersValue, setFiltersValue] = useState<PublisherFiltersValue>(EMPTY_FILTERS);
-  const [page, setPage] = useState(PAGINATION_DEFAULTS.PAGE);
+  const [page, setPage] = useState<number>(PAGINATION_DEFAULTS.PAGE);
   const [pageSize, setPageSize] = useState<number>(PAGINATION_DEFAULTS.PAGE_SIZE);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -137,13 +137,15 @@ export function PublisherManagementOverview({
 
           {!loading && filtered.length > 0 && (
             <Pagination
-              result={paginated}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(PAGINATION_DEFAULTS.PAGE);
-              }}
-            />
+  result={paginated}
+  onPageChange={(pageNumber: number) => {
+  setPage(pageNumber);
+}}
+  onPageSizeChange={(size) => {
+    setPageSize(size);
+    setPage(PAGINATION_DEFAULTS.PAGE);
+  }}
+/>
           )}
         </div>
       )}

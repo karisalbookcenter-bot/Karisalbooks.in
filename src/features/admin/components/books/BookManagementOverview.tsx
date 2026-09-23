@@ -79,7 +79,7 @@ export function BookManagementOverview() {
     });
     if (result.data) {
       setBooks(result.data.items);
-      setTotalCount(result.data.total);
+      setTotalCount(result.data.totalItems);
     }
     setLoading(false);
   }, [filters]);
@@ -200,12 +200,25 @@ export function BookManagementOverview() {
       )}
 
       {!loading && !showEmpty && (
-        <Pagination
-          page={filters.page}
-          totalPages={totalPages}
-          onPageChange={(page) => setFilters((f) => ({ ...f, page }))}
-        />
-      )}
+  <Pagination
+    result={{
+      page: filters.page,
+      pageSize: filters.pageSize,
+      totalItems: totalCount,
+      totalPages,
+    }}
+    onPageChange={(page) =>
+      setFilters((f) => ({ ...f, page }))
+    }
+    onPageSizeChange={(size) =>
+      setFilters((f) => ({
+        ...f,
+        pageSize: size,
+        page: 1,
+      }))
+    }
+  />
+)}
     </PageContainer>
   );
 }

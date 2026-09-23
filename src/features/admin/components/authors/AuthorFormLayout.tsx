@@ -71,8 +71,8 @@ export function AuthorFormLayout({ defaultValues, mode = "create", onCancel, cla
             placeholder="https://..."
           />
           <p className="text-xs text-muted-foreground">
-            A future file picker would call `useAuthorForm`'s `selectPhotoFile`, which uploads via the
-            Image Upload Service on submit.
+            A future file picker would call the `selectPhotoFile` function from `useAuthorForm`, which uploads via the
+Image Upload Service on submit.
           </p>
         </div>
 

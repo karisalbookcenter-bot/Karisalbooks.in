@@ -46,7 +46,7 @@ export function CustomerManagementOverview({ customers = [], loading, className 
   const [view, setView] = useState<CustomerViewMode>("table");
   const [searchValue, setSearchValue] = useState("");
   const [filtersValue, setFiltersValue] = useState<CustomerFiltersValue>(EMPTY_FILTERS);
-  const [page, setPage] = useState(PAGINATION_DEFAULTS.PAGE);
+ const [page, setPage] = useState<number>(PAGINATION_DEFAULTS.PAGE);
   const [pageSize, setPageSize] = useState<number>(PAGINATION_DEFAULTS.PAGE_SIZE);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detailsCustomer, setDetailsCustomer] = useState<Customer | null>(null);
@@ -134,13 +134,15 @@ export function CustomerManagementOverview({ customers = [], loading, className 
 
           {!loading && filtered.length > 0 && (
             <Pagination
-              result={paginated}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(PAGINATION_DEFAULTS.PAGE);
-              }}
-            />
+  result={paginated}
+  onPageChange={(pageNumber: number) => {
+    setPage(pageNumber);
+  }}
+  onPageSizeChange={(size) => {
+    setPageSize(size);
+    setPage(PAGINATION_DEFAULTS.PAGE);
+  }}
+/>
           )}
         </div>
       )}

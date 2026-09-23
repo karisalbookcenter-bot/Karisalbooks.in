@@ -56,7 +56,7 @@ export function SubcategoryManagementOverview({
   const [searchValue, setSearchValue] = useState("");
   const [filtersValue, setFiltersValue] = useState<SubcategoryFiltersValue>(EMPTY_FILTERS);
   const [sort, setSort] = useState<SubcategorySortState>(DEFAULT_SORT);
-  const [page, setPage] = useState(PAGINATION_DEFAULTS.PAGE);
+  const [page, setPage] = useState<number>(PAGINATION_DEFAULTS.PAGE);
   const [pageSize, setPageSize] = useState<number>(PAGINATION_DEFAULTS.PAGE_SIZE);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -200,13 +200,15 @@ export function SubcategoryManagementOverview({
 
           {!loading && filteredAndSorted.length > 0 && (
             <Pagination
-              result={paginated}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(PAGINATION_DEFAULTS.PAGE);
-              }}
-            />
+  result={paginated}
+  onPageChange={(pageNumber: number) => {
+    setPage(pageNumber);
+  }}
+  onPageSizeChange={(size) => {
+    setPageSize(size);
+    setPage(PAGINATION_DEFAULTS.PAGE);
+  }}
+/>
           )}
         </div>
       )}
