@@ -26,6 +26,8 @@ export interface Author extends BaseEntity {
  *  `name` by the repository factory when omitted, the same behavior
  *  `book.repository.ts`'s `createBook` already established. */
 export interface AuthorInsert {
+  [key: string]: unknown;
+
   name: string;
   slug?: string;
   bio?: string | null;

@@ -48,8 +48,13 @@ export const categoryRepository = {
     const { data, count, error } = await query.range(from, from + pageSize - 1);
     if (error) throw error;
 
-    return { items: (data ?? []) as Category[], total: count ?? 0, page, pageSize };
-  },
+   return {
+  items: (data ?? []) as Category[],
+  page,
+  pageSize,
+  totalItems: count ?? 0,
+  totalPages: Math.max(1, Math.ceil((count ?? 0) / pageSize)),
+};
 
   async getById(id: string): Promise<Category | null> {
     const supabase = createClient();

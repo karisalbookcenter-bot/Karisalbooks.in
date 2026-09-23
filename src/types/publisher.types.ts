@@ -16,10 +16,12 @@ export interface Publisher extends BaseEntity {
 }
 
 export interface PublisherInsert {
+  [key: string]: unknown;
+
   name: string;
   slug?: string;
-  description?: string | null;
   website_url?: string | null;
+  logo_url?: string | null;
   status?: Publisher["status"];
 }
 

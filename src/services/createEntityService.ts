@@ -21,8 +21,17 @@ import type {
  */
 
 export interface EntityValidation<TInsert, TUpdate> {
-  validateInsert: (input: unknown) => { success: boolean; data?: TInsert; errors?: Record<string, string> };
-  validateUpdate: (input: unknown) => { success: boolean; data?: TUpdate; errors?: Record<string, string> };
+  validateInsert: (input: unknown) => {
+    success: boolean;
+    data?: TInsert;
+    errors?: Partial<Record<keyof TInsert, string>>;
+  };
+
+  validateUpdate: (input: unknown) => {
+    success: boolean;
+    data?: TUpdate;
+    errors?: Partial<Record<keyof TUpdate, string>>;
+  };
 }
 
 export interface EntityService<T, TInsert, TUpdate> {
@@ -48,9 +57,16 @@ function toApiResponse<T>(fn: () => Promise<T>): Promise<ApiResponse<T>> {
     );
 }
 
-function formatValidationErrors(errors?: Record<string, string>): string {
-  if (!errors || Object.keys(errors).length === 0) return "Validation failed.";
-  return Object.values(errors).join(" ");
+function formatValidationErrors(
+  errors?: Record<string, string | undefined>
+): string {
+  if (!errors || Object.keys(errors).length === 0) {
+    return "Validation failed.";
+  }
+
+  return Object.values(errors)
+    .filter((message): message is string => Boolean(message))
+    .join(" ");
 }
 
 export function createEntityService<
