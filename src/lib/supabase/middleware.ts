@@ -26,10 +26,25 @@ export function createMiddlewareClient(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+        setAll(
+  cookiesToSet: {
+    name: string;
+    value: string;
+    options?: {
+      path?: string;
+      domain?: string;
+      maxAge?: number;
+      expires?: Date;
+      httpOnly?: boolean;
+      secure?: boolean;
+      sameSite?: "lax" | "strict" | "none";
+    };
+  }[]
+) {
+  cookiesToSet.forEach(({ name, value }) =>
+    request.cookies.set(name, value)
+  );
+},
           response = NextResponse.next({
             request: { headers: request.headers },
           });
