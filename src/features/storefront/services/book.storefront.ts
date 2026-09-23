@@ -29,26 +29,35 @@ export interface ListPublicBooksParams {
   pageSize?: number;
 }
 
-export async function listPublicBooks(params: ListPublicBooksParams = {}): Promise<PaginatedResult<Book>> {
+export async function listPublicBooks(
+  params: ListPublicBooksParams
+): Promise<PaginatedResult<Book>> {
   const supabase = createClient();
-  const { search, categoryId, subcategoryId, page = 1, pageSize = 12 } = params;
 
-  let query = supabase
-    .from("books")
-    .select("*", { count: "exact" })
-    .eq("status", PUBLIC_VISIBLE_STATUS);
-
-  if (search) query = query.ilike("title", `%${search}%`);
-  if (categoryId) query = query.eq("category_id", categoryId);
-  if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
-
-  query = query.order("created_at", { ascending: false });
+  const {
+    page = 1,
+    pageSize = 12,
+  } = params;
 
   const from = (page - 1) * pageSize;
-  const { data, count, error } = await query.range(from, from + pageSize - 1);
+  const to = from + pageSize - 1;
+
+  const { data, count, error } = await supabase
+    .from("books")
+    .select("*", { count: "exact" })
+    .range(from, to);
+
   if (error) throw error;
 
-  return { items: (data ?? []) as Book[], total: count ?? 0, page, pageSize };
+  const totalItems = count ?? 0;
+
+  return {
+    items: (data ?? []) as Book[],
+    page,
+    pageSize,
+    totalItems,
+    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
+  };
 }
 
 export async function getPublicBookBySlug(slug: string): Promise<Book | null> {
