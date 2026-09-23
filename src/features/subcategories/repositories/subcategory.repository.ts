@@ -48,12 +48,20 @@ export const subcategoryRepository = {
     if (status) query = query.eq("status", status);
     query = query.order(sortBy, { ascending: sortDirection === "asc" });
 
-    const from = (page - 1) * pageSize;
-    const { data, count, error } = await query.range(from, from + pageSize - 1);
-    if (error) throw error;
+   const from = (page - 1) * pageSize;
+const { data, count, error } = await query.range(from, from + pageSize - 1);
 
-    return { items: (data ?? []) as Subcategory[], total: count ?? 0, page, pageSize };
-  },
+if (error) throw error;
+
+const totalItems = count ?? 0;
+
+return {
+  items: (data ?? []) as Subcategory[],
+  page,
+  pageSize,
+  totalItems,
+  totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
+};
 
   async getById(id: string): Promise<Subcategory | null> {
     const supabase = createClient();

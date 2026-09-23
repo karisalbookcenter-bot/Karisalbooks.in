@@ -51,13 +51,13 @@ export async function listPublicBooks(
 
   const totalItems = count ?? 0;
 
-  return {
-    items: (data ?? []) as Book[],
-    page,
-    pageSize,
-    totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
-  };
+ return {
+  items: (data ?? []) as Book[],
+  page,
+  pageSize,
+  totalItems,
+  totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
+};
 }
 
 export async function getPublicBookBySlug(slug: string): Promise<Book | null> {
