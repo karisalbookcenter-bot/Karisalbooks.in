@@ -92,17 +92,63 @@ export function BookManagementOverview() {
   // (Sprint 11, Sprint 16) — fetched once, not re-fetched on every filter
   // change, since the full lists are small and only used for
   // name-resolution + dropdown/filter options here.
-  useEffect(() => {
-  authorService.list({ pageSize: 1000 }).then((r) => r.data && setAuthors(r.data.items));
-  publisherService.list({ pageSize: 1000 }).then((r) => r.data && setPublishers(r.data.items));
-  categoryService.listCategories({ pageSize: 1000 })
-.then((r) => {
-  console.log("CATEGORY RESPONSE:", r);
-  if (r.data) setCategories(r.data.items);
-});
-  subcategoryService
-    .listSubcategories({ pageSize: 1000 })
-    .then((r) => r.data && setSubcategories(r.data.items));
+ useEffect(() => {
+
+  async function loadDropdownData() {
+
+    const authorResult = await authorService.list({ pageSize: 1000 });
+    console.log("AUTHORS:", authorResult);
+
+    if (authorResult.data) {
+      setAuthors(authorResult.data.items);
+    }
+
+
+    const publisherResult = await publisherService.list({ pageSize: 1000 });
+    console.log("PUBLISHERS:", publisherResult);
+
+    if (publisherResult.data) {
+      setPublishers(publisherResult.data.items);
+    }
+
+
+    const categoryResult = await categoryService.listCategories({
+      pageSize: 1000,
+    });
+
+    console.log("CATEGORY RESULT:", categoryResult);
+
+
+    if (categoryResult.data) {
+      console.log(
+        "CATEGORY ITEMS:",
+        categoryResult.data.items
+      );
+
+      setCategories(categoryResult.data.items);
+    }
+
+
+    const subcategoryResult =
+      await subcategoryService.listSubcategories({
+        pageSize: 1000,
+      });
+
+    console.log(
+      "SUBCATEGORY RESULT:",
+      subcategoryResult
+    );
+
+
+    if (subcategoryResult.data) {
+      setSubcategories(subcategoryResult.data.items);
+    }
+
+  }
+
+
+  loadDropdownData();
+
 }, []);
 
   const handleDelete = async (book: Book) => {
