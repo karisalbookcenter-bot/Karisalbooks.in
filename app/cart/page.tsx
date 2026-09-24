@@ -105,6 +105,14 @@ export default function CartPage() {
               <h2 className="text-xl font-bold">
                 Total: {formatCurrency(total)}
               </h2>
+              <button
+  className="mt-4 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-white"
+  onClick={() => {
+    window.location.href = "/checkout";
+  }}
+>
+  Proceed to Checkout
+</button>
 
             </div>
 
