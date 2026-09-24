@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CartProvider } from "@/features/cart/context/CartProvider";
 
 export const metadata: Metadata = {
   title: "Bookery — Your Next Great Read",
@@ -14,7 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">{children}</body>
+      <body>
+  <CartProvider>
+    {children}
+  </CartProvider>
+</body>
     </html>
   );
 }
