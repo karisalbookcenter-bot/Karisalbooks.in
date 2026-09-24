@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -19,6 +19,8 @@ import type { Book } from "@/types/book.types";
 
 
 export default function BookDetailPage() {
+
+  const router = useRouter();
 
   const { addItem } = useCart();
 
@@ -83,6 +85,7 @@ export default function BookDetailPage() {
 
 
 
+
   if (loading) {
 
     return (
@@ -100,6 +103,8 @@ export default function BookDetailPage() {
     );
 
   }
+
+
 
 
 
@@ -136,7 +141,11 @@ export default function BookDetailPage() {
 
 
 
+
+
   const inStock = book.stock_quantity > 0;
+
+
 
 
 
@@ -145,6 +154,7 @@ export default function BookDetailPage() {
     <MainLayout>
 
       <div className="container grid gap-8 py-8 sm:grid-cols-[280px_1fr]">
+
 
 
         <div className="flex aspect-[2/3] items-center justify-center rounded-md bg-muted">
@@ -177,22 +187,30 @@ export default function BookDetailPage() {
 
 
 
+
         <div className="flex flex-col gap-3">
 
 
           <h1 className="text-3xl font-semibold">
+
             {book.title}
+
           </h1>
+
 
 
 
           {authorName && (
 
             <p className="text-muted-foreground">
+
               by {authorName}
+
             </p>
 
           )}
+
+
 
 
 
@@ -200,10 +218,14 @@ export default function BookDetailPage() {
           {publisherName && (
 
             <p className="text-sm text-muted-foreground">
+
               Published by {publisherName}
+
             </p>
 
           )}
+
+
 
 
 
@@ -213,6 +235,8 @@ export default function BookDetailPage() {
             {formatCurrency(book.price)}
 
           </p>
+
+
 
 
 
@@ -233,6 +257,8 @@ export default function BookDetailPage() {
 
 
           </p>
+
+
 
 
 
@@ -263,6 +289,9 @@ export default function BookDetailPage() {
                 });
 
 
+                router.push("/checkout");
+
+
               }}
 
             >
@@ -272,6 +301,8 @@ export default function BookDetailPage() {
             </button>
 
           )}
+
+
 
 
 
@@ -289,15 +320,19 @@ export default function BookDetailPage() {
 
 
 
+
+
           {book.description && (
 
             <div className="mt-4">
+
 
               <h2 className="mb-1 text-sm font-semibold">
 
                 Description
 
               </h2>
+
 
 
               <p className="text-sm text-muted-foreground">
@@ -310,6 +345,8 @@ export default function BookDetailPage() {
             </div>
 
           )}
+
+
 
 
 
