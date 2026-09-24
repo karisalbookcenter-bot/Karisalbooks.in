@@ -93,13 +93,17 @@ export function BookManagementOverview() {
   // change, since the full lists are small and only used for
   // name-resolution + dropdown/filter options here.
   useEffect(() => {
-    authorService.list({ pageSize: 1000 }).then((r) => r.data && setAuthors(r.data.items));
-    publisherService.list({ pageSize: 1000 }).then((r) => r.data && setPublishers(r.data.items));
-    categoryService.listCategories({ pageSize: 1000 })
+  authorService.list({ pageSize: 1000 }).then((r) => r.data && setAuthors(r.data.items));
+  publisherService.list({ pageSize: 1000 }).then((r) => r.data && setPublishers(r.data.items));
+  categoryService.listCategories({ pageSize: 1000 })
 .then((r) => {
   console.log("CATEGORY RESPONSE:", r);
   if (r.data) setCategories(r.data.items);
 });
+  subcategoryService
+    .listSubcategories({ pageSize: 1000 })
+    .then((r) => r.data && setSubcategories(r.data.items));
+}, []);
 
   const handleDelete = async (book: Book) => {
     await bookService.deleteBook(book.id);
