@@ -41,8 +41,9 @@ export async function createOrder(
 
 
   if (error) {
-    throw error;
-  }
+  console.error("ORDER INSERT ERROR:", error.message, error.details, error.hint);
+  throw new Error(error.message);
+}
 
 
   const orderItems = payload.items.map((item)=>({
@@ -61,8 +62,15 @@ export async function createOrder(
 
 
   if (itemError) {
-    throw itemError;
-  }
+  console.error(
+    "ORDER ITEMS INSERT ERROR:",
+    itemError.message,
+    itemError.details,
+    itemError.hint
+  );
+
+  throw new Error(itemError.message);
+}
 
 
   return order;
