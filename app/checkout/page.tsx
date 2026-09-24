@@ -74,11 +74,13 @@ export default function CheckoutPage() {
 
     } catch(error) {
 
-      console.error(error);
+  console.error("ORDER ERROR:", error);
 
-      alert("Order failed");
+  alert(
+    JSON.stringify(error)
+  );
 
-    }
+}
     finally {
 
       setLoading(false);
