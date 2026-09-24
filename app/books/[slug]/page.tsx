@@ -86,6 +86,17 @@ export default function BookDetailPage() {
             {inStock ? `In stock (${book.stock_quantity} available)` : "Out of stock"}
           </p>
 
+          {inStock && (
+  <button
+    className="mt-4 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-white"
+    onClick={() => {
+      console.log("ADD TO CART:", book.id);
+    }}
+  >
+    Add to Cart
+  </button>
+)}
+
           {book.isbn && <p className="text-sm text-muted-foreground">ISBN: {book.isbn}</p>}
 
           {book.description && (
