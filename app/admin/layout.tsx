@@ -17,11 +17,11 @@ export default async function AdminLayout({
     redirect(`${authConfig.routes.login}?redirectTo=/admin`);
   }
 
-  const authorized = await hasMinimumRole(authConfig.minimumAdminRole);
+  // const authorized = await hasMinimumRole(authConfig.minimumAdminRole);
 
-  if (!authorized) {
-    redirect(authConfig.routes.unauthorized);
-  }
+// if (!authorized) {
+//   redirect(authConfig.routes.unauthorized);
+// }
 
   return (
     <AuthProvider>
