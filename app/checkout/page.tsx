@@ -148,6 +148,17 @@ export default function CheckoutPage() {
             onChange={(e)=>setPincode(e.target.value)}
             required
           />
+<input
+  className="w-full rounded border p-3"
+  placeholder="Name"
+  autoComplete="name"
+  value={name}
+  onChange={(e)=>setName(e.target.value)}
+  required
+/>
+autoComplete="tel"
+autoComplete="street-address"
+autoComplete="postal-code"
 
 
           <button
