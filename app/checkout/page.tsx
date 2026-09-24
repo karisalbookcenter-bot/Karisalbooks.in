@@ -108,30 +108,33 @@ export default function CheckoutPage() {
 
 
           <input
-            className="w-full rounded border p-3"
-            placeholder="Name"
-            value={name}
-            onChange={(e)=>setName(e.target.value)}
-            required
-          />
+  className="w-full rounded border p-3"
+  placeholder="Name"
+  autoComplete="name"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  required
+/>
 
 
           <input
-            className="w-full rounded border p-3"
-            placeholder="Mobile"
-            value={mobile}
-            onChange={(e)=>setMobile(e.target.value)}
-            required
-          />
+  className="w-full rounded border p-3"
+  placeholder="Mobile"
+  autoComplete="tel"
+  value={mobile}
+  onChange={(e) => setMobile(e.target.value)}
+  required
+/>
 
 
-          <textarea
-            className="w-full rounded border p-3"
-            placeholder="Address"
-            value={address}
-            onChange={(e)=>setAddress(e.target.value)}
-            required
-          />
+          <input
+  className="w-full rounded border p-3"
+  placeholder="Address"
+  autoComplete="street-address"
+  value={address}
+  onChange={(e) => setAddress(e.target.value)}
+  required
+/>
 
 
           <input
@@ -144,20 +147,15 @@ export default function CheckoutPage() {
 
 
           <input
-            className="w-full rounded border p-3"
-            placeholder="Pincode"
-            value={pincode}
-            onChange={(e)=>setPincode(e.target.value)}
-            required
-          />
-<input
   className="w-full rounded border p-3"
-  placeholder="Name"
-  autoComplete="name"
-  value={name}
-  onChange={(e)=>setName(e.target.value)}
+  placeholder="Pincode"
+  autoComplete="postal-code"
+  value={pincode}
+  onChange={(e) => setPincode(e.target.value)}
   required
 />
+
+
 autoComplete="tel"
 autoComplete="street-address"
 autoComplete="postal-code"
