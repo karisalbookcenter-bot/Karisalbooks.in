@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { MainLayout } from "@/components/layout/MainLayout";
+
 import {
   getAdminOrders,
   updateOrderStatus,
 } from "@/features/orders/services/admin-order.service";
+
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 
 
@@ -31,10 +34,13 @@ type Order = {
 };
 
 
+
 export default function AdminOrdersPage() {
+
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
 
 
   async function loadOrders(){
@@ -45,12 +51,14 @@ export default function AdminOrdersPage() {
 
       setOrders(data as Order[]);
 
+
     } catch(error){
 
       console.error(
         "LOAD ORDERS ERROR:",
-        error
+        JSON.stringify(error,null,2)
       );
+
 
     } finally {
 
@@ -62,11 +70,14 @@ export default function AdminOrdersPage() {
 
 
 
+
   useEffect(()=>{
 
     loadOrders();
 
   },[]);
+
+
 
 
 
@@ -77,34 +88,47 @@ export default function AdminOrdersPage() {
 
     try {
 
+
       await updateOrderStatus(
         id,
         status
       );
 
 
+
       setOrders((current)=>
+
         current.map((order)=>
+
           order.id === id
+
           ? {
               ...order,
               status
             }
+
           : order
+
         )
+
       );
 
 
-    catch(error){
+    } catch(error){
 
- console.error(
-   "LOAD ORDERS ERROR:",
-   JSON.stringify(error,null,2)
- );
 
-}
+      console.error(
+        "STATUS UPDATE ERROR:",
+        JSON.stringify(error,null,2)
+      );
+
+
+    }
 
   }
+
+
+
 
 
 
@@ -115,7 +139,9 @@ export default function AdminOrdersPage() {
       <MainLayout>
 
         <div className="container py-10">
+
           Loading orders...
+
         </div>
 
       </MainLayout>
@@ -126,189 +152,297 @@ export default function AdminOrdersPage() {
 
 
 
+
+
   return (
 
     <MainLayout>
 
+
       <div className="container py-10">
 
+
         <h1 className="mb-8 text-3xl font-bold">
+
           Orders Management
+
         </h1>
 
 
+
         {
-          orders.length === 0 ? (
+          orders.length === 0 ?
+
+
+          (
 
             <p className="text-muted-foreground">
+
               No orders found.
+
             </p>
 
-          ) : (
+          )
 
 
-            <div className="space-y-6">
+          :
 
 
-            {
-              orders.map((order)=>(
+          (
+
+          <div className="space-y-6">
 
 
-                <div
-                  key={order.id}
-                  className="rounded-lg border p-6 space-y-4"
-                >
+          {
 
-<div className="mb-2">
-
-  <p className="text-sm font-semibold text-primary">
-    Order #{order.id.slice(0,8)}
-  </p>
-
-  <p className="text-xs text-muted-foreground">
-    {new Date(order.created_at).toLocaleString()}
-  </p>
-
-</div>
-
-                  <div>
-
-                    <h2 className="text-xl font-semibold">
-                      {order.customer_name}
-                    </h2>
+          orders.map((order)=>(
 
 
-                    <p>
-                      Mobile: {order.mobile}
-                    </p>
+            <div
 
+              key={order.id}
 
-                    <p>
-                      Address:
-                      {" "}
-                      {order.address},
-                      {" "}
-                      {order.district}
-                      {" "}
-                      - {order.pincode}
-                    </p>
+              className="rounded-lg border p-6 space-y-4"
 
-
-                  </div>
+            >
 
 
 
-                  <div>
+              <div>
 
-                    <h3 className="font-semibold">
-                      Items
-                    </h3>
+                <p className="text-sm font-semibold">
 
+                  Order #{order.id.slice(0,8)}
 
-                    {
-                      order.order_items?.map((item)=>(
-
-                        <div
-                          key={item.id}
-                          className="flex justify-between border-b py-2"
-                        >
-
-                          <span>
-                            {item.title}
-                            {" "}
-                            x {item.quantity}
-                          </span>
+                </p>
 
 
-                          <span>
-                            {
-                              formatCurrency(
-                                item.price * item.quantity
-                              )
-                            }
-                          </span>
+                <p className="text-xs text-muted-foreground">
+
+                  {new Date(order.created_at).toLocaleString()}
+
+                </p>
 
 
-                        </div>
-
-                      ))
-                    }
-
-
-                  </div>
+              </div>
 
 
 
 
-                  <div className="flex items-center justify-between">
+
+              <div>
 
 
-                    <p className="text-lg font-bold">
+                <h2 className="text-xl font-semibold">
 
-                      Total:
-                      {" "}
-                      {formatCurrency(
-                        order.total_amount
-                      )}
+                  {order.customer_name}
 
-                    </p>
+                </h2>
 
 
+                <p>
 
-                    <select
+                  Mobile: {order.mobile}
 
-                      value={order.status}
+                </p>
 
-                      onChange={(e)=>
-                        changeStatus(
-                          order.id,
-                          e.target.value
+
+                <p>
+
+                  Address:
+
+                  {" "}
+
+                  {order.address},
+
+                  {" "}
+
+                  {order.district}
+
+                  {" "}
+
+                  - {order.pincode}
+
+                </p>
+
+
+              </div>
+
+
+
+
+
+
+
+              <div>
+
+
+                <h3 className="font-semibold">
+
+                  Items
+
+                </h3>
+
+
+
+                {
+
+                order.order_items?.map((item)=>(
+
+
+                  <div
+
+                    key={item.id}
+
+                    className="flex justify-between border-b py-2"
+
+                  >
+
+
+                    <span>
+
+                      {item.title}
+
+                      {" x "}
+
+                      {item.quantity}
+
+                    </span>
+
+
+
+                    <span>
+
+                      {
+                        formatCurrency(
+                          item.price * item.quantity
                         )
                       }
 
-                      className="rounded border px-3 py-2"
-
-                    >
-
-                      <option value="pending">
-                        Pending
-                      </option>
-
-                      <option value="processing">
-                        Processing
-                      </option>
-
-                      <option value="shipped">
-                        Shipped
-                      </option>
-
-                      <option value="delivered">
-                        Delivered
-                      </option>
-
-                      <option value="cancelled">
-                        Cancelled
-                      </option>
-
-
-                    </select>
+                    </span>
 
 
                   </div>
 
 
-                </div>
+                ))
+
+                }
 
 
-              ))
-            }
+              </div>
+
+
+
+
+
+
+
+              <div className="flex justify-between items-center">
+
+
+                <p className="font-bold text-lg">
+
+
+                  Total:
+
+                  {" "}
+
+                  {
+                    formatCurrency(
+                      order.total_amount
+                    )
+                  }
+
+
+                </p>
+
+
+
+
+
+
+                <select
+
+                  value={order.status}
+
+
+                  onChange={(e)=>
+
+                    changeStatus(
+                      order.id,
+                      e.target.value
+                    )
+
+                  }
+
+
+                  className="border rounded px-3 py-2"
+
+                >
+
+
+                  <option value="pending">
+
+                    Pending
+
+                  </option>
+
+
+                  <option value="processing">
+
+                    Processing
+
+                  </option>
+
+
+                  <option value="shipped">
+
+                    Shipped
+
+                  </option>
+
+
+                  <option value="delivered">
+
+                    Delivered
+
+                  </option>
+
+
+                  <option value="cancelled">
+
+                    Cancelled
+
+                  </option>
+
+
+
+                </select>
+
+
+
+              </div>
+
+
+
 
 
             </div>
 
 
+          ))
+
+          }
+
+
+
+          </div>
+
           )
+
         }
+
 
 
       </div>
@@ -316,6 +450,8 @@ export default function AdminOrdersPage() {
 
     </MainLayout>
 
+
   );
+
 
 }
