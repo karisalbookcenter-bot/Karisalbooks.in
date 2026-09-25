@@ -7,7 +7,7 @@ export function StatCardGrid({
   cards = DASHBOARD_STAT_CARDS,
   stats,
   loading,
-  className,
+  className
 }: StatCardGridProps) {
   return (
     <div
