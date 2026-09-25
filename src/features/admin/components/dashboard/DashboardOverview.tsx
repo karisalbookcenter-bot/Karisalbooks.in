@@ -46,7 +46,6 @@ export function DashboardOverview({
 
         setStats(data);
 
-
       } catch (error) {
 
         console.error(
@@ -69,26 +68,19 @@ export function DashboardOverview({
 
 
 
-
   if (loading) {
 
     return (
-
       <PageContainer
         title="Dashboard"
         description="Overview of your store."
         className={className}
       >
-
         <DashboardSkeleton />
-
       </PageContainer>
-
     );
 
   }
-
-
 
 
 
@@ -100,41 +92,25 @@ export function DashboardOverview({
       className={className}
     >
 
-
       <div className="flex flex-col gap-6">
 
 
         <WelcomeBanner user={user} />
 
 
-
-       export interface DashboardStats {
-  totalBooks: number;
-  totalOrders: number;
-  totalCustomers: number;
-  totalRevenue: number;
-  pendingOrders: number;
-}
-
-export interface StatCardGridProps {
-  cards?: StatCardDefinition[];
-  stats?: DashboardStats;
-  loading?: boolean;
-  className?: string;
-}
+        <StatCardGrid
+          stats={stats}
+          loading={statsLoading}
+        />
 
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-
           <QuickActions />
-
 
           <SystemStatus />
 
-
         </div>
-
 
 
         <RecentActivity />
