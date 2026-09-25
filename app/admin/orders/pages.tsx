@@ -95,14 +95,14 @@ export default function AdminOrdersPage() {
       );
 
 
-    } catch(error){
+    catch(error){
 
-      console.error(
-        "STATUS UPDATE ERROR:",
-        error
-      );
+ console.error(
+   "LOAD ORDERS ERROR:",
+   JSON.stringify(error,null,2)
+ );
 
-    }
+}
 
   }
 
