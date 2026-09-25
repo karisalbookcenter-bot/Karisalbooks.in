@@ -1,27 +1,444 @@
-import type { NextRequest } from "next/server";
-import { handleAuthMiddleware } from "@/features/auth/middleware/auth.middleware";
+"use client";
 
-/**
- * Root middleware entry point — Sprint 05 (Authentication Foundation).
- *
- * Kept deliberately thin: all actual logic lives in
- * `@/features/auth/middleware/auth.middleware`. If a second, unrelated
- * kind of middleware is ever needed (e.g. geo-redirects), it composes here
- * rather than growing this file into a monolith.
- */
-export async function middleware(request: NextRequest) {
-  return handleAuthMiddleware(request);
-}
+import { useEffect, useState } from "react";
 
-export const config = {
-  /**
-   * Run on every route except static assets and Next.js internals, so the
-   * Supabase session cookie is refreshed on any real navigation. This is
-   * intentionally broad — it does NOT mean every route is protected; see
-   * `authConfig.protectedRoutePrefixes` / `adminRoutePrefixes` for which
-   * paths actually enforce a redirect.
-   */
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+import { MainLayout } from "@/components/layout/MainLayout";
+
+import {
+  getAdminOrders,
+  updateOrderStatus,
+} from "@/features/orders/services/admin-order.service";
+
+import { formatCurrency } from "@/lib/helpers/format.helpers";
+
+
+type OrderItem = {
+  id: string;
+  title: string;
+  price: number;
+  quantity: number;
 };
+
+
+type Order = {
+  id: string;
+  customer_name: string;
+  mobile: string;
+  address: string;
+  district: string;
+  pincode: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  order_items: OrderItem[];
+};
+
+
+
+export default function AdminOrdersPage() {
+
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+
+
+  async function loadOrders() {
+
+    try {
+
+      const data = await getAdminOrders();
+
+      setOrders(data as Order[]);
+
+
+    } catch (error) {
+
+      console.error(
+        "LOAD ORDERS ERROR:",
+        JSON.stringify(error, null, 2)
+      );
+
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+
+
+  useEffect(() => {
+
+    loadOrders();
+
+  }, []);
+
+
+
+
+  async function changeStatus(
+    id: string,
+    status: string
+  ) {
+
+    try {
+
+
+      await updateOrderStatus(
+        id,
+        status
+      );
+
+
+      setOrders((current) =>
+        current.map((order) =>
+          order.id === id
+            ? {
+                ...order,
+                status,
+              }
+            : order
+        )
+      );
+
+
+    } catch (error) {
+
+
+      console.error(
+        "STATUS UPDATE ERROR:",
+        JSON.stringify(error, null, 2)
+      );
+
+
+    }
+
+  }
+
+
+
+
+  if (loading) {
+
+    return (
+
+      <MainLayout>
+
+        <div className="container py-10">
+
+          Loading orders...
+
+        </div>
+
+      </MainLayout>
+
+    );
+
+  }
+
+
+
+
+
+  return (
+
+    <MainLayout>
+
+
+      <div className="container py-10">
+
+
+        <h1 className="mb-8 text-3xl font-bold">
+
+          Orders Management
+
+        </h1>
+
+
+
+
+        {
+          orders.length === 0 ? (
+
+            <p className="text-muted-foreground">
+
+              No orders found.
+
+            </p>
+
+
+          ) : (
+
+
+            <div className="space-y-6">
+
+
+              {
+                orders.map((order) => (
+
+
+                  <div
+
+                    key={order.id}
+
+                    className="rounded-lg border p-6 space-y-4"
+
+                  >
+
+
+
+                    <div>
+
+                      <p className="text-sm font-semibold">
+
+                        Order #{order.id.slice(0, 8)}
+
+                      </p>
+
+
+                      <p className="text-xs text-muted-foreground">
+
+                        {
+                          new Date(
+                            order.created_at
+                          ).toLocaleString()
+                        }
+
+                      </p>
+
+
+                    </div>
+
+
+
+
+
+                    <div>
+
+
+                      <h2 className="text-xl font-semibold">
+
+                        {order.customer_name}
+
+                      </h2>
+
+
+                      <p>
+
+                        Mobile: {order.mobile}
+
+                      </p>
+
+
+                      <p>
+
+                        Address:
+
+                        {" "}
+
+                        {order.address},
+
+                        {" "}
+
+                        {order.district}
+
+                        {" "}
+
+                        - {order.pincode}
+
+                      </p>
+
+
+                    </div>
+
+
+
+
+
+
+                    <div>
+
+
+                      <h3 className="font-semibold">
+
+                        Items
+
+                      </h3>
+
+
+
+                      {
+
+                        order.order_items?.map((item) => (
+
+
+                          <div
+
+                            key={item.id}
+
+                            className="flex justify-between border-b py-2"
+
+                          >
+
+
+                            <span>
+
+                              {item.title}
+
+                              {" x "}
+
+                              {item.quantity}
+
+                            </span>
+
+
+
+                            <span>
+
+                              {
+                                formatCurrency(
+                                  item.price * item.quantity
+                                )
+                              }
+
+                            </span>
+
+
+                          </div>
+
+
+                        ))
+
+                      }
+
+
+                    </div>
+
+
+
+
+
+
+
+                    <div className="flex justify-between items-center">
+
+
+                      <p className="font-bold text-lg">
+
+
+                        Total:
+
+                        {" "}
+
+                        {
+                          formatCurrency(
+                            order.total_amount
+                          )
+                        }
+
+
+                      </p>
+
+
+
+
+
+
+                      <select
+
+
+                        value={order.status}
+
+
+                        onChange={(e) =>
+
+                          changeStatus(
+                            order.id,
+                            e.target.value
+                          )
+
+                        }
+
+
+                        className="border rounded px-3 py-2"
+
+
+                      >
+
+
+                        <option value="pending">
+
+                          Pending
+
+                        </option>
+
+
+                        <option value="processing">
+
+                          Processing
+
+                        </option>
+
+
+                        <option value="shipped">
+
+                          Shipped
+
+                        </option>
+
+
+                        <option value="delivered">
+
+                          Delivered
+
+                        </option>
+
+
+                        <option value="cancelled">
+
+                          Cancelled
+
+                        </option>
+
+
+                      </select>
+
+
+
+                    </div>
+
+
+
+
+                  </div>
+
+
+                ))
+
+              }
+
+
+
+            </div>
+
+
+          )
+
+        }
+
+
+
+
+      </div>
+
+
+    </MainLayout>
+
+
+  );
+
+
+}
