@@ -6,6 +6,8 @@ import * as categoryService from "@/features/categories/services/category.servic
 import * as subcategoryService from "@/features/subcategories/services/subcategory.service";
 import type { Category } from "@/types/category.types";
 import type { Subcategory } from "@/types/subcategory.types";
+import { SubcategoryManagementOverview } from "@/features/admin/components/subcategories";
+
 
 /**
  * app/admin/subcategories/page.tsx — Sprint 17. Same reasoning as
@@ -15,6 +17,8 @@ import type { Subcategory } from "@/types/subcategory.types";
  * own documented "Category Linkage Strategy."
  */
 export default function AdminSubcategoriesPage() {
+  return <SubcategoryManagementOverview />;
+}
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
