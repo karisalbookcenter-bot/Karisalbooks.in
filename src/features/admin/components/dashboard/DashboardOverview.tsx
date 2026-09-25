@@ -108,11 +108,20 @@ export function DashboardOverview({
 
 
 
-        <StatCardGrid
-  stats={stats}
-  loading={statsLoading}
-/>
+       export interface DashboardStats {
+  totalBooks: number;
+  totalOrders: number;
+  totalCustomers: number;
+  totalRevenue: number;
+  pendingOrders: number;
+}
 
+export interface StatCardGridProps {
+  cards?: StatCardDefinition[];
+  stats?: DashboardStats;
+  loading?: boolean;
+  className?: string;
+}
 
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
