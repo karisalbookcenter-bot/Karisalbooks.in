@@ -28,10 +28,7 @@ export async function getAdminOrders() {
 
   if (error) {
 
-    console.error(
-      "ADMIN ORDERS FETCH ERROR:",
-      error.message
-    );
+    console.error("ADMIN ORDERS ERROR:", error);
 
     throw new Error(error.message);
 

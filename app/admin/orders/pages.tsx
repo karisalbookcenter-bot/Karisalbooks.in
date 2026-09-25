@@ -159,6 +159,17 @@ export default function AdminOrdersPage() {
                   className="rounded-lg border p-6 space-y-4"
                 >
 
+<div className="mb-2">
+
+  <p className="text-sm font-semibold text-primary">
+    Order #{order.id.slice(0,8)}
+  </p>
+
+  <p className="text-xs text-muted-foreground">
+    {new Date(order.created_at).toLocaleString()}
+  </p>
+
+</div>
 
                   <div>
 
