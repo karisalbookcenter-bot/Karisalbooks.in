@@ -7,7 +7,7 @@ export function StatCardGrid({
   cards = DASHBOARD_STAT_CARDS,
   stats,
   loading,
-  className
+  className,
 }: StatCardGridProps) {
   return (
     <div
@@ -23,6 +23,10 @@ export function StatCardGrid({
           switch (card.id) {
             case "total-books":
               value = stats.totalBooks.toString();
+              break;
+
+            case "categories":
+              value = "—";
               break;
 
             case "orders":
