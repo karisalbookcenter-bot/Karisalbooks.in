@@ -10,6 +10,8 @@ export async function getDashboardStats() {
     ordersResult,
     customersResult,
     revenueResult,
+    pendingOrdersResult,
+    lowStockResult,
   ] = await Promise.all([
 
 
@@ -36,6 +38,20 @@ export async function getDashboardStats() {
       .select("total_amount"),
 
 
+
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+
+
+
+    supabase
+      .from("books")
+      .select("id", { count: "exact", head: true })
+      .lt("stock_quantity", 5),
+
+
   ]);
 
 
@@ -51,20 +67,34 @@ export async function getDashboardStats() {
 
   return {
 
+
     totalBooks:
       booksResult.count || 0,
+
 
 
     totalOrders:
       ordersResult.count || 0,
 
 
+
     totalCustomers:
       customersResult.count || 0,
 
 
+
     totalRevenue:
       revenue,
+
+
+
+    pendingOrders:
+      pendingOrdersResult.count || 0,
+
+
+
+    lowStock:
+      lowStockResult.count || 0,
 
 
   };
