@@ -109,9 +109,9 @@ export function DashboardOverview({
 
 
         <StatCardGrid
-          loading={statsLoading}
-          stats={stats}
-        />
+  stats={stats}
+  loading={statsLoading}
+/>
 
 
 
