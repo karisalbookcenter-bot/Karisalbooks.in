@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { OrderDetailActions } from "./OrderDetailActions";
 
 interface PageProps {
   params: Promise<{
@@ -34,11 +35,9 @@ export default async function OrderDetailPage({
     .single();
 
 
-
   if (error || !order) {
     notFound();
   }
-
 
 
   return (
@@ -52,7 +51,7 @@ export default async function OrderDetailPage({
 
 
 
-      <div className="rounded-lg border p-5 space-y-3">
+      <div className="rounded-lg border p-5 space-y-4">
 
 
         <h2 className="text-xl font-semibold">
@@ -75,17 +74,26 @@ export default async function OrderDetailPage({
         </p>
 
 
-        <p className="font-bold">
+        <p className="font-bold text-xl">
           Total: ₹{order.total_amount}
         </p>
 
 
-        <p>
-          Status: {order.status}
-        </p>
+        <div>
+          <p className="mb-2 font-semibold">
+            Order Status
+          </p>
+
+          <OrderDetailActions
+            id={order.id}
+            status={order.status}
+          />
+
+        </div>
 
 
       </div>
+
 
 
 
@@ -99,67 +107,72 @@ export default async function OrderDetailPage({
 
 
 
-        <table className="w-full border">
+        <div className="overflow-x-auto">
+
+          <table className="w-full border">
 
 
-          <thead>
+            <thead>
 
-            <tr className="border-b bg-muted">
-
-              <th className="p-2 text-left">
-                Book
-              </th>
+              <tr className="border-b bg-muted">
 
 
-              <th className="p-2">
-                Quantity
-              </th>
+                <th className="p-2 text-left">
+                  Book
+                </th>
 
 
-              <th className="p-2">
-                Price
-              </th>
+                <th className="p-2">
+                  Quantity
+                </th>
 
 
-            </tr>
-
-          </thead>
-
-
-
-          <tbody>
-
-
-            {order.order_items?.map((item: any) => (
-
-              <tr key={item.id}>
-
-
-                <td className="border-t p-2">
-                  {item.title}
-                </td>
-
-
-                <td className="border-t p-2 text-center">
-                  {item.quantity}
-                </td>
-
-
-                <td className="border-t p-2 text-center">
-                  ₹{item.price}
-                </td>
+                <th className="p-2">
+                  Price
+                </th>
 
 
               </tr>
 
-
-            ))}
-
-
-          </tbody>
+            </thead>
 
 
-        </table>
+
+            <tbody>
+
+
+              {order.order_items?.map((item: any) => (
+
+                <tr key={item.id}>
+
+
+                  <td className="border-t p-2">
+                    {item.title}
+                  </td>
+
+
+                  <td className="border-t p-2 text-center">
+                    {item.quantity}
+                  </td>
+
+
+                  <td className="border-t p-2 text-center">
+                    ₹{item.price}
+                  </td>
+
+
+                </tr>
+
+
+              ))}
+
+
+            </tbody>
+
+
+          </table>
+
+        </div>
 
 
       </div>

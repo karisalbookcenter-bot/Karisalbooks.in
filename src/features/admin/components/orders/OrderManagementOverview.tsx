@@ -385,13 +385,6 @@ export function OrderManagementOverview() {
 
               </p>
 
-<Link
-  href={`/admin/orders/${order.id}`}
-  className="mt-3 inline-block rounded border px-4 py-2 text-sm font-medium hover:bg-muted"
->
-  View Details
-</Link>
-
 
 
 
