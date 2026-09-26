@@ -1,26 +1,19 @@
 import { notFound } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/server";
-import { OrderStatusBadge } from "@/features/admin/components/orders/OrderStatusBadge";
 
-
-type PageProps = {
+interface PageProps {
   params: Promise<{
     id: string;
   }>;
-};
-
+}
 
 export default async function OrderDetailPage({
   params,
 }: PageProps) {
 
-
   const { id } = await params;
 
-
-  const supabase = createClient();
-
+  const supabase = await createClient();
 
 
   const { data: order, error } = await supabase
@@ -53,29 +46,9 @@ export default async function OrderDetailPage({
     <div className="space-y-6 p-6">
 
 
-      <div className="flex items-center justify-between">
-
-        <div>
-
-          <h1 className="text-3xl font-bold">
-            Order Details
-          </h1>
-
-          <p className="text-sm text-muted-foreground">
-            Order ID: {order.id}
-          </p>
-
-        </div>
-
-
-        <OrderStatusBadge
-          status={order.status}
-        />
-
-
-      </div>
-
-
+      <h1 className="text-3xl font-bold">
+        Order Details
+      </h1>
 
 
 
@@ -83,13 +56,8 @@ export default async function OrderDetailPage({
 
 
         <h2 className="text-xl font-semibold">
-          Customer Details
+          {order.customer_name}
         </h2>
-
-
-        <p>
-          Name: {order.customer_name}
-        </p>
 
 
         <p>
@@ -107,9 +75,17 @@ export default async function OrderDetailPage({
         </p>
 
 
+        <p className="font-bold">
+          Total: ₹{order.total_amount}
+        </p>
+
+
+        <p>
+          Status: {order.status}
+        </p>
+
+
       </div>
-
-
 
 
 
@@ -123,116 +99,74 @@ export default async function OrderDetailPage({
 
 
 
-        <div className="overflow-x-auto">
+        <table className="w-full border">
 
 
-          <table className="w-full border">
+          <thead>
+
+            <tr className="border-b bg-muted">
+
+              <th className="p-2 text-left">
+                Book
+              </th>
 
 
-            <thead>
-
-              <tr className="border-b bg-muted">
-
-                <th className="p-3 text-left">
-                  Book
-                </th>
+              <th className="p-2">
+                Quantity
+              </th>
 
 
-                <th className="p-3">
-                  Quantity
-                </th>
+              <th className="p-2">
+                Price
+              </th>
 
 
-                <th className="p-3">
-                  Price
-                </th>
+            </tr>
+
+          </thead>
 
 
-                <th className="p-3">
-                  Total
-                </th>
+
+          <tbody>
+
+
+            {order.order_items?.map((item: any) => (
+
+              <tr key={item.id}>
+
+
+                <td className="border-t p-2">
+                  {item.title}
+                </td>
+
+
+                <td className="border-t p-2 text-center">
+                  {item.quantity}
+                </td>
+
+
+                <td className="border-t p-2 text-center">
+                  ₹{item.price}
+                </td>
 
 
               </tr>
 
-            </thead>
+
+            ))}
 
 
-
-            <tbody>
-
-
-              {order.order_items?.map(
-                (item: {
-                  id: string;
-                  title: string;
-                  quantity: number;
-                  price: number;
-                }) => (
-
-                <tr key={item.id}>
+          </tbody>
 
 
-                  <td className="border-t p-3">
-                    {item.title}
-                  </td>
-
-
-                  <td className="border-t p-3 text-center">
-                    {item.quantity}
-                  </td>
-
-
-                  <td className="border-t p-3 text-center">
-                    ₹{item.price}
-                  </td>
-
-
-                  <td className="border-t p-3 text-center">
-                    ₹{item.price * item.quantity}
-                  </td>
-
-
-                </tr>
-
-              ))}
-
-
-
-            </tbody>
-
-
-          </table>
-
-
-        </div>
+        </table>
 
 
       </div>
-
-
-
-
-
-
-      <div className="rounded-lg border p-5">
-
-
-        <h2 className="text-xl font-semibold">
-          Payment Summary
-        </h2>
-
-
-        <p className="mt-3 text-2xl font-bold">
-          ₹{order.total_amount}
-        </p>
-
-
-      </div>
-
 
 
     </div>
 
   );
+
 }
