@@ -9,6 +9,14 @@ import {
 } from "@/features/orders/admin-order.service";
 
 
+type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
+
+
 type OrderItem = {
   id: string;
   title: string;
@@ -25,7 +33,7 @@ type Order = {
   district: string;
   pincode: string;
   total_amount: number;
-  status: string;
+  status: OrderStatus;
   created_at: string;
   order_items: OrderItem[];
 };
@@ -41,11 +49,14 @@ const ORDER_STATUS = [
 ] as const;
 
 
+
 export function OrderManagementOverview() {
 
 
   const [orders, setOrders] = useState<Order[]>([]);
+
   const [loading, setLoading] = useState(true);
+
 
   const [search, setSearch] = useState("");
 
@@ -54,7 +65,7 @@ export function OrderManagementOverview() {
 
 
 
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async()=>{
 
     try {
 
@@ -79,7 +90,8 @@ export function OrderManagementOverview() {
 
     }
 
-  }, []);
+
+  },[]);
 
 
 
@@ -95,7 +107,7 @@ export function OrderManagementOverview() {
 
   async function handleStatusChange(
     id:string,
-    status:string
+    status:OrderStatus
   ){
 
     try {
@@ -107,6 +119,7 @@ export function OrderManagementOverview() {
       );
 
 
+
       setOrders((prev)=>
         prev.map((order)=>
           order.id === id
@@ -114,18 +127,19 @@ export function OrderManagementOverview() {
               ...order,
               status,
             }
-          : order
+          :
+            order
         )
       );
 
 
-    } catch(error){
+
+    }catch(error){
 
       console.error(
         "STATUS UPDATE ERROR:",
         error
       );
-
 
       alert(
         "Unable to update order"
@@ -139,13 +153,16 @@ export function OrderManagementOverview() {
 
 
 
+
   const filteredOrders = orders.filter((order)=>{
 
 
     const searchMatch =
       order.customer_name
       .toLowerCase()
-      .includes(search.toLowerCase())
+      .includes(
+        search.toLowerCase()
+      )
       ||
       order.mobile.includes(search);
 
@@ -158,10 +175,14 @@ export function OrderManagementOverview() {
 
 
 
-    return searchMatch && statusMatch;
+    return (
+      searchMatch &&
+      statusMatch
+    );
 
 
   });
+
 
 
 
@@ -185,6 +206,7 @@ export function OrderManagementOverview() {
 
 
 
+
   return (
 
     <div className="space-y-6 p-6">
@@ -193,6 +215,7 @@ export function OrderManagementOverview() {
       <h1 className="text-3xl font-bold">
         Orders
       </h1>
+
 
 
 
@@ -225,7 +248,8 @@ export function OrderManagementOverview() {
 
           onChange={(e)=>
             setStatusFilter(
-              e.target.value as (typeof ORDER_STATUS)[number]
+              e.target.value as
+              (typeof ORDER_STATUS)[number]
             )
           }
 
@@ -254,6 +278,7 @@ export function OrderManagementOverview() {
 
 
 
+
       {filteredOrders.length === 0 && (
 
         <div className="rounded-lg border p-8 text-center">
@@ -263,6 +288,7 @@ export function OrderManagementOverview() {
         </div>
 
       )}
+
 
 
 
@@ -282,7 +308,10 @@ export function OrderManagementOverview() {
 
 
 
+
           <div className="flex flex-col justify-between gap-4 md:flex-row">
+
+
 
 
 
@@ -315,15 +344,21 @@ export function OrderManagementOverview() {
 
 
 
+
               <p className="text-sm text-muted-foreground">
 
-                {new Date(order.created_at)
-                .toLocaleDateString("en-IN")}
+                {new Date(
+                  order.created_at
+                ).toLocaleDateString(
+                  "en-IN"
+                )}
 
               </p>
 
 
+
             </div>
+
 
 
 
@@ -349,6 +384,7 @@ export function OrderManagementOverview() {
 
 
 
+
               <select
 
                 className="mt-3 rounded border px-3 py-2"
@@ -358,32 +394,27 @@ export function OrderManagementOverview() {
                 onChange={(e)=>
                   handleStatusChange(
                     order.id,
-                    e.target.value
+                    e.target.value as OrderStatus
                   )
                 }
 
               >
 
-
                 <option value="pending">
                   Pending
                 </option>
-
 
                 <option value="confirmed">
                   Confirmed
                 </option>
 
-
                 <option value="shipped">
                   Shipped
                 </option>
 
-
                 <option value="delivered">
                   Delivered
                 </option>
-
 
                 <option value="cancelled">
                   Cancelled
@@ -393,10 +424,13 @@ export function OrderManagementOverview() {
               </select>
 
 
+
             </div>
 
 
+
           </div>
+
 
 
 
@@ -407,83 +441,87 @@ export function OrderManagementOverview() {
           <div className="overflow-x-auto">
 
 
-          <table className="w-full border">
+            <table className="w-full border">
 
 
-            <thead>
+              <thead>
+
+                <tr className="border-b bg-muted">
 
 
-              <tr className="border-b bg-muted">
+                  <th className="p-2 text-left">
+                    Book
+                  </th>
 
 
-                <th className="p-2 text-left">
-                  Book
-                </th>
+                  <th className="p-2">
+                    Qty
+                  </th>
 
 
-                <th className="p-2">
-                  Qty
-                </th>
-
-
-                <th className="p-2">
-                  Price
-                </th>
-
-
-              </tr>
-
-
-            </thead>
-
-
-
-            <tbody>
-
-
-              {order.order_items?.map((item)=>(
-
-
-                <tr key={item.id}>
-
-
-                  <td className="border-t p-2">
-
-                    {item.title}
-
-                  </td>
-
-
-
-                  <td className="border-t p-2 text-center">
-
-                    {item.quantity}
-
-                  </td>
-
-
-
-                  <td className="border-t p-2 text-center">
-
-                    ₹{item.price}
-
-                  </td>
+                  <th className="p-2">
+                    Price
+                  </th>
 
 
                 </tr>
 
-
-              ))}
-
+              </thead>
 
 
-            </tbody>
 
 
-          </table>
+              <tbody>
+
+
+                {order.order_items?.map((item)=>(
+
+
+                  <tr
+                    key={item.id}
+                  >
+
+
+                    <td className="border-t p-2">
+
+                      {item.title}
+
+                    </td>
+
+
+
+                    <td className="border-t p-2 text-center">
+
+                      {item.quantity}
+
+                    </td>
+
+
+
+                    <td className="border-t p-2 text-center">
+
+                      ₹{item.price}
+
+                    </td>
+
+
+
+                  </tr>
+
+
+                ))}
+
+
+              </tbody>
+
+
+
+            </table>
 
 
           </div>
+
+
 
 
 
@@ -491,6 +529,7 @@ export function OrderManagementOverview() {
 
 
       ))}
+
 
 
 
