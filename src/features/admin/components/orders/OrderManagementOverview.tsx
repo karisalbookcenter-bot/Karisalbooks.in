@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { OrderStatusBadge } from "./OrderStatusBadge";
 
 import {
   getAdminOrders,
   updateOrderStatus,
 } from "@/features/orders/admin-order.service";
+
 
 type OrderItem = {
   id: string;
@@ -13,6 +15,7 @@ type OrderItem = {
   quantity: number;
   price: number;
 };
+
 
 type Order = {
   id: string;
@@ -27,6 +30,7 @@ type Order = {
   order_items: OrderItem[];
 };
 
+
 const ORDER_STATUS = [
   "all",
   "pending",
@@ -36,61 +40,92 @@ const ORDER_STATUS = [
   "cancelled",
 ] as const;
 
+
 export function OrderManagementOverview() {
+
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+
   const [statusFilter, setStatusFilter] =
     useState<(typeof ORDER_STATUS)[number]>("all");
 
 
+
   const loadOrders = useCallback(async () => {
+
     try {
+
       setLoading(true);
 
       const data = await getAdminOrders();
 
       setOrders(data as Order[]);
 
-    } catch (error) {
+
+    } catch(error){
 
       console.error(
         "ORDER LOAD ERROR:",
         error
       );
 
+
     } finally {
 
       setLoading(false);
 
     }
+
   }, []);
 
 
-  useEffect(() => {
+
+  useEffect(()=>{
+
     loadOrders();
-  }, [loadOrders]);
+
+  },[loadOrders]);
+
+
 
 
 
   async function handleStatusChange(
-    id: string,
-    status: string
-  ) {
+    id:string,
+    status:string
+  ){
 
     try {
+
 
       await updateOrderStatus(
         id,
         status
       );
 
-      await loadOrders();
 
-    } catch(error) {
+      setOrders((prev)=>
+        prev.map((order)=>
+          order.id === id
+          ? {
+              ...order,
+              status,
+            }
+          : order
+        )
+      );
 
-      console.error(error);
+
+    } catch(error){
+
+      console.error(
+        "STATUS UPDATE ERROR:",
+        error
+      );
+
 
       alert(
         "Unable to update order"
@@ -102,7 +137,10 @@ export function OrderManagementOverview() {
 
 
 
+
+
   const filteredOrders = orders.filter((order)=>{
+
 
     const searchMatch =
       order.customer_name
@@ -112,27 +150,38 @@ export function OrderManagementOverview() {
       order.mobile.includes(search);
 
 
+
     const statusMatch =
       statusFilter === "all"
       ||
       order.status === statusFilter;
 
 
+
     return searchMatch && statusMatch;
 
+
   });
+
+
 
 
 
   if(loading){
 
     return (
+
       <div className="p-6">
+
         Loading orders...
+
       </div>
+
     );
 
   }
+
+
 
 
 
@@ -147,24 +196,39 @@ export function OrderManagementOverview() {
 
 
 
-      <div className="flex gap-3">
+
+      <div className="flex flex-col gap-3 md:flex-row">
+
 
         <input
-          className="w-72 rounded border px-3 py-2"
+
+          className="w-full rounded border px-3 py-2 md:w-72"
+
           placeholder="Search customer / mobile..."
+
           value={search}
-          onChange={(e)=>setSearch(e.target.value)}
+
+          onChange={(e)=>
+            setSearch(e.target.value)
+          }
+
         />
 
 
+
+
         <select
+
           className="rounded border px-3 py-2"
+
           value={statusFilter}
+
           onChange={(e)=>
             setStatusFilter(
               e.target.value as (typeof ORDER_STATUS)[number]
             )
           }
+
         >
 
           {ORDER_STATUS.map((status)=>(
@@ -173,14 +237,19 @@ export function OrderManagementOverview() {
               key={status}
               value={status}
             >
-              {status}
+
+              {status.toUpperCase()}
+
             </option>
 
           ))}
 
+
         </select>
 
+
       </div>
+
 
 
 
@@ -199,24 +268,33 @@ export function OrderManagementOverview() {
 
 
 
+
       {filteredOrders.map((order)=>(
 
 
         <div
+
           key={order.id}
+
           className="space-y-4 rounded-lg border p-5"
+
         >
 
 
 
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col justify-between gap-4 md:flex-row">
+
 
 
             <div>
 
-              <h2 className="font-semibold text-lg">
+
+              <h2 className="text-lg font-semibold">
+
                 {order.customer_name}
+
               </h2>
+
 
 
               <p>
@@ -224,13 +302,24 @@ export function OrderManagementOverview() {
               </p>
 
 
+
               <p>
                 {order.address}
               </p>
 
 
+
               <p>
                 {order.district} - {order.pincode}
+              </p>
+
+
+
+              <p className="text-sm text-muted-foreground">
+
+                {new Date(order.created_at)
+                .toLocaleDateString("en-IN")}
+
               </p>
 
 
@@ -239,18 +328,30 @@ export function OrderManagementOverview() {
 
 
 
+
+
             <div className="text-right">
 
 
               <p className="text-xl font-bold">
+
                 ₹{order.total_amount}
+
               </p>
+
+
+
+
+              <OrderStatusBadge
+                status={order.status}
+              />
+
 
 
 
               <select
 
-                className="mt-2 rounded border px-3 py-2"
+                className="mt-3 rounded border px-3 py-2"
 
                 value={order.status}
 
@@ -263,21 +364,26 @@ export function OrderManagementOverview() {
 
               >
 
+
                 <option value="pending">
                   Pending
                 </option>
+
 
                 <option value="confirmed">
                   Confirmed
                 </option>
 
+
                 <option value="shipped">
                   Shipped
                 </option>
 
+
                 <option value="delivered">
                   Delivered
                 </option>
+
 
                 <option value="cancelled">
                   Cancelled
@@ -297,10 +403,15 @@ export function OrderManagementOverview() {
 
 
 
+
+          <div className="overflow-x-auto">
+
+
           <table className="w-full border">
 
 
             <thead>
+
 
               <tr className="border-b bg-muted">
 
@@ -322,8 +433,8 @@ export function OrderManagementOverview() {
 
               </tr>
 
-            </thead>
 
+            </thead>
 
 
 
@@ -359,7 +470,6 @@ export function OrderManagementOverview() {
                   </td>
 
 
-
                 </tr>
 
 
@@ -373,12 +483,15 @@ export function OrderManagementOverview() {
           </table>
 
 
+          </div>
+
 
 
         </div>
 
 
       ))}
+
 
 
 
