@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 
 import {
@@ -54,9 +55,7 @@ export function OrderManagementOverview() {
 
 
   const [orders, setOrders] = useState<Order[]>([]);
-
   const [loading, setLoading] = useState(true);
-
 
   const [search, setSearch] = useState("");
 
@@ -160,9 +159,7 @@ export function OrderManagementOverview() {
     const searchMatch =
       order.customer_name
       .toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
+      .includes(search.toLowerCase())
       ||
       order.mobile.includes(search);
 
@@ -318,11 +315,25 @@ export function OrderManagementOverview() {
             <div>
 
 
-              <h2 className="text-lg font-semibold">
+              <div className="flex items-center gap-3">
 
-                {order.customer_name}
+                <h2 className="text-lg font-semibold">
 
-              </h2>
+                  {order.customer_name}
+
+                </h2>
+
+
+                <Link
+                  href={`/admin/orders/${order.id}`}
+                  className="rounded border px-3 py-1 text-sm hover:bg-muted"
+                >
+                  View Details
+                </Link>
+
+
+              </div>
+
 
 
 
@@ -345,6 +356,7 @@ export function OrderManagementOverview() {
 
 
 
+
               <p className="text-sm text-muted-foreground">
 
                 {new Date(
@@ -354,7 +366,6 @@ export function OrderManagementOverview() {
                 )}
 
               </p>
-
 
 
             </div>
@@ -373,6 +384,13 @@ export function OrderManagementOverview() {
                 ₹{order.total_amount}
 
               </p>
+
+<Link
+  href={`/admin/orders/${order.id}`}
+  className="mt-3 inline-block rounded border px-4 py-2 text-sm font-medium hover:bg-muted"
+>
+  View Details
+</Link>
 
 
 
@@ -424,9 +442,7 @@ export function OrderManagementOverview() {
               </select>
 
 
-
             </div>
-
 
 
           </div>
@@ -445,6 +461,7 @@ export function OrderManagementOverview() {
 
 
               <thead>
+
 
                 <tr className="border-b bg-muted">
 
@@ -466,7 +483,9 @@ export function OrderManagementOverview() {
 
                 </tr>
 
+
               </thead>
+
 
 
 
@@ -529,7 +548,6 @@ export function OrderManagementOverview() {
 
 
       ))}
-
 
 
 
