@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 
 
+
 export async function getAdminOrders() {
 
   const supabase = createClient();
@@ -53,11 +54,79 @@ export async function updateOrderStatus(
   const supabase = createClient();
 
 
+  const updateData: Record<string, any> = {
+
+    status,
+
+    updated_at:
+      new Date().toISOString()
+
+  };
+
+
+  if(status === "shipped") {
+
+    updateData.shipped_at =
+      new Date().toISOString();
+
+  }
+
+
+
+  const { error } = await supabase
+    .from("orders")
+    .update(updateData)
+    .eq(
+      "id",
+      id
+    );
+
+
+
+  if(error){
+
+    console.error(
+      "ORDER STATUS UPDATE ERROR:",
+      error.message
+    );
+
+    throw new Error(error.message);
+
+  }
+
+
+  return true;
+
+}
+
+
+
+
+
+export async function updateOrderPayment(
+  id: string,
+  payment_status: string,
+  payment_method?: string,
+  payment_id?: string
+) {
+
+
+  const supabase = createClient();
+
+
   const { error } = await supabase
     .from("orders")
     .update({
-      status,
-      updated_at: new Date().toISOString()
+
+      payment_status,
+
+      payment_method,
+
+      payment_id,
+
+      updated_at:
+        new Date().toISOString()
+
     })
     .eq(
       "id",
@@ -65,10 +134,61 @@ export async function updateOrderStatus(
     );
 
 
+
   if(error){
 
     console.error(
-      "ORDER STATUS UPDATE ERROR:",
+      "PAYMENT UPDATE ERROR:",
+      error.message
+    );
+
+    throw new Error(error.message);
+
+  }
+
+
+  return true;
+
+}
+
+
+
+
+
+export async function updateOrderCourier(
+  id: string,
+  courier_name: string,
+  tracking_number: string
+) {
+
+
+  const supabase = createClient();
+
+
+
+  const { error } = await supabase
+    .from("orders")
+    .update({
+
+      courier_name,
+
+      tracking_number,
+
+      updated_at:
+        new Date().toISOString()
+
+    })
+    .eq(
+      "id",
+      id
+    );
+
+
+
+  if(error){
+
+    console.error(
+      "COURIER UPDATE ERROR:",
       error.message
     );
 
