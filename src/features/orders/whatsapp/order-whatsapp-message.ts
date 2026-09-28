@@ -54,7 +54,8 @@ export function generateOrderWhatsAppMessage({
     case "shipped":
 
       statusMessage =
-`உங்கள் புத்தகங்கள் அனுப்பப்பட்டுவிட்டன.`;
+`உங்கள் புத்தகங்கள் அனுப்பப்பட்டுவிட்டன.
+Tracking விவரங்களை கீழே பார்க்கலாம்.`;
 
       break;
 
@@ -82,7 +83,8 @@ export function generateOrderWhatsAppMessage({
     default:
 
       statusMessage =
-`உங்கள் ஆர்டர் பெறப்பட்டுள்ளது.`;
+`உங்கள் ஆர்டர் பெறப்பட்டுள்ளது.
+விரைவில் செயல்படுத்தப்படும்.`;
 
   }
 
@@ -90,7 +92,16 @@ export function generateOrderWhatsAppMessage({
 
 
   const trackingLink =
-`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://karisalbooks.in"}/track-order?id=${orderId}`;
+
+  `${
+
+    process.env.NEXT_PUBLIC_SITE_URL
+
+    ??
+
+    "https://karisalbooks.in"
+
+  }/track-order?id=${orderId}`;
 
 
 
@@ -98,10 +109,13 @@ export function generateOrderWhatsAppMessage({
 
   const message =
 
-`வணக்கம் ${customerName},
+`வணக்கம் ${customerName} 👋
 
 
 கரிசல் புத்தக மையம் 📚
+
+
+உங்கள் ஆர்டர் விவரம்:
 
 
 Order ID:
@@ -149,9 +163,10 @@ ${trackingLink}
 
 
 
-நன்றி.
+நன்றி 🙏
 
 கரிசல் புத்தக மையம்`;
+
 
 
 

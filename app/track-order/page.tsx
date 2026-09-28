@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import {
   getOrderTracking,
@@ -52,6 +53,21 @@ function StatusBadge({
 
 
 export default function TrackOrderPage(){
+
+
+  const searchParams = useSearchParams();
+
+useEffect(()=>{
+
+  const id = searchParams.get("id");
+
+  if(id){
+
+    setOrderId(id);
+
+  }
+
+},[searchParams]);
 
 
   const [orderId,setOrderId] =
@@ -355,11 +371,39 @@ export default function TrackOrderPage(){
 
 
                 <p>
-                  Tracking No:
-                  {" "}
-                  {order.tracking_number}
-                </p>
+ Tracking No:
+ {" "}
+ {order.tracking_number}
+</p>
 
+
+{
+order.tracking_number && (
+
+<a
+
+href={`https://www.google.com/search?q=${order.tracking_number}`}
+
+target="_blank"
+
+className="
+mt-2
+inline-block
+rounded
+border
+px-3
+py-1
+text-sm
+"
+
+>
+
+Track Shipment
+
+</a>
+
+)
+}
 
               </div>
 

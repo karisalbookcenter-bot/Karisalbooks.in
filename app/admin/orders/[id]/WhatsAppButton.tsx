@@ -11,7 +11,6 @@ generateOrderWhatsAppMessage
 
 interface Props {
 
-
 mobile:string;
 
 customerName:string;
@@ -26,8 +25,8 @@ courier?:string|null;
 
 tracking?:string|null;
 
-
 }
+
 
 
 
@@ -56,7 +55,20 @@ function openWhatsApp(){
 
 
 
+if(!mobile){
+
+alert("Customer mobile number missing");
+
+return;
+
+}
+
+
+
+
+
 const message =
+
 generateOrderWhatsAppMessage({
 
 customerName,
@@ -76,21 +88,41 @@ tracking,
 
 
 
+
 const phone =
+
 mobile.replace(/\D/g,"");
 
 
 
 
+
+if(!phone){
+
+alert("Invalid mobile number");
+
+return;
+
+}
+
+
+
+
+
 const url =
+
 `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
 
 
 
+
 window.open(
+
 url,
+
 "_blank"
+
 );
 
 
@@ -100,10 +132,14 @@ url,
 
 
 
+
 return(
 
 
+
 <button
+
+type="button"
 
 onClick={openWhatsApp}
 
