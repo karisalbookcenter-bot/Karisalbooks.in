@@ -1,0 +1,295 @@
+"use client";
+
+
+import { useCallback, useState } from "react";
+
+import * as offerService from "@/features/offers/services/offer.service";
+
+import type { Offer } from "@/types/offer.types";
+
+
+
+export interface OfferFormValues {
+
+  title: string;
+
+  description: string;
+
+  discountPercentage: string;
+
+  startDate: string;
+
+  endDate: string;
+
+  status: "active" | "inactive";
+
+
+}
+
+
+
+
+
+interface UseOfferFormOptions {
+
+  mode?: "create" | "edit";
+
+  offerId?: string;
+
+  initialValues?: Partial<OfferFormValues>;
+
+}
+
+
+
+
+
+export function useOfferForm(
+  options: UseOfferFormOptions = {}
+) {
+
+
+  const {
+    mode = "create",
+    offerId,
+  } = options;
+
+
+
+  const [values, setValues] =
+    useState<OfferFormValues>({
+
+      title:
+        options.initialValues?.title ?? "",
+
+      description:
+        options.initialValues?.description ?? "",
+
+
+      discountPercentage:
+        options.initialValues?.discountPercentage ?? "5",
+
+
+      startDate:
+        options.initialValues?.startDate ?? "",
+
+
+      endDate:
+        options.initialValues?.endDate ?? "",
+
+
+      status:
+        options.initialValues?.status ?? "active",
+
+    });
+
+
+
+
+  const [loading,setLoading] =
+    useState(false);
+
+
+
+  const [error,setError] =
+    useState<string | null>(null);
+
+
+
+
+
+
+  const setField = useCallback(
+    <K extends keyof OfferFormValues>(
+      field: K,
+      value: OfferFormValues[K]
+    ) => {
+
+
+      setValues(prev => ({
+
+        ...prev,
+
+        [field]: value,
+
+      }));
+
+
+    },
+    []
+  );
+
+
+
+
+
+
+
+  const reset = () => {
+
+    setValues({
+
+      title:"",
+      description:"",
+      discountPercentage:"5",
+      startDate:"",
+      endDate:"",
+      status:"active",
+
+    });
+
+
+    setError(null);
+
+  };
+
+
+
+
+
+
+
+
+  const submit = async () => {
+
+
+    setLoading(true);
+
+    setError(null);
+
+
+
+    try {
+
+
+      const payload = {
+
+
+        title: values.title,
+
+        description:
+          values.description || null,
+
+
+        discount_percentage:
+          Number(values.discountPercentage),
+
+
+        start_date:
+          values.startDate,
+
+
+        end_date:
+          values.endDate,
+
+
+        status:
+          values.status,
+
+      };
+
+
+
+
+
+      let result;
+
+
+
+      if (
+        mode === "edit"
+        &&
+        offerId
+      ) {
+
+
+        result =
+          await offerService.updateOffer(
+            offerId,
+            payload
+          );
+
+
+      } else {
+
+
+        result =
+          await offerService.createOffer(
+            payload
+          );
+
+
+      }
+
+
+
+
+
+      if (result.error) {
+
+        setError(
+          result.error.message
+        );
+
+      }
+
+
+
+      return result;
+
+
+
+    } catch(err) {
+
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong"
+      );
+
+
+      return {
+        data:null,
+        error:{
+          message:"Something went wrong"
+        }
+      };
+
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
+
+
+  };
+
+
+
+
+
+
+  return {
+
+
+    values,
+
+    setField,
+
+    loading,
+
+    error,
+
+    reset,
+
+    submit,
+
+
+  };
+
+
+}
