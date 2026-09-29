@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { AuthService } from "@/features/auth/services/auth.service";
 
 export interface CreateOrderInput {
   customer_name: string;
@@ -23,19 +24,23 @@ export async function createOrder(
 ) {
 
   const supabase = createClient();
+  const sessionResult = await AuthService.getCurrentSession();
+
+const user = sessionResult.data?.user;
 
 
   const { data: order, error } =
     await supabase
       .from("orders")
       .insert({
-        customer_name: payload.customer_name,
-        mobile: payload.mobile,
-        address: payload.address,
-        district: payload.district,
-        pincode: payload.pincode,
-        total_amount: payload.total_amount,
-      })
+  customer_name: payload.customer_name,
+  mobile: payload.mobile,
+  address: payload.address,
+  district: payload.district,
+  pincode: payload.pincode,
+  total_amount: payload.total_amount,
+  user_id: user?.id ?? null,
+})
       .select()
       .single();
 
