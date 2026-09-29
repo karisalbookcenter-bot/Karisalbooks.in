@@ -47,8 +47,7 @@ export default function CheckoutPage() {
 
 
 
-  const [paymentMethod, setPaymentMethod] =
-    useState<"cod" | "online">("cod");
+
 
 
 
@@ -89,7 +88,6 @@ export default function CheckoutPage() {
         total_amount: total,
 
 
-        payment_method: paymentMethod,
 
 
 
@@ -304,77 +302,6 @@ export default function CheckoutPage() {
 
 
 
-          <div className="rounded border p-4 space-y-3">
-
-
-            <h3 className="font-semibold">
-
-              Payment Method
-
-            </h3>
-
-
-
-            <label className="flex gap-2">
-
-              <input
-
-                type="radio"
-
-                value="cod"
-
-                checked={
-                  paymentMethod === "cod"
-                }
-
-                onChange={() =>
-                  setPaymentMethod("cod")
-                }
-
-              />
-
-              Cash on Delivery
-
-            </label>
-
-
-
-
-
-            <label className="flex gap-2">
-
-
-              <input
-
-                type="radio"
-
-                value="online"
-
-                checked={
-                  paymentMethod === "online"
-                }
-
-                onChange={() =>
-                  setPaymentMethod("online")
-                }
-
-              />
-
-
-              Online Payment
-
-
-            </label>
-
-
-
-          </div>
-
-
-
-
-
-
 
 
           <button
@@ -482,24 +409,6 @@ export default function CheckoutPage() {
             Total:
             {" "}
             {formatCurrency(total)}
-
-          </p>
-
-
-
-
-
-          <p className="mt-3 text-sm">
-
-            Payment:
-            {" "}
-            {
-              paymentMethod === "cod"
-              ?
-              "Cash on Delivery"
-              :
-              "Online Payment"
-            }
 
           </p>
 
