@@ -97,14 +97,11 @@ export const membershipInsertSchema =
     membership_id: z
       .string()
       .trim()
-      .min(
-        1,
-        "Membership ID is required."
-      )
       .max(
         50,
         "Membership ID is too long."
-      ),
+      )
+      .optional(),
 
 
 

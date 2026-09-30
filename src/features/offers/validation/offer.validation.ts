@@ -19,6 +19,14 @@ export const offerInsertSchema = z.object({
     .nullable()
     .optional(),
 
+  coupon_code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .max(32, "Coupon code must be 32 characters or fewer.")
+    .nullable()
+    .optional(),
+
   discount_percentage: z
     .number()
     .min(5, "Minimum discount is 5%.")

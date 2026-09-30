@@ -13,6 +13,9 @@ export function Header() {
         <nav className="flex items-center gap-6 text-sm text-muted-foreground">
           <span className="cursor-default">Browse</span>
           <span className="cursor-default">Categories</span>
+          <Link href="/membership/apply" className="transition-colors hover:text-foreground">
+            Membership
+          </Link>
           <span className="cursor-default">About</span>
         </nav>
       </div>

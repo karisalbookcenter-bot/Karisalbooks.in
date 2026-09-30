@@ -10,6 +10,7 @@ import {
 import type {
   Membership,
   MembershipInsert,
+  MembershipPlan,
   MembershipUpdate,
 } from "@/types/membership.types";
 
@@ -298,5 +299,49 @@ export function bulkDeleteMemberships(
     return null;
 
   });
+
+}
+
+export interface ListMembershipPlansInput {
+
+  page?: number;
+
+  pageSize?: number;
+
+  search?: string;
+
+  status?: RecordStatus[];
+
+  sortBy?: keyof MembershipPlan;
+
+  sortDirection?: SortDirection;
+
+}
+
+
+/**
+ * List membership plans
+ */
+export function listMembershipPlans(
+  input: ListMembershipPlansInput = {}
+): Promise<ApiResponse<PaginatedResult<MembershipPlan>>> {
+
+  return toApiResponse(() =>
+    repository.listMembershipPlans({
+
+      page: input.page ?? 1,
+
+      pageSize: input.pageSize ?? 100,
+
+      search: input.search,
+
+      status: input.status,
+
+      sortBy: input.sortBy,
+
+      sortDirection: input.sortDirection,
+
+    })
+  );
 
 }

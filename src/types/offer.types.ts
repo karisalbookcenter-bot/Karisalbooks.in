@@ -22,6 +22,8 @@ export interface Offer {
 
   special_day: string | null;
 
+  coupon_code: string | null;
+
   start_date: string;
 
   end_date: string;
@@ -36,8 +38,10 @@ export interface Offer {
 
 export type OfferInsert = Omit<
   Offer,
-  "id" | "created_at" | "updated_at"
->;
+  "id" | "created_at" | "updated_at" | "coupon_code"
+> & {
+  coupon_code?: string | null;
+};
 
 
 export type OfferUpdate = Partial<

@@ -1,19 +1,37 @@
+// src/features/memberships/repository/membership.repository.ts
+
+
 import { createClient } from "@/lib/supabase/client";
 
-import type {
-  Membership,
-  MembershipInsert,
-  MembershipUpdate,
-  MembershipPlan,
-  MembershipPlanInsert,
-  MembershipPlanUpdate,
-} from "@/types/membership.types";
 
 import type {
+
+  Membership,
+
+  MembershipInsert,
+
+  MembershipUpdate,
+
+  MembershipPlan,
+
+  MembershipPlanInsert,
+
+  MembershipPlanUpdate,
+
+} from "@/types/membership.types";
+
+
+import type {
+
   PaginatedResult,
+
   RecordStatus,
+
   SortDirection,
+
 } from "@/types/common.types";
+
+
 
 
 
@@ -27,6 +45,7 @@ import type {
 
 
 
+
 /**
  * Membership Plan
  */
@@ -35,188 +54,193 @@ import type {
 
 export interface ListMembershipPlansParams {
 
-  page: number;
 
-  pageSize: number;
+  page:number;
 
-  search?: string;
 
-  status?: RecordStatus[];
+  pageSize:number;
 
-  sortBy?: keyof MembershipPlan;
 
-  sortDirection?: SortDirection;
+  search?:string;
+
+
+  status?:RecordStatus[];
+
+
+  sortBy?:keyof MembershipPlan;
+
+
+  sortDirection?:SortDirection;
+
 
 }
+
+
+
 
 
 
 
 export async function getMembershipPlanById(
-  id: string
-): Promise<MembershipPlan | null> {
+  id:string
+):Promise<MembershipPlan|null>{
 
 
-  const supabase =
-    createClient();
+ const supabase=createClient();
 
 
-  const {
-    data,
-    error,
-  } =
-    await supabase
-      .from("membership_plans")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+ const {
+  data,
+  error
+ }
+ =
+ await supabase
+ .from("membership_plans")
+ .select("*")
+ .eq("id",id)
+ .maybeSingle();
 
 
 
-  if (error) {
-    throw new Error(error.message);
-  }
+ if(error)
+  throw new Error(error.message);
 
 
-  return data as MembershipPlan | null;
+
+ return data as MembershipPlan|null;
+
 
 }
+
+
 
 
 
 
 
 export async function listMembershipPlans(
-  params: ListMembershipPlansParams
-): Promise<PaginatedResult<MembershipPlan>> {
+ params:ListMembershipPlansParams
+):Promise<PaginatedResult<MembershipPlan>>{
 
 
-  const {
+ const {
 
-    page,
+ page,
 
-    pageSize,
+ pageSize,
 
-    search,
+ search,
 
-    status,
+ status,
 
-    sortBy = "created_at",
+ sortBy="created_at",
 
-    sortDirection = "desc",
+ sortDirection="desc",
 
-  } = params;
-
-
-
-  const supabase =
-    createClient();
+ }=params;
 
 
 
-  let query =
-    supabase
-      .from("membership_plans")
-      .select("*", {
-        count: "exact",
-      });
+ const supabase=createClient();
 
 
 
-  if (search && search.trim()) {
-
-    query =
-      query.ilike(
-        "name",
-        `%${search.trim()}%`
-      );
-
-  }
-
-
-
-  if (
-    status &&
-    status.length > 0
-  ) {
-
-    query =
-      query.in(
-        "status",
-        status
-      );
-
-  }
+ let query =
+ supabase
+ .from("membership_plans")
+ .select("*",{count:"exact"});
 
 
 
 
-  const from =
-    (page - 1) * pageSize;
+ if(search){
 
+ query=query.ilike(
+ "name",
+ `%${search}%`
+ );
 
-  const to =
-    from + pageSize - 1;
-
-
-
-
-  const {
-    data,
-    error,
-    count,
-
-  } =
-    await query
-      .order(
-        sortBy,
-        {
-          ascending:
-            sortDirection === "asc",
-        }
-      )
-      .range(
-        from,
-        to
-      );
+ }
 
 
 
-  if (error) {
 
-    throw new Error(error.message);
+ if(status && status.length){
 
-  }
+ query=query.in(
+ "status",
+ status
+ );
 
-
-
-  const totalItems =
-    count ?? 0;
-
+ }
 
 
-  return {
 
-    items:
-      (data ?? []) as MembershipPlan[],
 
-    page,
+ const from=(page-1)*pageSize;
 
-    pageSize,
+ const to=from+pageSize-1;
 
-    totalItems,
 
-    totalPages:
-      Math.max(
-        1,
-        Math.ceil(
-          totalItems / pageSize
-        )
-      ),
 
-  };
+ const {
+ data,
+ error,
+ count
+ }
+ =
+ await query
+ .order(
+ sortBy,
+ {
+ ascending:
+ sortDirection==="asc"
+ }
+ )
+ .range(
+ from,
+ to
+ );
+
+
+
+ if(error)
+ throw new Error(error.message);
+
+
+
+ const totalItems=count ?? 0;
+
+
+
+ return {
+
+
+ items:(data ?? []) as MembershipPlan[],
+
+
+ page,
+
+
+ pageSize,
+
+
+ totalItems,
+
+
+ totalPages:
+ Math.max(
+ 1,
+ Math.ceil(
+ totalItems/pageSize
+ )
+ )
+
+ };
+
 
 }
+
 
 
 
@@ -225,40 +249,35 @@ export async function listMembershipPlans(
 
 
 export async function createMembershipPlan(
-  input: MembershipPlanInsert
-): Promise<MembershipPlan> {
+ input:MembershipPlanInsert
+):Promise<MembershipPlan>{
 
 
-  const supabase =
-    createClient();
+ const supabase=createClient();
 
 
-
-  const {
-    data,
-    error,
-
-  } =
-    await supabase
-      .from("membership_plans")
-      .insert(input)
-      .select()
-      .single();
-
-
-
-  if (error) {
-
-    throw new Error(error.message);
-
-  }
+ const {
+ data,
+ error
+ }
+ =
+ await supabase
+ .from("membership_plans")
+ .insert(input)
+ .select()
+ .single();
 
 
 
-  return data as MembershipPlan;
+ if(error)
+ throw new Error(error.message);
+
+
+
+ return data as MembershipPlan;
+
 
 }
-
 
 
 
@@ -266,39 +285,36 @@ export async function createMembershipPlan(
 
 
 export async function updateMembershipPlan(
-  id: string,
-  input: MembershipPlanUpdate
-): Promise<MembershipPlan> {
+ id:string,
+ input:MembershipPlanUpdate
+):Promise<MembershipPlan>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    data,
-    error,
-
-  } =
-    await supabase
-      .from("membership_plans")
-      .update(input)
-      .eq("id", id)
-      .select()
-      .single();
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
+ data,
+ error
+ }
+ =
+ await supabase
+ .from("membership_plans")
+ .update(input)
+ .eq("id",id)
+ .select()
+ .single();
 
-    throw new Error(error.message);
-
-  }
 
 
+ if(error)
+ throw new Error(error.message);
 
-  return data as MembershipPlan;
+
+
+ return data as MembershipPlan;
+
 
 }
 
@@ -307,33 +323,28 @@ export async function updateMembershipPlan(
 
 
 
-
 export async function deleteMembershipPlan(
-  id: string
-): Promise<void> {
+ id:string
+):Promise<void>{
 
 
-  const supabase =
-    createClient();
+ const supabase=createClient();
 
 
-
-  const {
-    error,
-
-  } =
-    await supabase
-      .from("membership_plans")
-      .delete()
-      .eq("id", id);
+ const {
+ error
+ }
+ =
+ await supabase
+ .from("membership_plans")
+ .delete()
+ .eq("id",id);
 
 
 
-  if (error) {
+ if(error)
+ throw new Error(error.message);
 
-    throw new Error(error.message);
-
-  }
 
 }
 
@@ -352,41 +363,304 @@ export async function deleteMembershipPlan(
 
 
 
-
-export async function getMembershipById(
-  id: string
-): Promise<Membership | null> {
-
-
-  const supabase =
-    createClient();
+// Customer Membership Functions
 
 
 
-  const {
-    data,
-    error,
+export interface ListMembershipsParams {
 
-  } =
-    await supabase
-      .from("memberships")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+  page:number;
 
+  pageSize:number;
 
+  search?:string;
 
-  if (error) {
+  plan?:
+    | "standard"
+    | "premium"
+    | string;
 
-    throw new Error(error.message);
+  status?:RecordStatus[];
 
-  }
+  sortBy?:keyof Membership;
 
-
-
-  return data as Membership | null;
+  sortDirection?:SortDirection;
 
 }
+
+
+
+
+
+
+
+
+export async function listMemberships(
+  params:ListMembershipsParams
+):Promise<PaginatedResult<Membership>>{
+
+
+ const {
+
+ page,
+
+ pageSize,
+
+ search,
+
+ plan,
+
+ status,
+
+ sortBy="created_at",
+
+ sortDirection="desc",
+
+ } = params;
+
+
+
+
+ const supabase=createClient();
+
+
+
+
+ let query =
+ supabase
+ .from("memberships")
+ .select("*",{
+   count:"exact",
+ });
+
+
+
+
+
+ if(search && search.trim()){
+
+
+ query =
+ query.or(
+
+ `membership_id.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`
+
+ );
+
+
+ }
+
+
+
+
+
+
+
+ if(plan){
+
+
+ query =
+ query.eq(
+ "plan",
+ plan
+ );
+
+
+ }
+
+
+
+
+
+
+
+ if(status && status.length){
+
+
+ query =
+ query.in(
+ "status",
+ status
+ );
+
+
+ }
+
+
+
+
+
+
+
+ const from =
+ (page-1)*pageSize;
+
+
+
+ const to =
+ from + pageSize - 1;
+
+
+
+
+
+
+
+ const {
+
+ data,
+
+ error,
+
+ count,
+
+ }
+
+ =
+ await query
+ .order(
+
+ sortBy,
+
+ {
+
+ ascending:
+ sortDirection==="asc"
+
+ }
+
+ )
+
+ .range(
+ from,
+ to
+ );
+
+
+
+
+
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
+
+
+
+
+
+ const totalItems =
+ count ?? 0;
+
+
+
+
+
+
+
+ return {
+
+
+ items:
+ (data ?? []) as Membership[],
+
+
+
+ page,
+
+
+
+ pageSize,
+
+
+
+ totalItems,
+
+
+
+ totalPages:
+
+ Math.max(
+
+ 1,
+
+ Math.ceil(
+ totalItems/pageSize
+ )
+
+ )
+
+
+ };
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+export async function getMembershipById(
+ id:string
+):Promise<Membership|null>{
+
+
+ const supabase=createClient();
+
+
+
+ const {
+
+ data,
+
+ error,
+
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .select("*")
+ .eq(
+ "id",
+ id
+ )
+ .maybeSingle();
+
+
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
+
+
+ return data as Membership|null;
+
+
+}
+
+
 
 
 
@@ -395,42 +669,52 @@ export async function getMembershipById(
 
 
 export async function getMembershipByMembershipId(
-  membershipId: string
-): Promise<Membership | null> {
+ membershipId:string
+):Promise<Membership|null>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    data,
-    error,
-
-  } =
-    await supabase
-      .from("memberships")
-      .select("*")
-      .eq(
-        "membership_id",
-        membershipId
-      )
-      .maybeSingle();
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
 
-    throw new Error(error.message);
+ data,
 
-  }
+ error,
+
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .select("*")
+ .eq(
+ "membership_id",
+ membershipId
+ )
+ .maybeSingle();
 
 
 
-  return data as Membership | null;
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
+
+
+ return data as Membership|null;
+
 
 }
+
+
 
 
 
@@ -439,39 +723,50 @@ export async function getMembershipByMembershipId(
 
 
 export async function createMembership(
-  input: MembershipInsert
-): Promise<Membership> {
+ input:MembershipInsert
+):Promise<Membership>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    data,
-    error,
-
-  } =
-    await supabase
-      .from("memberships")
-      .insert(input)
-      .select()
-      .single();
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
 
-    throw new Error(error.message);
+ data,
 
-  }
+ error,
+
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .insert(input)
+ .select()
+ .single();
 
 
 
-  return data as Membership;
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
+
+
+ return data as Membership;
+
 
 }
+
+
 
 
 
@@ -480,44 +775,55 @@ export async function createMembership(
 
 
 export async function updateMembership(
-  id: string,
-  input: MembershipUpdate
-): Promise<Membership> {
+ id:string,
+ input:MembershipUpdate
+):Promise<Membership>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    data,
-    error,
-
-  } =
-    await supabase
-      .from("memberships")
-      .update(input)
-      .eq(
-        "id",
-        id
-      )
-      .select()
-      .single();
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
 
-    throw new Error(error.message);
+ data,
 
-  }
+ error,
+
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .update(input)
+ .eq(
+ "id",
+ id
+ )
+ .select()
+ .single();
 
 
 
-  return data as Membership;
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
+
+
+ return data as Membership;
+
 
 }
+
+
 
 
 
@@ -526,36 +832,46 @@ export async function updateMembership(
 
 
 export async function deleteMembership(
-  id: string
-): Promise<void> {
+ id:string
+):Promise<void>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    error,
-
-  } =
-    await supabase
-      .from("memberships")
-      .delete()
-      .eq(
-        "id",
-        id
-      );
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
 
-    throw new Error(error.message);
+ error,
 
-  }
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .delete()
+ .eq(
+ "id",
+ id
+ );
+
+
+
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
 
 }
+
+
 
 
 
@@ -564,37 +880,48 @@ export async function deleteMembership(
 
 
 export async function updateMembershipsStatus(
-  ids: string[],
-  status: RecordStatus
-): Promise<void> {
+ ids:string[],
+ status:RecordStatus
+):Promise<void>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    error,
-
-  } =
-    await supabase
-      .from("memberships")
-      .update({
-        status,
-      })
-      .in(
-        "id",
-        ids
-      );
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
 
-    throw new Error(error.message);
+ error,
 
-  }
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .update({
+
+ status,
+
+ })
+
+ .in(
+ "id",
+ ids
+ );
+
+
+
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
 
 }
 
@@ -604,34 +931,81 @@ export async function updateMembershipsStatus(
 
 
 
+
+
 export async function deleteMemberships(
-  ids: string[]
-): Promise<void> {
+ ids:string[]
+):Promise<void>{
 
 
-  const supabase =
-    createClient();
-
-
-
-  const {
-    error,
-
-  } =
-    await supabase
-      .from("memberships")
-      .delete()
-      .in(
-        "id",
-        ids
-      );
+ const supabase=createClient();
 
 
 
-  if (error) {
+ const {
 
-    throw new Error(error.message);
+ error,
 
-  }
+ }
+
+ =
+ await supabase
+ .from("memberships")
+ .delete()
+ .in(
+ "id",
+ ids
+ );
+
+
+
+
+
+ if(error){
+
+ throw new Error(
+ error.message
+ );
+
+ }
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// Service compatibility aliases
+
+
+export async function bulkDeleteMemberships(
+ ids:string[]
+):Promise<void>{
+
+ return deleteMemberships(ids);
+
+}
+
+
+
+
+
+
+
+export async function bulkUpdateMembershipsStatus(
+ ids:string[],
+ status:RecordStatus
+):Promise<void>{
+
+ return updateMembershipsStatus(
+ ids,
+ status
+ );
 
 }

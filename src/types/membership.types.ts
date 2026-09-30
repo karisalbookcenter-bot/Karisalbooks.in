@@ -117,7 +117,7 @@ export type MembershipPlanUpdate =
  */
 export interface MembershipInsert {
 
-  membership_id: string;
+  membership_id?: string;
 
   customer_id: string;
 

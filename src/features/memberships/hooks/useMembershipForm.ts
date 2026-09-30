@@ -6,378 +6,174 @@ import {
   validateMembershipInsert,
   validateMembershipUpdate,
 } from "../validation/membership.validation";
-
 import * as membershipService from "../services/membership.service";
 
-import type {
-  Membership,
-  MembershipInsert,
-} from "@/types/membership.types";
-
-import type {
-  ApiResponse,
-} from "@/types/common.types";
-
-
+import type { ApiResponse, RecordStatus } from "@/types/common.types";
+import type { Membership, MembershipInsert } from "@/types/membership.types";
 
 export interface MembershipFormValues {
-
-  user_id: string;
-
-  membership_type:
-    | "standard"
-    | "premium";
-
-  discount_percentage: number;
-
+  customer_id: string;
+  plan_id: string;
+  payment_amount: number;
   start_date: string;
-
-  end_date: string;
-
-  status:
-    | "active"
-    | "inactive";
-
+  expiry_date: string;
+  status: RecordStatus;
+  payment_status: "pending" | "paid" | "failed" | "refunded";
 }
 
-
-
 const DEFAULT_VALUES: MembershipFormValues = {
-
-  user_id: "",
-
-  membership_type: "standard",
-
-  discount_percentage: 15,
-
+  customer_id: "",
+  plan_id: "",
+  payment_amount: 0,
   start_date: "",
-
-  end_date: "",
-
+  expiry_date: "",
   status: "active",
-
+  payment_status: "pending",
 };
 
-
-
 export interface UseMembershipFormResult {
-
-
+  form: MembershipFormValues;
   values: MembershipFormValues;
-
-
-  errors: Record<string,string>;
-
-
+  errors: Record<string, string>;
+  loading: boolean;
   isSubmitting: boolean;
-
-
-  submitError: string | null;
-
-
+  submit: () => Promise<ApiResponse<Membership>>;
   setField: <K extends keyof MembershipFormValues>(
     field: K,
     value: MembershipFormValues[K]
   ) => void;
-
-
-  reset:()=>void;
-
-
-  submit:()=>Promise<ApiResponse<Membership>>;
-
+  reset: () => void;
 }
-
-
 
 export interface UseMembershipFormOptions {
-
-  mode?:
-    | "create"
-    | "edit";
-
-
-  membershipId?:string;
-
-
-  initialValues?:
-    Partial<MembershipFormValues>;
-
+  initialMembership?: Membership;
+  onSuccess?: () => void;
+  mode?: "create" | "edit";
+  membershipId?: string;
 }
 
-
-
-
-function toPayload(
- values:MembershipFormValues
-):MembershipInsert {
-
-
- return {
-
-    user_id:
-      values.user_id,
-
-
-    membership_type:
-      values.membership_type,
-
-
-    discount_percentage:
-      Number(values.discount_percentage),
-
-
-    start_date:
-      values.start_date,
-
-
-    end_date:
-      values.end_date || null,
-
-
-    status:
-      values.status,
-
- };
-
+function toPayload(values: MembershipFormValues): MembershipInsert {
+  return {
+    customer_id: values.customer_id,
+    plan_id: values.plan_id,
+    payment_amount: values.payment_amount,
+    payment_status: values.payment_status,
+    start_date: values.start_date,
+    expiry_date: values.expiry_date,
+    status: values.status,
+  };
 }
 
-
-
-
+function validationError(errors: Record<string, string> = {}): ApiResponse<Membership> {
+  return {
+    data: null,
+    error: {
+      message: Object.values(errors).join(" ") || "Validation failed.",
+      code: "VALIDATION_ERROR",
+    },
+  };
+}
 
 export function useMembershipForm(
- options:UseMembershipFormOptions={}
-):UseMembershipFormResult {
-
-
- const {
-   mode="create",
-   membershipId,
- } = options;
-
-
-
- const [values,setValues]=useState<MembershipFormValues>({
-   ...DEFAULT_VALUES,
-   ...options.initialValues,
- });
-
-
-
- const [errors,setErrors]=useState<Record<string,string>>({});
-
-
- const [isSubmitting,setIsSubmitting]
- =
- useState(false);
-
-
-
- const [submitError,setSubmitError]
- =
- useState<string|null>(null);
-
-
-
-
-
- const setField = useCallback(
-
- (field,value)=>{
-
-
- setValues(prev=>({
-
-   ...prev,
-
-   [field]:value,
-
- }));
-
-
- setErrors(prev=>{
-
-   const next={...prev};
-
-   delete next[field];
-
-   return next;
-
- });
-
-
- },
-
- []
-
- );
-
-
-
-
-
- const reset = useCallback(()=>{
-
-
- setValues({
-
-   ...DEFAULT_VALUES,
-
-   ...options.initialValues,
-
- });
-
-
- setErrors({});
-
-
- setSubmitError(null);
-
-
- },[options.initialValues]);
-
-
-
-
-
-
- const submit = useCallback(
- async()=>{
-
-
- setIsSubmitting(true);
-
- setSubmitError(null);
-
-
-
- const payload =
- toPayload(values);
-
-
-
- const validation =
- mode==="create"
-
- ? validateMembershipInsert(payload)
-
- : validateMembershipUpdate(payload);
-
-
-
- if(!validation.success){
-
-
- setErrors(
-   validation.errors ?? {}
- );
-
-
- setIsSubmitting(false);
-
-
- return {
-
-   data:null,
-
-   error:{
-     message:"Validation failed",
-     code:"VALIDATION_ERROR"
-   }
-
- };
-
-
- }
-
-
-
-
-
- let result;
-
-
-
- if(
-   mode==="edit"
-   &&
-   membershipId
- ){
-
- result =
- await membershipService.updateMembership(
-   membershipId,
-   validation.data!
- );
-
-
- }
- else{
-
-
- result =
- await membershipService.createMembership(
-   validation.data!
- );
-
-
- }
-
-
-
-
- setIsSubmitting(false);
-
-
-
- if(result.error){
-
-   setSubmitError(
-     result.error.message
-   );
-
- }
-
-
-
- return result;
-
-
-
- },
-
- [
- values,
- mode,
- membershipId
- ]
-
- );
-
-
-
-
-
-
-
- return {
-
- values,
-
- errors,
-
- isSubmitting,
-
- submitError,
-
- setField,
-
- reset,
-
- submit,
-
- };
-
-
+  options: UseMembershipFormOptions = {}
+): UseMembershipFormResult {
+  const {
+    initialMembership,
+    mode = "create",
+    membershipId,
+    onSuccess,
+  } = options;
+
+  const [form, setForm] = useState<MembershipFormValues>(() =>
+    initialMembership
+      ? {
+          customer_id: initialMembership.customer_id,
+          plan_id: initialMembership.plan_id,
+          payment_amount: initialMembership.payment_amount,
+          start_date: initialMembership.start_date,
+          expiry_date: initialMembership.expiry_date,
+          status: initialMembership.status,
+          payment_status: initialMembership.payment_status,
+        }
+      : { ...DEFAULT_VALUES }
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  const setField = useCallback(
+    <K extends keyof MembershipFormValues>(
+      field: K,
+      value: MembershipFormValues[K]
+    ) => {
+      setForm((previous) => ({ ...previous, [field]: value }));
+      setErrors((previous) => {
+        const next = { ...previous };
+        delete next[field];
+        return next;
+      });
+    },
+    []
+  );
+
+  const reset = useCallback(() => {
+    setForm({ ...DEFAULT_VALUES });
+    setErrors({});
+  }, []);
+
+  const submit = useCallback(async (): Promise<ApiResponse<Membership>> => {
+    setLoading(true);
+    try {
+      const payload = toPayload(form);
+      let result: ApiResponse<Membership>;
+
+      if (mode === "create") {
+        const validation = validateMembershipInsert(payload);
+        if (!validation.success || !validation.data) {
+          setErrors(validation.errors ?? {});
+          return validationError(validation.errors);
+        }
+        result = await membershipService.createMembership(validation.data);
+      } else {
+        const validation = validateMembershipUpdate(payload);
+        if (!validation.success || !validation.data) {
+          setErrors(validation.errors ?? {});
+          return validationError(validation.errors);
+        }
+        if (!membershipId) {
+          return {
+            data: null,
+            error: {
+              message: "Membership ID is required for updates.",
+              code: "MISSING_MEMBERSHIP_ID",
+            },
+          };
+        }
+        result = await membershipService.updateMembership(
+          membershipId,
+          validation.data
+        );
+      }
+
+      if (result.error) {
+        setErrors({ form: result.error.message });
+      } else {
+        setErrors({});
+        onSuccess?.();
+      }
+      return result;
+    } finally {
+      setLoading(false);
+    }
+  }, [form, mode, membershipId, onSuccess]);
+
+  return {
+    form,
+    values: form,
+    errors,
+    loading,
+    isSubmitting: loading,
+    setField,
+    reset,
+    submit,
+  };
 }

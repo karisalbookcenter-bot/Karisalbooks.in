@@ -17,6 +17,8 @@ export interface OfferFormValues {
 
   description: string;
 
+  couponCode: string;
+
   discountPercentage: string;
 
   startDate: string;
@@ -66,6 +68,9 @@ export function useOfferForm(
 
       description:
         options.initialValues?.description ?? "",
+
+      couponCode:
+        options.initialValues?.couponCode ?? "",
 
 
       discountPercentage:
@@ -133,6 +138,7 @@ export function useOfferForm(
 
       title:"",
       description:"",
+      couponCode:"",
       discountPercentage:"5",
       startDate:"",
       endDate:"",
@@ -171,6 +177,9 @@ export function useOfferForm(
 
         description:
           values.description || null,
+
+        coupon_code:
+          values.couponCode.trim().toUpperCase() || null,
 
         offer_type: "percentage" as const,
 

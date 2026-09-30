@@ -39,6 +39,9 @@ function offerToFormValues(
     description:
       offer.description ?? "",
 
+    couponCode:
+      offer.coupon_code ?? "",
+
 
     discountPercentage:
       String(offer.discount_percentage),
@@ -193,6 +196,25 @@ export function OfferFormLayout({
             )
           }
 
+        />
+
+      </div>
+
+
+      <div>
+
+        <Label htmlFor="offer-coupon-code">
+          Coupon Code
+        </Label>
+
+        <Input
+          id="offer-coupon-code"
+          value={values.couponCode}
+          maxLength={32}
+          placeholder="For example, PONGAL25"
+          onChange={(e) =>
+            setField("couponCode", e.target.value.toUpperCase())
+          }
         />
 
       </div>

@@ -1,8 +1,15 @@
 // src/features/admin/components/memberships/MembershipManagementOverview.tsx
 
+
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 
 import {
   PageContainer,
@@ -24,6 +31,7 @@ import type {
 } from "@/types/common.types";
 
 
+
 import {
   MembershipTable,
 } from "./MembershipTable";
@@ -34,25 +42,47 @@ import {
 } from "./MembershipFormLayout";
 
 
+import {
+  MembershipToolbar,
+} from "./MembershipToolbar";
+
+
+import {
+  MembershipEmptyState,
+} from "./MembershipEmptyState";
+
+
+
+
 
 const PAGE_SIZE = 10;
 
 
 
+
+
 const BULK_ACTIONS = [
+
   {
     id:"activate",
     label:"Activate",
   },
+
   {
     id:"deactivate",
     label:"Deactivate",
   },
+
   {
     id:"delete",
     label:"Delete",
   },
+
 ];
+
+
+
+
 
 
 
@@ -61,367 +91,621 @@ export function MembershipManagementOverview(){
 
 
 
-const [memberships,setMemberships]
-=
-useState<Membership[]>([]);
+  const [
+    memberships,
+    setMemberships
+  ] = useState<Membership[]>([]);
 
 
 
-const [loading,setLoading]
-=
-useState(true);
 
+  const [
+    loading,
+    setLoading
+  ] = useState(true);
 
 
-const [totalCount,setTotalCount]
-=
-useState(0);
 
 
+  const [
+    totalCount,
+    setTotalCount
+  ] = useState(0);
 
-const [page,setPage]
-=
-useState(1);
 
 
 
-const [selectedIds,setSelectedIds]
-=
-useState<string[]>([]);
+  const [
+    page,
+    setPage
+  ] = useState(1);
 
 
 
-const [editingMembership,setEditingMembership]
-=
-useState<Membership|null|"new">(null);
 
+  const [
+    selectedIds,
+    setSelectedIds
+  ] = useState<string[]>([]);
 
 
 
 
+  const [
+    editingMembership,
+    setEditingMembership
+  ] =
+  useState<
+    Membership | "new" | null
+  >(null);
 
-const loadMemberships =
-useCallback(async()=>{
 
 
-setLoading(true);
 
+  const [
+    searchValue,
+    setSearchValue
+  ] = useState("");
 
 
-const result =
-await membershipService.listMemberships({
 
-page,
 
-pageSize:PAGE_SIZE,
+  const [
+    planFilter,
+    setPlanFilter
+  ] =
+  useState<
+    "all" | "standard" | "premium"
+  >("all");
 
-});
 
 
 
-if(result.data){
 
-setMemberships(
- result.data.items
-);
 
 
-setTotalCount(
- result.data.totalItems
-);
 
-}
 
+  const loadMemberships =
+  useCallback(async()=>{
 
 
-setLoading(false);
+    setLoading(true);
 
 
 
-},[page]);
+    const result =
+    await membershipService.listMemberships({
 
+      page,
 
+      pageSize:PAGE_SIZE,
 
+      search:
+        searchValue || undefined,
 
 
+      plan:
+        planFilter==="all"
+        ? undefined
+        : planFilter,
 
 
-useEffect(()=>{
+    });
 
-loadMemberships();
 
-},[loadMemberships]);
 
 
 
+    if(result.data){
 
 
+      setMemberships(
+        result.data.items
+      );
 
 
+      setTotalCount(
+        result.data.totalItems
+      );
 
-const handleDelete =
-async(
- membership:Membership
-)=>{
 
+    }
 
-await membershipService.deleteMembership(
- membership.id
-);
 
 
-loadMemberships();
+    setLoading(false);
 
 
-};
 
+  },[
+    page,
+    searchValue,
+    planFilter
+  ]);
 
 
 
 
 
 
-const handleBulkAction =
-async(
- action:string
-)=>{
 
 
-if(action==="delete"){
 
 
-await membershipService.bulkDeleteMemberships(
- selectedIds
-);
 
+  useEffect(()=>{
 
-}
 
-else{
+    loadMemberships();
 
 
-const status:RecordStatus =
-action==="activate"
-?
-"active"
-:
-"inactive";
+  },[
+    loadMemberships
+  ]);
 
 
 
-await membershipService.bulkUpdateMembershipsStatus(
- selectedIds,
- status
-);
 
 
-}
 
 
 
-setSelectedIds([]);
 
 
-loadMemberships();
 
 
+  const handleDelete =
+  async(
+    membership:Membership
+  )=>{
 
-};
 
+    await membershipService.deleteMembership(
+      membership.id
+    );
 
 
+    loadMemberships();
 
 
+  };
 
-return (
 
-<PageContainer
 
-title="Memberships"
 
-description={`${totalCount} memberships`}
 
->
 
 
 
-<div className="mb-4 flex justify-between">
 
+  const handleBulkAction =
+  async(
+    action:string
+  )=>{
 
-<button
 
-className="
-rounded-md
-bg-primary
-px-4
-py-2
-text-sm
-text-white
-"
+    if(action==="delete"){
 
-onClick={()=>setEditingMembership("new")}
 
->
+      await membershipService.bulkDeleteMemberships(
+        selectedIds
+      );
 
-Add Membership
 
-</button>
+    }
 
 
-</div>
+    else{
 
 
+      const status:RecordStatus =
+      action==="activate"
+      ? "active"
+      : "inactive";
 
 
 
+      await membershipService.bulkUpdateMembershipsStatus(
+        selectedIds,
+        status
+      );
 
-{
-selectedIds.length>0 &&
 
-<BulkActionBar
+    }
 
-count={selectedIds.length}
 
-actions={BULK_ACTIONS}
 
-onAction={handleBulkAction}
 
-/>
 
-}
+    setSelectedIds([]);
 
 
+    loadMemberships();
 
 
 
+  };
 
 
 
-{
-editingMembership &&
 
-<div
-className="
-mb-4
-rounded-md
-border
-p-4
-"
->
 
 
-<MembershipFormLayout
 
-mode={
-editingMembership==="new"
-?
-"create"
-:
-"edit"
-}
 
 
-initialMembership={
-editingMembership==="new"
-?
-undefined
-:
-editingMembership
-}
+  return (
 
+    <PageContainer
 
+      title="Memberships"
 
-onCancel={()=>setEditingMembership(null)}
+      description={
+        `${totalCount} memberships`
+      }
 
+    >
 
 
-onSuccess={()=>{
 
-setEditingMembership(null);
 
-loadMemberships();
 
-}}
+      <MembershipToolbar
 
 
 
-/>
+        searchValue={searchValue}
 
 
-</div>
 
-}
+        onSearchChange={(value)=>{
 
 
+          setSearchValue(value);
 
 
+          setPage(1);
 
 
+        }}
 
 
-<MembershipTable
 
-memberships={memberships}
 
-loading={loading}
+        selectedPlan={planFilter}
 
-selectedIds={selectedIds}
 
-onSelectionChange={setSelectedIds}
 
-onEdit={setEditingMembership}
+        onPlanChange={(value)=>{
 
-onDelete={handleDelete}
 
-/>
+          setPlanFilter(value);
 
 
+          setPage(1);
 
 
+        }}
 
 
 
 
-{
-!loading && memberships.length>0 &&
 
-<Pagination
+        onAddMembership={()=>{
 
-result={{
 
-page,
+          setEditingMembership(
+            "new"
+          );
 
-pageSize:PAGE_SIZE,
 
-totalItems:totalCount,
+        }}
 
-totalPages:
-Math.max(
-1,
-Math.ceil(
-totalCount/PAGE_SIZE
-)
-)
 
-}}
 
 
+      />
 
-onPageChange={setPage}
 
 
 
-/>
 
-}
 
 
 
-</PageContainer>
 
+      {
+        selectedIds.length > 0 && (
 
-);
 
+          <div className="mt-4">
 
+
+            <BulkActionBar
+
+
+              count={
+                selectedIds.length
+              }
+
+
+              actions={
+                BULK_ACTIONS
+              }
+
+
+              onAction={
+                handleBulkAction
+              }
+
+
+              onClear={()=>
+                setSelectedIds([])
+              }
+
+
+            />
+
+
+          </div>
+
+
+        )
+      }
+
+
+
+
+
+
+
+
+
+      {
+        editingMembership && (
+
+
+          <div
+
+            className="
+              mt-4
+              rounded-md
+              border
+              p-4
+            "
+
+          >
+
+
+
+            <MembershipFormLayout
+
+
+              mode={
+                editingMembership==="new"
+                ?
+                "create"
+                :
+                "edit"
+              }
+
+
+
+
+              initialMembership={
+
+                editingMembership==="new"
+                ?
+                undefined
+                :
+                editingMembership
+
+              }
+
+
+
+              onCancel={()=>{
+
+
+                setEditingMembership(
+                  null
+                );
+
+
+              }}
+
+
+
+              onSuccess={()=>{
+
+
+                setEditingMembership(
+                  null
+                );
+
+
+                loadMemberships();
+
+
+              }}
+
+
+
+            />
+
+
+
+          </div>
+
+
+        )
+      }
+
+
+
+
+
+
+
+
+
+      {
+        !loading &&
+        memberships.length===0
+
+        ?
+
+        (
+
+          <div className="mt-4">
+
+
+            <MembershipEmptyState
+
+
+              variant="no-data"
+
+
+              onCreateMembership={()=>{
+
+
+                setEditingMembership(
+                  "new"
+                );
+
+
+              }}
+
+
+            />
+
+
+          </div>
+
+        )
+
+
+        :
+
+
+        (
+
+          <div className="mt-4">
+
+
+            <MembershipTable
+
+
+
+              memberships={
+                memberships
+              }
+
+
+
+              loading={
+                loading
+              }
+
+
+
+              selectedIds={
+                selectedIds
+              }
+
+
+
+              onSelectionChange={
+                setSelectedIds
+              }
+
+
+
+              onEdit={
+                setEditingMembership
+              }
+
+
+
+              onDelete={
+                handleDelete
+              }
+
+
+
+            />
+
+
+          </div>
+
+
+        )
+
+
+      }
+
+
+
+
+
+
+
+
+
+      {
+        !loading &&
+        totalCount > 0 && (
+
+
+          <Pagination
+
+
+
+            result={{
+
+              page,
+
+              pageSize:PAGE_SIZE,
+
+              totalItems:
+                totalCount,
+
+
+              totalPages:
+                Math.max(
+                  1,
+                  Math.ceil(
+                    totalCount /
+                    PAGE_SIZE
+                  )
+                )
+
+
+            }}
+
+
+
+            onPageChange={
+              setPage
+            }
+
+
+
+          />
+
+
+        )
+      }
+
+
+
+
+
+
+
+    </PageContainer>
+
+  );
 
 }
