@@ -36,7 +36,7 @@ export const offerInsertSchema = z.object({
     .enum([
       "active",
       "inactive",
-      "archived",
+      "expired",
     ])
     .optional(),
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -47,14 +47,9 @@ function StatusBadge({
     </span>
 
   );
-
 }
 
-
-
-export default function TrackOrderPage(){
-
-
+function TrackOrderContent() {
   const searchParams = useSearchParams();
 
 useEffect(()=>{
@@ -457,5 +452,12 @@ Track Shipment
     </div>
 
   );
+}
 
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading track order...</div>}>
+      <TrackOrderContent />
+    </Suspense>
+  );
 }

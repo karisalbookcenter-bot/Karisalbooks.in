@@ -10,13 +10,13 @@ import {
 import type {
   Offer,
   OfferInsert,
+  OfferStatus,
   OfferUpdate,
 } from "@/types/offer.types";
 
 import type {
   ApiResponse,
   PaginatedResult,
-  RecordStatus,
   SortDirection,
 } from "@/types/common.types";
 
@@ -52,7 +52,7 @@ export interface ListOffersInput {
 
   search?: string;
 
-  status?: RecordStatus[];
+  status?: OfferStatus[];
 
   sortBy?: keyof Offer;
 
@@ -234,7 +234,7 @@ export function deleteOffer(
  */
 export function bulkUpdateOffersStatus(
   ids: string[],
-  status: RecordStatus
+  status: OfferStatus
 ): Promise<ApiResponse<null>> {
 
 

@@ -4,12 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   Offer,
   OfferInsert,
+  OfferStatus,
   OfferUpdate,
 } from "@/types/offer.types";
 
 import type {
   PaginatedResult,
-  RecordStatus,
   SortDirection,
 } from "@/types/common.types";
 
@@ -20,7 +20,7 @@ export interface ListOffersParams {
 
   search?: string;
 
-  status?: RecordStatus[];
+  status?: OfferStatus[];
 
   sortBy?: keyof Offer;
 
@@ -330,7 +330,7 @@ export async function deleteOffer(
  */
 export async function updateOffersStatus(
   ids: string[],
-  status: RecordStatus
+  status: OfferStatus
 ): Promise<void> {
 
 

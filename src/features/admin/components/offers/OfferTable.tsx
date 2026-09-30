@@ -1,10 +1,11 @@
 "use client";
 
 
-import { StatusBadge } from "@/components/common";
 import { formatDate } from "@/lib/helpers/format.helpers";
 
 import type { Offer } from "@/types/offer.types";
+
+import { OfferStatusBadge } from "./OfferStatusBadge";
 
 
 
@@ -304,9 +305,10 @@ export function OfferTable({
                 ">
 
 
-                  <StatusBadge
+                  <OfferStatusBadge
 
                     status={
+                    
                       offer.status
                     }
 

@@ -1,7 +1,5 @@
 // src/types/offer.types.ts
 
-import type { Database } from "@/types/database.types";
-
 export type OfferStatus =
   | "active"
   | "inactive"
@@ -16,9 +14,11 @@ export interface Offer {
 
   title: string;
 
+  description: string | null;
+
   offer_type: OfferType;
 
-  discount_percentage: 5 | 10 | 15 | 20 | 25;
+  discount_percentage: number;
 
   special_day: string | null;
 

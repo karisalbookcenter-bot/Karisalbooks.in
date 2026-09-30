@@ -2,8 +2,10 @@
 
 
 import { useCallback, useState } from "react";
-
-import * as offerService from "@/features/offers/services/offer.service";
+import {
+  createOfferAction,
+  updateOfferAction,
+} from "@/features/offers/actions/offer.actions";
 
 import type { Offer } from "@/types/offer.types";
 
@@ -21,7 +23,7 @@ export interface OfferFormValues {
 
   endDate: string;
 
-  status: "active" | "inactive";
+  status: "active" | "inactive" |"expired";
 
 
 }
@@ -170,6 +172,9 @@ export function useOfferForm(
         description:
           values.description || null,
 
+        offer_type: "percentage" as const,
+
+        special_day: null,
 
         discount_percentage:
           Number(values.discountPercentage),
@@ -204,7 +209,7 @@ export function useOfferForm(
 
 
         result =
-          await offerService.updateOffer(
+          await updateOfferAction(
             offerId,
             payload
           );
@@ -214,7 +219,7 @@ export function useOfferForm(
 
 
         result =
-          await offerService.createOffer(
+          await createOfferAction(
             payload
           );
 
