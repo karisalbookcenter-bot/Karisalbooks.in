@@ -35,6 +35,10 @@ export interface ListPublicBooksParams {
   pageSize?: number;
 }
 
+function isMissingPrebookingSchema(error: { code?: string; message?: string }) {
+  return error.code === "42703" && Boolean(error.message?.includes("prebooking_"));
+}
+
 export async function listPublicBooks(
   params: ListPublicBooksParams
 ): Promise<PaginatedResult<Book>> {
@@ -57,33 +61,39 @@ export async function listPublicBooks(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
-    .from("books")
-    .select("*", { count: "exact" })
-    .eq("status", PUBLIC_VISIBLE_STATUS);
-
-  if (search?.trim()) query = query.ilike("title", `%${search.trim()}%`);
-  if (categoryId) query = query.eq("category_id", categoryId);
-  if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
-  if (authorId) query = query.eq("author_id", authorId);
-  if (publisherId) query = query.eq("publisher_id", publisherId);
-  if (availability === "in-stock") query = query.gt("stock_quantity", 0);
-  if (availability === "out-of-stock") query = query.eq("stock_quantity", 0);
-  if (minPrice !== undefined) query = query.gte("price", minPrice);
-  if (maxPrice !== undefined) query = query.lte("price", maxPrice);
+  const buildQuery = (filterPrebookings: boolean) => {
+    let query = supabase
+      .from("books")
+      .select("*", { count: "exact" })
+      .eq("status", PUBLIC_VISIBLE_STATUS);
+    if (filterPrebookings) query = query.or(`prebooking_enabled.eq.false,prebooking_end_at.lte.${new Date().toISOString()}`);
+    if (search?.trim()) query = query.ilike("title", `%${search.trim()}%`);
+    if (categoryId) query = query.eq("category_id", categoryId);
+    if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
+    if (authorId) query = query.eq("author_id", authorId);
+    if (publisherId) query = query.eq("publisher_id", publisherId);
+    if (availability === "in-stock") query = query.gt("stock_quantity", 0);
+    if (availability === "out-of-stock") query = query.eq("stock_quantity", 0);
+    if (minPrice !== undefined) query = query.gte("price", minPrice);
+    if (maxPrice !== undefined) query = query.lte("price", maxPrice);
+    return query;
+  };
 
   const sortColumn = sortBy === "title" ? "title" : sortBy.startsWith("price") ? "price" : "created_at";
   const ascending = sortBy === "title" || sortBy === "price-asc";
-  const { data, count, error } = await query
+  let result = await buildQuery(true)
     .order(sortColumn, { ascending })
     .range(from, to);
+  if (result.error && isMissingPrebookingSchema(result.error)) {
+    result = await buildQuery(false).order(sortColumn, { ascending }).range(from, to);
+  }
 
-  if (error) throw error;
+  if (result.error) throw result.error;
 
-  const totalItems = count ?? 0;
+  const totalItems = result.count ?? 0;
 
  return {
-  items: (data ?? []) as Book[],
+  items: (result.data ?? []) as Book[],
   page,
   pageSize,
   totalItems,
@@ -93,12 +103,13 @@ export async function listPublicBooks(
 
 export async function getPublicBookBySlug(slug: string): Promise<Book | null> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("books")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", PUBLIC_VISIBLE_STATUS)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as Book | null) ?? null;
+  const findBook = (filterPrebookings: boolean) => {
+    let query = supabase.from("books").select("*").eq("slug", slug).eq("status", PUBLIC_VISIBLE_STATUS);
+    if (filterPrebookings) query = query.or(`prebooking_enabled.eq.false,prebooking_end_at.lte.${new Date().toISOString()}`);
+    return query.maybeSingle();
+  };
+  let result = await findBook(true);
+  if (result.error && isMissingPrebookingSchema(result.error)) result = await findBook(false);
+  if (result.error) throw result.error;
+  return (result.data as Book | null) ?? null;
 }

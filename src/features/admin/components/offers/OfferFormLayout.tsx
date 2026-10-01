@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import Image from "next/image";
 
 
 import { useOfferForm } from "@/features/offers/hooks/useOfferForm";
@@ -19,7 +21,7 @@ interface OfferFormLayoutProps {
 
   initialOffer?: Offer;
 
-  onSuccess?: () => void;
+  onSuccess?: (campaignMessage?: string) => void;
 
   onCancel?: () => void;
 
@@ -62,6 +64,12 @@ function offerToFormValues(
     status:
       offer.status,
 
+    campaignPosterUrl: offer.campaign_poster_url ?? "",
+    campaignPriceDetails: offer.campaign_price_details ?? "",
+    campaignEmailSubject: offer.campaign_email_subject ?? "",
+    campaignEmailBody: offer.campaign_email_body ?? "",
+    sendCampaign: false,
+
 
   };
 
@@ -84,6 +92,9 @@ export function OfferFormLayout({
   onCancel,
 
 }: OfferFormLayoutProps) {
+
+  const [posterUploading, setPosterUploading] = useState(false);
+  const [posterError, setPosterError] = useState("");
 
 
 
@@ -129,14 +140,46 @@ export function OfferFormLayout({
       await submit();
 
 
-    if (!result.error) {
+    if (result.error || !result.data) return;
 
-      onSuccess?.();
-
+    let campaignMessage = "Offer saved.";
+    if (values.sendCampaign) {
+      try {
+        const response = await fetch("/api/admin/offers/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ offerId: result.data.id }),
+        });
+        const campaign = await response.json() as { sentCount?: number; failedCount?: number; error?: string };
+        if (!response.ok) throw new Error(campaign.error ?? "Offer saved, but the email campaign could not be sent.");
+        campaignMessage = `Offer saved. Sent: ${campaign.sentCount ?? 0}; failed: ${campaign.failedCount ?? 0}.`;
+      } catch (campaignError) {
+        campaignMessage = campaignError instanceof Error ? campaignError.message : "Offer saved, but the email campaign could not be sent.";
+      }
     }
+
+    onSuccess?.(campaignMessage);
 
 
   };
+
+  async function uploadPoster(file: File | undefined) {
+    if (!file) return;
+    setPosterError("");
+    setPosterUploading(true);
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      const response = await fetch("/api/admin/site-assets", { method: "POST", body: form });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error ?? "Unable to upload campaign poster.");
+      setField("campaignPosterUrl", result.url);
+    } catch (uploadError) {
+      setPosterError(uploadError instanceof Error ? uploadError.message : "Unable to upload campaign poster.");
+    } finally {
+      setPosterUploading(false);
+    }
+  }
 
 
 
@@ -421,6 +464,48 @@ export function OfferFormLayout({
 
 
 
+
+      <section className="space-y-4 border-t border-border pt-4">
+        <div>
+          <h3 className="text-sm font-semibold">Offer email campaign</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">Only customers who opted in to offers receive campaign email. New offers send after save; edits do not resend unless selected.</p>
+        </div>
+
+        <div>
+          <Label htmlFor="offer-poster">Campaign poster</Label>
+          <Input id="offer-poster" type="file" accept="image/jpeg,image/png,image/webp" disabled={posterUploading} onChange={(event) => void uploadPoster(event.target.files?.[0])} />
+          {posterUploading && <p className="mt-1 text-xs text-muted-foreground">Uploading poster…</p>}
+          {posterError && <p role="alert" className="mt-1 text-xs text-destructive">{posterError}</p>}
+          {values.campaignPosterUrl && <div className="relative mt-3 h-48 w-full max-w-md"><Image src={values.campaignPosterUrl} alt="Offer poster preview" fill sizes="(max-width: 768px) 100vw, 448px" className="object-contain" /></div>}
+        </div>
+
+        <div>
+          <Label htmlFor="offer-price-details">Price details</Label>
+          <Textarea id="offer-price-details" value={values.campaignPriceDetails} onChange={(event) => setField("campaignPriceDetails", event.target.value)} placeholder="Eligible books, offer price, and exclusions" />
+        </div>
+
+        <div>
+          <Label htmlFor="offer-email-subject">Email subject</Label>
+          <Input id="offer-email-subject" maxLength={180} value={values.campaignEmailSubject} onChange={(event) => setField("campaignEmailSubject", event.target.value)} placeholder={`A special offer from Karisal Books: ${values.title || "{{title}}"}`} />
+        </div>
+
+        <div>
+          <Label htmlFor="offer-email-body">Email message</Label>
+          <Textarea id="offer-email-body" rows={6} maxLength={5000} value={values.campaignEmailBody} onChange={(event) => setField("campaignEmailBody", event.target.value)} placeholder={`Vanakkam {{name}},\n\n${values.title || "{{title}}"}\n{{description}}\n{{discount}}% off\n{{price_details}}\nCode: {{code}}\nValid until {{end_date}}`} />
+          <p className="mt-1 text-xs text-muted-foreground">Tokens: {"{{name}}, {{title}}, {{description}}, {{discount}}, {{price_details}}, {{code}}, {{start_date}}, {{end_date}}, {{offer_url}}"}</p>
+        </div>
+
+        <div className="rounded-md border border-border bg-secondary/30 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Preview</p>
+          <p className="font-semibold">{values.campaignEmailSubject || `A special offer from Karisal Books: ${values.title || "Offer title"}`}</p>
+          <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{values.campaignEmailBody || `Vanakkam {{name}},\n\n${values.title || "{{title}}"}\n{{description}}\n{{discount}}% off\n{{price_details}}\nCode: {{code}}\nValid until {{end_date}}`}</p>
+        </div>
+
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" checked={values.sendCampaign} onChange={(event) => setField("sendCampaign", event.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
+          <span>Email this campaign to opted-in customers after saving</span>
+        </label>
+      </section>
 
       {
         error && (

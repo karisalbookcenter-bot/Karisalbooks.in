@@ -28,6 +28,14 @@ export interface Book extends BaseEntity {
   price: number;
   stock_quantity: number;
   cover_image_url: string | null;
+  prebooking_enabled?: boolean;
+  prebooking_start_at?: string | null;
+  prebooking_end_at?: string | null;
+  prebooking_price?: number | null;
+  prebooking_offer_price?: number | null;
+  prebooking_offer_start_at?: string | null;
+  prebooking_offer_end_at?: string | null;
+  prebooking_ready_at?: string | null;
 }
 
 /**
@@ -51,6 +59,14 @@ export interface BookInsert {
   price?: number;
   stock_quantity?: number;
   cover_image_url?: string | null;
+  prebooking_enabled?: boolean;
+  prebooking_start_at?: string | null;
+  prebooking_end_at?: string | null;
+  prebooking_price?: number | null;
+  prebooking_offer_price?: number | null;
+  prebooking_offer_start_at?: string | null;
+  prebooking_offer_end_at?: string | null;
+  prebooking_ready_at?: string | null;
   status?: Book["status"];
 }
 

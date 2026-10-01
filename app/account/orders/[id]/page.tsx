@@ -52,19 +52,21 @@ export default async function CustomerOrderDetailPage({
 
 
   const { id } = await params;
-
-
   const supabase = await createClient();
 
 
 
-  const { data: order, error } = await supabase
+  let { data: order, error } = await supabase
 
     .from("orders")
 
     .select(`
 
       id,
+
+      purchase_type,
+
+      prebooking_id,
 
       customer_name,
 
@@ -100,6 +102,16 @@ export default async function CustomerOrderDetailPage({
     )
 
     .single();
+
+  if (error?.code === "42703" && /purchase_type|prebooking_id/.test(error.message)) {
+    const fallback = await supabase
+      .from("orders")
+      .select(`id, customer_name, total_amount, status, created_at, courier_name, tracking_number, shipped_at, order_items(id, title, quantity, price)`)
+      .eq("id", id)
+      .single();
+    order = fallback.data as typeof order;
+    error = fallback.error;
+  }
 
 
 
@@ -142,6 +154,10 @@ export default async function CustomerOrderDetailPage({
           {order.id}
 
         </p>
+
+        {order.purchase_type === "prebooking" && order.prebooking_id && (
+          <p>Pre-booking ID: <span className="font-mono font-semibold">{order.prebooking_id}</span></p>
+        )}
 
 
 

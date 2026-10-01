@@ -181,6 +181,8 @@ export function OfferTable({
 
             </th>
 
+            <th className="px-4 py-3 text-left text-sm">Email campaign</th>
+
 
 
 
@@ -315,6 +317,12 @@ export function OfferTable({
                   />
 
 
+                </td>
+
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {offer.campaign_sent_at ? (
+                    <>{formatDate(offer.campaign_sent_at)}<span className="mt-1 block">{offer.campaign_sent_count ?? 0} recipients</span></>
+                  ) : "Not sent"}
                 </td>
 
 

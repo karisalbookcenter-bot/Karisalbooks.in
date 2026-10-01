@@ -23,6 +23,7 @@ interface PaymentVerificationInput {
     district: string;
     state: string;
     pincode: string;
+    marketingConsent?: boolean;
   };
 }
 
@@ -54,8 +55,8 @@ export async function POST(request: Request) {
       order.amount !== priced.totalPaise ||
       order.currency !== "INR" ||
       order.notes?.flow !== purchase.flow ||
-      order.notes?.reference !== (purchase.flow === "membership" ? purchase.planId : "books") ||
-      order.notes?.shipping_method !== (purchase.flow === "books" ? priced.shippingMethod : "none") ||
+      order.notes?.reference !== (purchase.flow === "membership" ? purchase.planId : purchase.flow) ||
+      order.notes?.shipping_method !== (purchase.flow !== "membership" ? priced.shippingMethod : "none") ||
       payment.order_id !== orderId ||
       payment.amount !== priced.totalPaise ||
       payment.currency !== "INR"
@@ -165,18 +166,22 @@ export async function POST(request: Request) {
     }
 
     const customer = body.customer;
-    if (!customer || !customer.name || !customer.mobile || !customer.address || !customer.district || !customer.pincode) {
+    if (!customer || !customer.name || !customer.email?.trim() || !customer.mobile || !customer.address || !customer.district || !customer.pincode) {
       return NextResponse.json({ error: "Complete your delivery details before paying." }, { status: 400 });
     }
 
     const { data: existingOrder, error: existingOrderError } = await supabase
       .from("orders")
-      .select("id")
+      .select("*")
       .eq("payment_id", paymentId)
       .maybeSingle();
     if (existingOrderError) throw new Error(existingOrderError.message);
     if (existingOrder) {
-      return NextResponse.json({ success: true, flow: "books", orderId: existingOrder.id });
+      return NextResponse.json({ success: true, flow: purchase.flow, orderId: existingOrder.id, prebookingId: "prebooking_id" in existingOrder ? existingOrder.prebooking_id : undefined });
+    }
+
+    if (purchase.flow === "prebooking" && !customer.email?.trim()) {
+      return NextResponse.json({ error: "An email address is required for pre-booking confirmation." }, { status: 400 });
     }
 
     const { data: orderRow, error: orderInsertError } = await supabase
@@ -199,8 +204,9 @@ export async function POST(request: Request) {
         payment_status: "paid",
         payment_method: "Razorpay",
         payment_id: paymentId,
+        ...(purchase.flow === "prebooking" ? { purchase_type: "prebooking" } : {}),
       })
-      .select("id")
+      .select("*")
       .single();
     if (orderInsertError) throw new Error(orderInsertError.message);
 
@@ -211,20 +217,57 @@ export async function POST(request: Request) {
         title: item.title,
         price: item.price,
         quantity: item.quantity,
+        ...(purchase.flow === "prebooking" ? { is_prebooking: true } : {}),
       }))
     );
     if (itemsError) throw new Error(itemsError.message);
 
-    await sendPurchaseNotifications({
-      type: "order",
+    try {
+      const email = customer.email.trim().toLowerCase();
+      const { data: existingCustomer, error: customerLookupError } = await supabase
+        .from("customers")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+      if (customerLookupError) throw new Error(customerLookupError.message);
+
+      const customerFields = {
+        name: customer.name.trim(),
+        email,
+        phone: customer.mobile.trim(),
+        address: customer.address.trim(),
+        city: customer.district.trim(),
+        state: customer.state.trim(),
+        pincode: customer.pincode.trim(),
+        marketing_consent: customer.marketingConsent === true,
+        marketing_consent_at: customer.marketingConsent ? new Date().toISOString() : null,
+      };
+      const customerWrite = existingCustomer
+        ? await supabase.from("customers").update(customerFields).eq("id", existingCustomer.id)
+        : await supabase.from("customers").insert({
+            ...customerFields,
+          });
+      if (customerWrite.error) throw new Error(customerWrite.error.message);
+    } catch (customerError) {
+      console.error("CUSTOMER PROFILE UPDATE FAILED", customerError);
+    }
+
+    const notificationResult = await sendPurchaseNotifications({
+      type: purchase.flow === "prebooking" ? "prebooking" : "order",
       name: customer.name.trim(),
       email: customer.email,
       mobile: customer.mobile,
-      reference: orderRow.id,
+      reference: orderRow.prebooking_id ?? orderRow.id,
       amount: priced.totalPaise / 100,
     });
 
-    return NextResponse.json({ success: true, flow: "books", orderId: orderRow.id });
+    return NextResponse.json({
+      success: true,
+      flow: purchase.flow,
+      orderId: orderRow.id,
+      prebookingId: orderRow.prebooking_id,
+      ...(purchase.flow === "prebooking" ? { emailSent: notificationResult.emailSent } : {}),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to verify payment.";
     return NextResponse.json(

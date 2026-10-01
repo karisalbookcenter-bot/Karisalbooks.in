@@ -17,16 +17,27 @@ export default async function AccountOrdersPage() {
 
   const supabase = await createClient();
 
-  const { data: orders } = await supabase
+  let { data: orders, error } = await supabase
     .from("orders")
     .select(`
       id,
+      purchase_type,
+      prebooking_id,
       total_amount,
       status,
       created_at
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+  if (error?.code === "42703" && /purchase_type|prebooking_id/.test(error.message)) {
+    const fallback = await supabase
+      .from("orders")
+      .select("id, total_amount, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    orders = fallback.data as typeof orders;
+  }
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-6">
@@ -51,7 +62,7 @@ export default async function AccountOrdersPage() {
 
                 <div>
                   <p className="font-semibold">
-                    Order #{order.id.slice(0, 8)}
+                    {order.purchase_type === "prebooking" ? `Pre-booking ${order.prebooking_id ?? ""}` : `Order #${order.id.slice(0, 8)}`}
                   </p>
 
                   <p className="text-sm text-gray-500">

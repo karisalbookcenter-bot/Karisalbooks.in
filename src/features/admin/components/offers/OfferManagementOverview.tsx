@@ -34,6 +34,7 @@ export function OfferManagementOverview() {
   const [offers, setOffers] = useState<Offer[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [campaignMessage, setCampaignMessage] = useState("");
 
   const [editingOffer, setEditingOffer] =
     useState<Offer | null | "new">(null);
@@ -137,6 +138,8 @@ export function OfferManagementOverview() {
 
       />
 
+      {campaignMessage && <p role="status" className="mb-4 rounded-md border border-border bg-secondary/50 p-3 text-sm">{campaignMessage}</p>}
+
 
 
 
@@ -179,9 +182,10 @@ export function OfferManagementOverview() {
 
 
 
-              onSuccess={() => {
+              onSuccess={(message) => {
 
                 setEditingOffer(null);
+                setCampaignMessage(message ?? "Offer saved.");
 
                 loadOffers();
 

@@ -22,6 +22,8 @@ type OrderItem = {
 
 type Order = {
   id: string;
+  purchase_type?: string;
+  prebooking_id?: string | null;
   customer_name: string;
   mobile: string;
   address: string;
@@ -195,7 +197,7 @@ export default function AdminOrdersPage() {
 
                       <p className="text-sm font-semibold">
 
-                        Order #{order.id.slice(0, 8)}
+                        {order.purchase_type === "prebooking" ? `Pre-booking ${order.prebooking_id ?? ""}` : `Order #${order.id.slice(0, 8)}`}
 
                       </p>
 

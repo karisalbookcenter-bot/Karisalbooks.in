@@ -1,5 +1,5 @@
 interface OrderNotificationInput {
-  type: "order" | "membership";
+  type: "order" | "membership" | "prebooking" | "prebooking-ready";
   name: string;
   email?: string;
   mobile?: string;
@@ -23,6 +23,26 @@ function plainText(input: OrderNotificationInput) {
     ].join("\n");
   }
 
+  if (input.type === "prebooking") {
+    return [
+      `Vanakkam ${input.name},`,
+      "",
+      "Your Karisal Books pre-booking is confirmed.",
+      `Pre-booking ID: ${input.reference}`,
+      `Paid: INR ${input.amount.toFixed(2)}`,
+      "We will email you when the book is ready for distribution.",
+    ].join("\n");
+  }
+
+  if (input.type === "prebooking-ready") {
+    return [
+      `Vanakkam ${input.name},`,
+      "",
+      `Your pre-booked title is ready for distribution. Pre-booking ID: ${input.reference}`,
+      "Our team will process your delivery next. Thank you for supporting forthcoming books.",
+    ].join("\n");
+  }
+
   return [
     `Vanakkam ${input.name},`,
     "",
@@ -36,7 +56,7 @@ function plainText(input: OrderNotificationInput) {
 async function sendEmail(input: OrderNotificationInput) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ORDER_EMAIL_FROM;
-  if (!apiKey || !from || !input.email) return;
+  if (!apiKey || !from || !input.email) return false;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -49,7 +69,11 @@ async function sendEmail(input: OrderNotificationInput) {
       to: [input.email],
       subject: input.type === "membership"
         ? `Your membership ${input.reference} is active`
-        : `Karisal Books order ${input.reference} confirmed`,
+        : input.type === "prebooking"
+          ? `Pre-booking confirmed: ${input.reference}`
+          : input.type === "prebooking-ready"
+            ? `Your pre-booked book is ready · ${input.reference}`
+            : `Karisal Books order ${input.reference} confirmed`,
       text: plainText(input),
     }),
     signal: AbortSignal.timeout(5000),
@@ -58,15 +82,17 @@ async function sendEmail(input: OrderNotificationInput) {
   if (!response.ok) {
     console.error("ORDER EMAIL NOTIFICATION FAILED", response.status);
   }
+  return response.ok;
 }
 
 async function sendWhatsApp(input: OrderNotificationInput) {
+  if (input.type === "prebooking-ready") return false;
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const template = input.type === "membership"
     ? process.env.WHATSAPP_MEMBERSHIP_TEMPLATE
     : process.env.WHATSAPP_ORDER_TEMPLATE;
-  if (!accessToken || !phoneNumberId || !template || !input.mobile) return;
+  if (!accessToken || !phoneNumberId || !template || !input.mobile) return false;
 
   const recipient = input.mobile.replace(/\D/g, "");
   const to = recipient.length === 10 ? `91${recipient}` : recipient;
@@ -102,6 +128,7 @@ async function sendWhatsApp(input: OrderNotificationInput) {
   if (!response.ok) {
     console.error("WHATSAPP NOTIFICATION FAILED", response.status);
   }
+  return response.ok;
 }
 
 export async function sendPurchaseNotifications(input: OrderNotificationInput) {
@@ -111,4 +138,5 @@ export async function sendPurchaseNotifications(input: OrderNotificationInput) {
       console.error("PURCHASE NOTIFICATION FAILED", result.reason);
     }
   }
+  return { emailSent: results[0].status === "fulfilled" && results[0].value };
 }

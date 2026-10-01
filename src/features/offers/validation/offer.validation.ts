@@ -19,6 +19,14 @@ export const offerInsertSchema = z.object({
     .nullable()
     .optional(),
 
+  campaign_poster_url: z.string().url("Poster must be a valid URL.").nullable().optional(),
+
+  campaign_price_details: z.string().max(2000).nullable().optional(),
+
+  campaign_email_subject: z.string().max(180).nullable().optional(),
+
+  campaign_email_body: z.string().max(5000).nullable().optional(),
+
   coupon_code: z
     .string()
     .trim()

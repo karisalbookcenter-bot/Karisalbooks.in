@@ -4,6 +4,7 @@ export interface CartItem {
   slug: string;
   price: number;
   quantity: number;
+  purchaseType?: "books" | "prebooking";
   coverImageUrl?: string | null;
 }
 

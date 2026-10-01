@@ -4,10 +4,18 @@ import { razorpay } from "@/lib/razorpay";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { purchase?: PurchaseInput };
+    const body = (await request.json()) as { purchase?: PurchaseInput; customer?: { email?: string } };
     const purchase = body.purchase;
-    if (!purchase || (purchase.flow !== "books" && purchase.flow !== "membership")) {
+    if (!purchase || (purchase.flow !== "books" && purchase.flow !== "prebooking" && purchase.flow !== "membership")) {
       return NextResponse.json({ error: "Invalid purchase type." }, { status: 400 });
+    }
+    if (purchase.flow !== "membership" && (!body.customer?.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.customer.email.trim()))) {
+      return NextResponse.json({ error: "A valid email address is required for book orders." }, { status: 400 });
+    }
+    if (purchase.flow === "prebooking") {
+      if (!process.env.RESEND_API_KEY || !process.env.ORDER_EMAIL_FROM) {
+        return NextResponse.json({ error: "Pre-booking is temporarily unavailable because confirmation email is not configured." }, { status: 503 });
+      }
     }
 
     const priced = await pricePurchase(purchase);
@@ -17,8 +25,8 @@ export async function POST(request: Request) {
       receipt: `kb_${Date.now()}`,
       notes: {
         flow: purchase.flow,
-        reference: purchase.flow === "membership" ? purchase.planId : "books",
-        shipping_method: purchase.flow === "books" ? purchase.shippingMethod ?? "India Post" : "none",
+        reference: purchase.flow === "membership" ? purchase.planId : purchase.flow,
+        shipping_method: purchase.flow !== "membership" ? purchase.shippingMethod ?? "India Post" : "none",
       },
     });
 

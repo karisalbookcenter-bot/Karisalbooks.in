@@ -6,10 +6,26 @@ export interface PublicSocialLinks {
   whatsapp: string;
 }
 
+export interface PublicSiteSettings {
+  logoUrl: string;
+  description: string;
+  arrivalsSliderEnabled: boolean;
+  arrivalsSliderIntervalSeconds: number;
+  arrivalsTitle: string;
+}
+
 export const DEFAULT_SOCIAL_LINKS: PublicSocialLinks = {
   facebook: "",
   instagram: "",
   youtube: "",
   x: "",
   whatsapp: "",
+};
+
+export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
+  logoUrl: "",
+  description: "Tamil books, independent publishers, and thoughtful publishing services.",
+  arrivalsSliderEnabled: true,
+  arrivalsSliderIntervalSeconds: 6,
+  arrivalsTitle: "New arrivals",
 };

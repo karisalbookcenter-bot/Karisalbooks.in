@@ -12,6 +12,7 @@ import type {
 } from "@/types/common.types";
 
 import { slugify } from "@/lib/helpers/string.helpers";
+import { isUniqueSlugViolation, saveWithUniqueSlug } from "@/lib/helpers/unique-slug.helpers";
 
 
 
@@ -374,55 +375,25 @@ export async function listBooks(
 export async function createBook(
   input: BookInsert
 ): Promise<Book> {
-
-
   const supabase =
     await createClient();
+  const baseSlug = input.slug?.trim() || slugify(input.title);
 
-
-
-  const payload = {
-
-    ...input,
-
-
-    slug:
-      input.slug?.trim() ||
-      slugify(input.title),
-
-  };
-
-
-
-
-  const {
-
-    data,
-
-    error,
-
-  } =
-    await supabase
-      .from("books")
-      .insert(payload)
-      .select()
-      .single();
-
-
-
-
-  if (error) {
-
-    throw new Error(
-      error.message
-    );
-
-  }
-
-
-
-  return mapRow(data);
-
+  return saveWithUniqueSlug({
+    baseSlug,
+    fallbackSlug: "book",
+    exists: async (slug) => {
+      const { data, error } = await supabase.from("books").select("id").eq("slug", slug).maybeSingle();
+      if (error) throw new Error(error.message);
+      return Boolean(data);
+    },
+    save: async (slug) => {
+      const { data, error } = await supabase.from("books").insert({ ...input, slug }).select().single();
+      if (error) throw error;
+      return mapRow(data);
+    },
+    isSlugConflict: (error) => isUniqueSlugViolation(error, "books"),
+  });
 }
 
 
@@ -444,109 +415,38 @@ export async function updateBook(
 
 
 
-  const payload = {
+  const baseSlug = input.slug?.trim() || (input.title ? slugify(input.title) : "");
 
-
-    ...input,
-
-
-    ...(input.title &&
-      !input.slug
-      ? {
-          slug:
-            slugify(input.title),
-        }
-      : {}),
-
-
-  };
-
-
-
-
-
-  const {
-
-    data,
-
-    error,
-
-  } =
-    await supabase
-      .from("books")
-      .update(payload)
-      .eq("id", id)
-      .select("*");
-
-
-
-
-
-  if (error) {
-
-    throw new Error(
-      error.message
-    );
-
+  if (!baseSlug) {
+    const { data, error } = await supabase.from("books").update(input).eq("id", id).select("*");
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) throw new Error("Book update failed. No record returned.");
+    return mapRow(data[0]);
   }
 
-
-
-
-  if (
-    !data ||
-    data.length === 0
-  ) {
-
-    throw new Error(
-      "Book update failed. No record returned."
-    );
-
-  }
-
-
-
-
-  return mapRow(data[0]);
-
+  return saveWithUniqueSlug({
+    baseSlug,
+    fallbackSlug: "book",
+    excludeId: id,
+    exists: async (slug) => {
+      const { data, error } = await supabase.from("books").select("id").eq("slug", slug).neq("id", id).maybeSingle();
+      if (error) throw new Error(error.message);
+      return Boolean(data);
+    },
+    save: async (slug) => {
+      const { data, error } = await supabase.from("books").update({ ...input, slug }).eq("id", id).select("*");
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error("Book update failed. No record returned.");
+      return mapRow(data[0]);
+    },
+    isSlugConflict: (error) => isUniqueSlugViolation(error, "books"),
+  });
 }
 
-
-
-
-
-
-
-
-
-export async function deleteBook(
-  id: string
-): Promise<void> {
-
-
-  const supabase =
-    await createClient();
-
-
-
-  const {
-    error,
-  } =
-    await supabase
-      .from("books")
-      .delete()
-      .eq("id", id);
-
-
-
-  if (error) {
-
-    throw new Error(
-      error.message
-    );
-
-  }
-
+export async function deleteBook(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("books").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 
@@ -605,31 +505,7 @@ export async function deleteBooks(
   ids: string[]
 ): Promise<void> {
 
-
-  const supabase =
-    await createClient();
-
-
-
-  const {
-    error,
-  } =
-    await supabase
-      .from("books")
-      .delete()
-      .in(
-        "id",
-        ids
-      );
-
-
-
-  if (error) {
-
-    throw new Error(
-      error.message
-    );
-
-  }
-
+  const supabase = await createClient();
+  const { error } = await supabase.from("books").delete().in("id", ids);
+  if (error) throw new Error(error.message);
 }

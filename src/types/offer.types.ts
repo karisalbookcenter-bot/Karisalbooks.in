@@ -30,6 +30,18 @@ export interface Offer {
 
   status: OfferStatus;
 
+  campaign_poster_url?: string | null;
+
+  campaign_price_details?: string | null;
+
+  campaign_email_subject?: string | null;
+
+  campaign_email_body?: string | null;
+
+  campaign_sent_at?: string | null;
+
+  campaign_sent_count?: number;
+
   created_at: string;
 
   updated_at: string;

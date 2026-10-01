@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       code?: unknown;
+      flow?: unknown;
       items?: { book_id: string; quantity: number }[];
       shippingMethod?: "India Post" | "Professional Courier";
       state?: string;
@@ -17,13 +18,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Enter a valid membership number or coupon code." }, { status: 400 });
     }
 
-    const priced = await pricePurchase({
-      flow: "books",
-      items: body.items,
-      shippingMethod: body.shippingMethod,
-      state: body.state,
-      discountCode: typeof body.code === "string" ? body.code : undefined,
-    });
+    if (body.flow !== undefined && body.flow !== "books" && body.flow !== "prebooking") {
+      return NextResponse.json({ error: "Invalid purchase type." }, { status: 400 });
+    }
+    if (body.flow === "prebooking" && body.code !== undefined) {
+      return NextResponse.json({ error: "Pre-booking prices cannot be combined with discounts." }, { status: 400 });
+    }
+
+    const priced = body.flow === "prebooking"
+      ? await pricePurchase({
+          flow: "prebooking",
+          items: body.items,
+          shippingMethod: body.shippingMethod,
+          state: body.state,
+        })
+      : await pricePurchase({
+          flow: "books",
+          items: body.items,
+          shippingMethod: body.shippingMethod,
+          state: body.state,
+          discountCode: typeof body.code === "string" ? body.code : undefined,
+        });
 
     return NextResponse.json({
       code: priced.discount?.code,

@@ -8,6 +8,13 @@ export interface BookPurchaseInput {
   discountCode?: string;
 }
 
+export interface PrebookingPurchaseInput {
+  flow: "prebooking";
+  items: { book_id: string; quantity: number }[];
+  shippingMethod?: ShippingMethod;
+  state?: string;
+}
+
 export type ShippingMethod = "India Post" | "Professional Courier";
 
 export interface MembershipPurchaseInput {
@@ -15,7 +22,7 @@ export interface MembershipPurchaseInput {
   planId: string;
 }
 
-export type PurchaseInput = BookPurchaseInput | MembershipPurchaseInput;
+export type PurchaseInput = BookPurchaseInput | PrebookingPurchaseInput | MembershipPurchaseInput;
 
 export interface ResolvedDiscount {
   code: string;
@@ -29,6 +36,26 @@ export const MEMBERSHIP_VALIDITY_DAYS = 350;
 export const MEMBERSHIP_TAX_PERCENT = 8;
 export const MEMBERSHIP_PLATFORM_FEE_PERCENT = 8;
 export const MEMBER_COURIER_DISCOUNT_PERCENT = 30;
+
+function isMissingPrebookingSchema(error: { code?: string; message?: string }) {
+  return error.code === "42703" && Boolean(error.message?.includes("prebooking_"));
+}
+
+interface PricingBookRow {
+  id: string;
+  title: string;
+  price: number;
+  stock_quantity: number;
+  status: string;
+  publisher_id: string | null;
+  prebooking_enabled?: boolean | null;
+  prebooking_start_at?: string | null;
+  prebooking_end_at?: string | null;
+  prebooking_price?: number | null;
+  prebooking_offer_price?: number | null;
+  prebooking_offer_start_at?: string | null;
+  prebooking_offer_end_at?: string | null;
+}
 
 const MEMBER_DISCOUNT_PUBLISHERS = new Set([
   "kalasuvadu",
@@ -184,11 +211,21 @@ export async function pricePurchase(input: PurchaseInput) {
     requested.set(item.book_id, (requested.get(item.book_id) ?? 0) + item.quantity);
   }
 
-  const { data: books, error } = await supabase
+  const booksResult = await supabase
     .from("books")
-    .select("id, title, price, stock_quantity, status, publisher_id")
+    .select("id, title, price, stock_quantity, status, publisher_id, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at")
     .in("id", [...requested.keys()]);
-  if (error) throw new Error(error.message);
+  let books: PricingBookRow[] | null = booksResult.data as PricingBookRow[] | null;
+  let booksError = booksResult.error;
+  if (input.flow === "books" && booksResult.error && isMissingPrebookingSchema(booksResult.error)) {
+    const legacyResult = await supabase
+      .from("books")
+      .select("id, title, price, stock_quantity, status, publisher_id")
+      .in("id", [...requested.keys()]);
+    books = legacyResult.data as PricingBookRow[] | null;
+    booksError = legacyResult.error;
+  }
+  if (booksError) throw new Error(booksError.message);
   if (!books || books.length !== requested.size) throw new Error("One or more books are unavailable.");
 
   const publisherIds = [...new Set(books.map((book) => book.publisher_id).filter((id): id is string => Boolean(id)))];
@@ -200,8 +237,23 @@ export async function pricePurchase(input: PurchaseInput) {
 
   const items = books.map((book) => {
     const quantity = requested.get(book.id) ?? 0;
-    const price = Number(book.price);
-    if (book.status !== "active" || book.stock_quantity < quantity || !Number.isFinite(price) || price < 0) {
+    const now = Date.now();
+    const bookingStart = book.prebooking_start_at ? new Date(book.prebooking_start_at).getTime() : 0;
+    const bookingEnd = book.prebooking_end_at ? new Date(book.prebooking_end_at).getTime() : 0;
+    const offerStart = book.prebooking_offer_start_at ? new Date(book.prebooking_offer_start_at).getTime() : 0;
+    const offerEnd = book.prebooking_offer_end_at ? new Date(book.prebooking_offer_end_at).getTime() : 0;
+    const bookingOpen = Boolean(book.prebooking_enabled) && bookingStart <= now && bookingEnd >= now;
+    const offerOpen = book.prebooking_offer_price !== null && book.prebooking_offer_price !== undefined && offerStart <= now && offerEnd >= now;
+    if (input.flow === "prebooking" && !bookingOpen) {
+      throw new Error(`${book.title} is outside its pre-booking period.`);
+    }
+    if (input.flow === "books" && Boolean(book.prebooking_enabled) && bookingEnd > now) {
+      throw new Error(`${book.title} is currently available for pre-booking only.`);
+    }
+    const price = input.flow === "prebooking"
+      ? Number(offerOpen ? book.prebooking_offer_price : book.prebooking_price)
+      : Number(book.price);
+    if (book.status !== "active" || (input.flow === "books" && book.stock_quantity < quantity) || !Number.isFinite(price) || price < 0) {
       throw new Error(`${book.title} is unavailable in the requested quantity.`);
     }
     return {
@@ -223,7 +275,9 @@ export async function pricePurchase(input: PurchaseInput) {
     (sum, item) => sum + Math.round(item.price * 100) * item.quantity,
     0
   );
-  const discount = input.discountCode ? await resolveDiscountCode(input.discountCode) : null;
+  const discount = input.flow === "books" && input.discountCode
+    ? await resolveDiscountCode(input.discountCode)
+    : null;
   const courierChargePaise = getCourierChargePaise(deliveryState);
   const qualifyingItems = items.filter((item) => {
     const publisherName = item.publisherName.trim().toLowerCase();
@@ -238,12 +292,12 @@ export async function pricePurchase(input: PurchaseInput) {
 
   let bookDiscountPaise = 0;
   let courierDiscountPaise = 0;
-  if (discount?.kind === "coupon") {
+  if (input.flow === "books" && discount?.kind === "coupon") {
     bookDiscountPaise = Math.round((subtotalPaise * discount.percentage) / 100);
-  } else if (discount?.tier === "premium") {
+  } else if (input.flow === "books" && discount?.tier === "premium") {
     bookDiscountPaise = Math.round((qualifyingSubtotalPaise * 20) / 100);
     courierDiscountPaise = Math.round((courierChargePaise * MEMBER_COURIER_DISCOUNT_PERCENT) / 100);
-  } else if (discount?.tier === "standard") {
+  } else if (input.flow === "books" && discount?.tier === "standard") {
     if (qualifyingItems.length > 0 || subtotalPaise >= 70000) {
       bookDiscountPaise = Math.round((subtotalPaise * 15) / 100);
     }

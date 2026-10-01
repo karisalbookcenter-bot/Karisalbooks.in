@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { BaseEntity, PaginatedResult, RecordStatus, SortDirection } from "@/types/common.types";
 import { slugify } from "@/lib/helpers/string.helpers";
+import { isUniqueSlugViolation, saveWithUniqueSlug } from "@/lib/helpers/unique-slug.helpers";
 
 /**
  * Generic Supabase repository factory — Sprint 11.
@@ -141,23 +142,50 @@ export function createSupabaseRepository<
 
   async function create(input: TInsert): Promise<T> {
     const supabase = await createClient();
-    const payload = { ...input, slug: input.slug?.trim() || slugify(input.name) };
+    const baseSlug = input.slug?.trim() || slugify(input.name);
 
-    const { data, error } = await supabase.from(table).insert(payload).select().single();
-    if (error) throw new Error(error.message);
-    return data as T;
+    return saveWithUniqueSlug({
+      baseSlug,
+      fallbackSlug: table.slice(0, -1),
+      exists: async (slug) => {
+        const { data, error } = await supabase.from(table).select("id").eq("slug", slug).maybeSingle();
+        if (error) throw new Error(error.message);
+        return Boolean(data);
+      },
+      save: async (slug) => {
+        const { data, error } = await supabase.from(table).insert({ ...input, slug }).select().single();
+        if (error) throw error;
+        return data as T;
+      },
+      isSlugConflict: (error) => isUniqueSlugViolation(error, table),
+    });
   }
 
   async function update(id: string, input: TUpdate): Promise<T> {
     const supabase = await createClient();
-    const payload = {
-      ...input,
-      ...(input.name && !input.slug ? { slug: slugify(input.name as string) } : {}),
-    };
+    const baseSlug = input.slug?.trim() || (input.name ? slugify(input.name as string) : "");
+    if (!baseSlug) {
+      const { data, error } = await supabase.from(table).update({ ...input } as never).eq("id", id).select().single();
+      if (error) throw new Error(error.message);
+      return data as T;
+    }
 
-    const { data, error } = await supabase.from(table).update(payload).eq("id", id).select().single();
-    if (error) throw new Error(error.message);
-    return data as T;
+    return saveWithUniqueSlug({
+      baseSlug,
+      fallbackSlug: table.slice(0, -1),
+      excludeId: id,
+      exists: async (slug) => {
+        const { data, error } = await supabase.from(table).select("id").eq("slug", slug).neq("id", id).maybeSingle();
+        if (error) throw new Error(error.message);
+        return Boolean(data);
+      },
+      save: async (slug) => {
+        const { data, error } = await supabase.from(table).update({ ...input, slug }).eq("id", id).select().single();
+        if (error) throw error;
+        return data as T;
+      },
+      isSlugConflict: (error) => isUniqueSlugViolation(error, table),
+    });
   }
 
   async function remove(id: string): Promise<void> {

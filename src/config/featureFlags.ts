@@ -29,9 +29,9 @@ export interface FeatureFlags {
 }
 
 export const featureFlags: FeatureFlags = {
-  enableOffers: false,
-  enablePreBooking: false,
-  enablePublicationServices: false,
+  enableOffers: true,
+  enablePreBooking: true,
+  enablePublicationServices: true,
   enableWishlist: false,
 };
 

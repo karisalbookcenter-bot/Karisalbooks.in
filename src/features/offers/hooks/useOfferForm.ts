@@ -27,6 +27,16 @@ export interface OfferFormValues {
 
   status: "active" | "inactive" |"expired";
 
+  campaignPosterUrl: string;
+
+  campaignPriceDetails: string;
+
+  campaignEmailSubject: string;
+
+  campaignEmailBody: string;
+
+  sendCampaign: boolean;
+
 
 }
 
@@ -88,6 +98,21 @@ export function useOfferForm(
       status:
         options.initialValues?.status ?? "active",
 
+      campaignPosterUrl:
+        options.initialValues?.campaignPosterUrl ?? "",
+
+      campaignPriceDetails:
+        options.initialValues?.campaignPriceDetails ?? "",
+
+      campaignEmailSubject:
+        options.initialValues?.campaignEmailSubject ?? "",
+
+      campaignEmailBody:
+        options.initialValues?.campaignEmailBody ?? "",
+
+      sendCampaign:
+        options.initialValues?.sendCampaign ?? mode === "create",
+
     });
 
 
@@ -143,6 +168,11 @@ export function useOfferForm(
       startDate:"",
       endDate:"",
       status:"active",
+      campaignPosterUrl:"",
+      campaignPriceDetails:"",
+      campaignEmailSubject:"",
+      campaignEmailBody:"",
+      sendCampaign:true,
 
     });
 
@@ -199,6 +229,14 @@ export function useOfferForm(
 
         status:
           values.status,
+
+        campaign_poster_url: values.campaignPosterUrl || null,
+
+        campaign_price_details: values.campaignPriceDetails || null,
+
+        campaign_email_subject: values.campaignEmailSubject || null,
+
+        campaign_email_body: values.campaignEmailBody || null,
 
       };
 
