@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthContext } from "@/features/auth/context/AuthProvider";
+import { authConfig } from "@/config/auth";
 import type { AdminUserSummary } from "@/features/admin/types/admin-layout.types";
 
 export interface UserProfileDropdownProps {
@@ -46,8 +48,29 @@ function getInitials(name: string): string {
  * component approach.
  */
 export function UserProfileDropdown({ user = PLACEHOLDER_USER, className }: UserProfileDropdownProps) {
+  const { user: authUser, signOut } = useAuthContext();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const displayUser: AdminUserSummary = authUser
+    ? {
+        name: authUser.email?.split("@")[0] || "Admin",
+        email: authUser.email ?? "",
+      }
+    : user;
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    setSignOutError(null);
+    const result = await signOut();
+    if (result.error) {
+      setSignOutError(result.error.message);
+      setSigningOut(false);
+      return;
+    }
+    window.location.assign(authConfig.routes.afterLogout);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -81,10 +104,10 @@ export function UserProfileDropdown({ user = PLACEHOLDER_USER, className }: User
         className="flex items-center gap-2 rounded-full p-1 pr-2 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-          {getInitials(user.name)}
+          {getInitials(displayUser.name)}
         </span>
         <span className="hidden max-w-[8rem] truncate font-medium text-foreground sm:inline">
-          {user.name}
+          {displayUser.name}
         </span>
       </button>
 
@@ -95,8 +118,8 @@ export function UserProfileDropdown({ user = PLACEHOLDER_USER, className }: User
           className="absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="border-b border-border px-3 py-2.5">
-            <p className="truncate text-sm font-medium">{user.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+            <p className="truncate text-sm font-medium">{displayUser.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{displayUser.email}</p>
           </div>
 
           <div className="p-1">
@@ -124,17 +147,14 @@ export function UserProfileDropdown({ user = PLACEHOLDER_USER, className }: User
             <button
               type="button"
               role="menuitem"
-              onClick={() => {
-                // Intentionally a no-op this sprint — UI only, per task 8.
-                // Future wiring: await AuthService.signOut(); then redirect
-                // to authConfig.routes.afterLogout.
-                setOpen(false);
-              }}
-              className="flex w-full items-center gap-2 rounded-sm px-2.5 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+              disabled={signingOut}
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-2 rounded-sm px-2.5 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
-              Sign out
+              {signingOut ? "Signing out…" : "Sign out"}
             </button>
+            {signOutError && <p role="alert" className="px-2.5 pb-2 text-xs text-destructive">{signOutError}</p>}
           </div>
         </div>
       )}

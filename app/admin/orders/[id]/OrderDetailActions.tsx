@@ -15,6 +15,8 @@ import { OrderStatusBadge } from "@/features/admin/components/orders/OrderStatus
 type OrderStatus =
   | "pending"
   | "confirmed"
+  | "processing"
+  | "packed"
   | "shipped"
   | "delivered"
   | "cancelled";
@@ -280,11 +282,19 @@ export function OrderDetailActions({
         >
 
           <option value="pending">
-            Pending
+            New Orders
           </option>
 
           <option value="confirmed">
             Confirmed
+          </option>
+
+          <option value="processing">
+            Processing
+          </option>
+
+          <option value="packed">
+            Packed
           </option>
 
           <option value="shipped">
@@ -321,19 +331,18 @@ export function OrderDetailActions({
 
 
 
-        <input
-
+        <select
           className="w-full rounded border px-3 py-2"
-
-          placeholder="Courier Name"
-
           value={courier}
-
-          onChange={(e)=>
-            setCourier(e.target.value)
-          }
-
-        />
+          onChange={(event) => setCourier(event.target.value)}
+        >
+          <option value="">Select courier</option>
+          <option value="India Post">India Post</option>
+          <option value="Professional Courier">Professional Courier</option>
+          {courier && !["India Post", "Professional Courier"].includes(courier) && (
+            <option value={courier}>{courier}</option>
+          )}
+        </select>
 
 
 

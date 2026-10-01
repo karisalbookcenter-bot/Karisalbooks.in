@@ -22,6 +22,12 @@ function StatusBadge({
     confirmed:
       "bg-blue-100 text-blue-800",
 
+    processing:
+      "bg-blue-100 text-blue-800",
+
+    packed:
+      "bg-orange-100 text-orange-800",
+
     shipped:
       "bg-purple-100 text-purple-800",
 
@@ -42,7 +48,7 @@ function StatusBadge({
         "bg-gray-100 text-gray-700"
       }`}
     >
-      {status}
+      {status === "pending" ? "New Orders" : status === "packed" ? "Packed" : status}
 
     </span>
 
@@ -298,6 +304,8 @@ useEffect(()=>{
               <p>
                 {
                   ["confirmed",
+                  "processing",
+                  "packed",
                   "shipped",
                   "delivered"]
                   .includes(order.status)
@@ -305,7 +313,21 @@ useEffect(()=>{
                   : "○"
                 }
                 {" "}
-                Confirmed
+                Processing
+              </p>
+
+
+              <p>
+                {
+                  ["packed",
+                  "shipped",
+                  "delivered"]
+                  .includes(order.status)
+                  ? "✅"
+                  : "○"
+                }
+                {" "}
+                Packed
               </p>
 
 

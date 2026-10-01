@@ -35,7 +35,7 @@ export const authConfig = {
    * Middleware still runs on every route to keep the session cookie fresh;
    * this list only controls whether a *redirect* fires.
    */
-  protectedRoutePrefixes: [] as string[],
+  protectedRoutePrefixes: ["/account"] as string[],
 
   /**
    * Path prefixes that require at least `minimumAdminRole`. Intentionally
@@ -43,7 +43,7 @@ export const authConfig = {
    * scope this sprint. Populate with a route constant (e.g. `ROUTES.ADMIN`)
    * once that milestone adds one, rather than a hardcoded string.
    */
-  adminRoutePrefixes: [] as string[],
+  adminRoutePrefixes: ["/admin"] as string[],
 
   /** Minimum role allowed into any path matching `adminRoutePrefixes`. */
   minimumAdminRole: ROLES.STAFF as Role,

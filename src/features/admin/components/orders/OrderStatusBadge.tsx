@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 type OrderStatus =
   | "pending"
   | "confirmed"
+  | "processing"
+  | "packed"
   | "shipped"
   | "delivered"
   | "cancelled";
@@ -25,6 +27,12 @@ export function OrderStatusBadge({
     confirmed:
       "bg-blue-100 text-blue-800",
 
+    processing:
+      "bg-blue-100 text-blue-800",
+
+    packed:
+      "bg-orange-100 text-orange-800",
+
     shipped:
       "bg-purple-100 text-purple-800",
 
@@ -45,7 +53,7 @@ export function OrderStatusBadge({
           "bg-gray-100 text-gray-800"
       )}
     >
-      {status}
+      {status === "pending" ? "New Orders" : status === "packed" ? "Packed" : status}
     </span>
   );
 }

@@ -25,6 +25,12 @@ export interface ListPublicBooksParams {
   search?: string;
   categoryId?: string;
   subcategoryId?: string;
+  authorId?: string;
+  publisherId?: string;
+  availability?: "all" | "in-stock" | "out-of-stock";
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: "newest" | "title" | "price-asc" | "price-desc";
   page?: number;
   pageSize?: number;
 }
@@ -35,6 +41,15 @@ export async function listPublicBooks(
   const supabase = createClient();
 
   const {
+    search,
+    categoryId,
+    subcategoryId,
+    authorId,
+    publisherId,
+    availability = "all",
+    minPrice,
+    maxPrice,
+    sortBy = "newest",
     page = 1,
     pageSize = 12,
   } = params;
@@ -42,9 +57,25 @@ export async function listPublicBooks(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("books")
     .select("*", { count: "exact" })
+    .eq("status", PUBLIC_VISIBLE_STATUS);
+
+  if (search?.trim()) query = query.ilike("title", `%${search.trim()}%`);
+  if (categoryId) query = query.eq("category_id", categoryId);
+  if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
+  if (authorId) query = query.eq("author_id", authorId);
+  if (publisherId) query = query.eq("publisher_id", publisherId);
+  if (availability === "in-stock") query = query.gt("stock_quantity", 0);
+  if (availability === "out-of-stock") query = query.eq("stock_quantity", 0);
+  if (minPrice !== undefined) query = query.gte("price", minPrice);
+  if (maxPrice !== undefined) query = query.lte("price", maxPrice);
+
+  const sortColumn = sortBy === "title" ? "title" : sortBy.startsWith("price") ? "price" : "created_at";
+  const ascending = sortBy === "title" || sortBy === "price-asc";
+  const { data, count, error } = await query
+    .order(sortColumn, { ascending })
     .range(from, to);
 
   if (error) throw error;

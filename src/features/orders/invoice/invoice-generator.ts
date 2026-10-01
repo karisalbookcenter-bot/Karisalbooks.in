@@ -15,7 +15,10 @@ type InvoiceOrder = {
   district: string;
   pincode: string;
   total_amount: number;
+  subtotal_amount?: number | null;
+  discount_amount?: number | null;
   courier_charge: number | null;
+  courier_discount?: number | null;
   payment_status: string | null;
   payment_method: string | null;
   courier_name: string | null;
@@ -98,19 +101,34 @@ export function generateInvoicePDF(
   const courier =
     order.courier_charge ?? 0;
 
-  const booksTotal =
-    order.total_amount - courier;
+  const bookDiscount = order.discount_amount ?? 0;
+  const courierDiscount = order.courier_discount ?? 0;
+  const booksSubtotal = order.subtotal_amount && order.subtotal_amount > 0
+    ? order.subtotal_amount
+    : order.total_amount - courier + bookDiscount;
 
   pdf.text(
-    `Books Total : ₹${booksTotal}`,
+    `Books Subtotal : ₹${booksSubtotal}`,
     14,
     finalY
   );
 
   pdf.text(
-    `Courier Charge : ₹${courier}`,
+    `Book Discount : -₹${bookDiscount}`,
     14,
     finalY + 8
+  );
+
+  pdf.text(
+    `Courier Charge : ₹${courier + courierDiscount}`,
+    14,
+    finalY + 16
+  );
+
+  pdf.text(
+    `Member Courier Discount : -₹${courierDiscount}`,
+    14,
+    finalY + 24
   );
 
   pdf.setFontSize(13);
@@ -118,7 +136,7 @@ export function generateInvoicePDF(
   pdf.text(
     `Grand Total : ₹${order.total_amount}`,
     14,
-    finalY + 20
+    finalY + 36
   );
 
   pdf.setFontSize(11);

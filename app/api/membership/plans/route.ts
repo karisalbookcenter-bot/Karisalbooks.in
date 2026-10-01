@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { calculateMembershipCharge, MEMBERSHIP_VALIDITY_DAYS } from "@/features/checkout/server/purchase-pricing.server";
 
 export async function GET() {
   try {
@@ -12,7 +13,13 @@ export async function GET() {
       .order("price", { ascending: true });
 
     if (error) throw new Error(error.message);
-    return NextResponse.json({ plans: data ?? [] });
+    const plans = (data ?? []).map((plan) => ({
+      ...plan,
+      ...calculateMembershipCharge(plan.name, Number(plan.price)),
+      validity_days: MEMBERSHIP_VALIDITY_DAYS,
+      discount_percentage: plan.name.toLowerCase().includes("premium") ? 20 : 15,
+    }));
+    return NextResponse.json({ plans });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load membership plans.";
     return NextResponse.json(

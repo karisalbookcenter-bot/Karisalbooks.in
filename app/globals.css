@@ -1,68 +1,70 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 40 33% 98%;
-    --foreground: 20 14% 12%;
+    --background: 0 0% 99%;
+    --foreground: 158 18% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 14% 12%;
+    --card-foreground: 158 18% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14% 12%;
+    --popover-foreground: 158 18% 11%;
 
-    --primary: 20 60% 25%;
-    --primary-foreground: 40 33% 98%;
+    --primary: 157 38% 23%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 20% 92%;
-    --secondary-foreground: 20 14% 12%;
+    --secondary: 150 19% 93%;
+    --secondary-foreground: 158 18% 11%;
 
-    --muted: 30 20% 92%;
-    --muted-foreground: 20 8% 40%;
+    --muted: 150 12% 95%;
+    --muted-foreground: 158 8% 39%;
 
-    --accent: 30 25% 88%;
-    --accent-foreground: 20 14% 12%;
+    --accent: 43 62% 91%;
+    --accent-foreground: 158 18% 11%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 40 33% 98%;
 
-    --border: 30 15% 85%;
-    --input: 30 15% 85%;
-    --ring: 20 60% 25%;
+    --border: 150 10% 86%;
+    --input: 150 10% 82%;
+    --ring: 157 38% 23%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 20 14% 8%;
-    --foreground: 40 33% 96%;
+    --background: 158 18% 7%;
+    --foreground: 145 18% 95%;
 
-    --card: 20 14% 10%;
-    --card-foreground: 40 33% 96%;
+    --card: 158 15% 10%;
+    --card-foreground: 145 18% 95%;
 
-    --popover: 20 14% 10%;
-    --popover-foreground: 40 33% 96%;
+    --popover: 158 15% 10%;
+    --popover-foreground: 145 18% 95%;
 
-    --primary: 30 45% 70%;
-    --primary-foreground: 20 14% 10%;
+    --primary: 43 64% 66%;
+    --primary-foreground: 158 18% 10%;
 
-    --secondary: 20 10% 16%;
-    --secondary-foreground: 40 33% 96%;
+    --secondary: 158 12% 16%;
+    --secondary-foreground: 145 18% 95%;
 
-    --muted: 20 10% 16%;
-    --muted-foreground: 30 10% 65%;
+    --muted: 158 12% 16%;
+    --muted-foreground: 145 8% 66%;
 
-    --accent: 20 10% 18%;
-    --accent-foreground: 40 33% 96%;
+    --accent: 43 32% 21%;
+    --accent-foreground: 145 18% 95%;
 
     --destructive: 0 62% 40%;
     --destructive-foreground: 40 33% 96%;
 
-    --border: 20 10% 20%;
-    --input: 20 10% 20%;
-    --ring: 30 45% 70%;
+    --border: 158 10% 23%;
+    --input: 158 10% 25%;
+    --ring: 43 64% 66%;
   }
 }
 
@@ -72,5 +74,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Noto Sans Tamil", Latha, system-ui, sans-serif;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }

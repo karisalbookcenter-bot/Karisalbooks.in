@@ -50,6 +50,24 @@ export function generateOrderWhatsAppMessage({
       break;
 
 
+        case "processing":
+
+      statusMessage =
+    `உங்கள் ஆர்டர் செயல்படுத்தப்படுகிறது.
+    புத்தகங்கள் தயாரானதும் packing செய்யப்படும்.`;
+
+      break;
+
+
+        case "packed":
+
+      statusMessage =
+    `உங்கள் புத்தகங்கள் pack செய்யப்பட்டுவிட்டன.
+    விரைவில் courier-ல் அனுப்பப்படும்.`;
+
+      break;
+
+
 
     case "shipped":
 

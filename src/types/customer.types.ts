@@ -1,4 +1,4 @@
-import type { BaseEntity } from "./common.types";
+import type { BaseEntity, RecordStatus } from "./common.types";
 
 
 /**
@@ -73,7 +73,7 @@ export interface CustomerInsert {
   membership_id?: string | null;
 
 
-  status?: string;
+  status?: RecordStatus;
 
 }
 
@@ -107,6 +107,6 @@ export interface CustomerUpdate {
   membership_id?: string | null;
 
 
-  status?: string;
+  status?: RecordStatus;
 
 }

@@ -64,26 +64,17 @@ export function CustomerTable({
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => onToggleSelect?.(customer.id)}
-                        aria-label={`Select ${customer.full_name}`}
+                        aria-label={`Select ${customer.name}`}
                         className="h-4 w-4 rounded border-input"
                       />
                     </td>
                   )}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      {customer.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={customer.avatar_url}
-                          alt={customer.full_name}
-                          className="h-8 w-8 shrink-0 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                          {getCustomerInitials(customer.full_name)}
-                        </span>
-                      )}
-                      <span className="font-medium text-foreground">{customer.full_name}</span>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+                        {getCustomerInitials(customer.name)}
+                      </span>
+                      <span className="font-medium text-foreground">{customer.name}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">

@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useBookForm } from "@/features/books/hooks/useBookForm";
+import { authorService } from "@/features/authors/services/author.service";
+import { publisherService } from "@/features/publishers/services/publisher.service";
 import type { BookFormValues } from "@/features/books/types/book-form.types";
 import type { Book } from "@/types/book.types";
 import type { BookFormLayoutProps } from "@/features/admin/types/book-management.types";
@@ -43,6 +46,12 @@ export function BookFormLayout({
   onSuccess,
   onCancel,
 }: BookFormLayoutProps) {
+  const [authorMode, setAuthorMode] = useState<"existing" | "manual">("existing");
+  const [publisherMode, setPublisherMode] = useState<"existing" | "manual">("existing");
+  const [manualAuthorName, setManualAuthorName] = useState("");
+  const [manualPublisherName, setManualPublisherName] = useState("");
+  const [manualEntryError, setManualEntryError] = useState<string | null>(null);
+
   const {
     values,
     errors,
@@ -59,9 +68,55 @@ export function BookFormLayout({
   });
 
   const handleSave = async () => {
-    const result = await submit();
-    if (result?.data) onSuccess?.(result.data);
+    setManualEntryError(null);
+
+    try {
+      let authorId = values.authorId;
+      if (authorMode === "manual") {
+        if (!manualAuthorName.trim()) {
+          setManualEntryError("Enter an author name.");
+          return;
+        }
+        authorId = await resolveAuthorId(manualAuthorName);
+      }
+
+      let publisherId = values.publisherId ?? "";
+      if (publisherMode === "manual") {
+        publisherId = manualPublisherName.trim()
+          ? await resolvePublisherId(manualPublisherName)
+          : "";
+      }
+
+      const result = await submit({ authorId, publisherId });
+      if (result?.data) onSuccess?.(result.data);
+    } catch (error) {
+      setManualEntryError(error instanceof Error ? error.message : "Unable to save author or publisher.");
+    }
   };
+
+  async function resolveAuthorId(rawName: string) {
+    const name = rawName.trim();
+    const existing = await authorService.list({ page: 1, pageSize: 1000, search: name });
+    if (existing.error) throw new Error(existing.error.message);
+    const match = existing.data.items.find((author) => author.name.trim().toLowerCase() === name.toLowerCase());
+    if (match) return match.id;
+
+    const created = await authorService.create({ name });
+    if (created.error) throw new Error(created.error.message);
+    return created.data.id;
+  }
+
+  async function resolvePublisherId(rawName: string) {
+    const name = rawName.trim();
+    const existing = await publisherService.list({ page: 1, pageSize: 1000, search: name });
+    if (existing.error) throw new Error(existing.error.message);
+    const match = existing.data.items.find((publisher) => publisher.name.trim().toLowerCase() === name.toLowerCase());
+    if (match) return match.id;
+
+    const created = await publisherService.create({ name });
+    if (created.error) throw new Error(created.error.message);
+    return created.data.id;
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -171,21 +226,21 @@ export function BookFormLayout({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="book-author">Author</Label>
-          <Select
-            id="book-author"
-            value={values.authorId}
-            onChange={(e) => setField("authorId", e.target.value)}
-          >
-            <option value="">Select an author</option>
-            {authors.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </Select>
+          <div className="mb-2 mt-1 inline-flex rounded-md border border-border p-0.5" role="group" aria-label="Author entry mode">
+            <button type="button" aria-pressed={authorMode === "existing"} onClick={() => setAuthorMode("existing")} className={`rounded px-3 py-1.5 text-xs ${authorMode === "existing" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>Existing</button>
+            <button type="button" aria-pressed={authorMode === "manual"} onClick={() => setAuthorMode("manual")} className={`rounded px-3 py-1.5 text-xs ${authorMode === "manual" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>Type new</button>
+          </div>
+          {authorMode === "existing" ? (
+            <Select id="book-author" value={values.authorId} onChange={(event) => setField("authorId", event.target.value)}>
+              <option value="">Select an author</option>
+              {authors.map((author) => <option key={author.id} value={author.id}>{author.name}</option>)}
+            </Select>
+          ) : (
+            <Input id="book-author" value={manualAuthorName} onChange={(event) => setManualAuthorName(event.target.value)} placeholder="Type author name" />
+          )}
           {/* Keyed as "author_id", not "authorId" — errors come from
               validateBookInsert/Update, which validate toBookInsert(values)'s
               snake_case, BookInsert-shaped payload (useBookForm.ts §setField),
@@ -196,20 +251,22 @@ export function BookFormLayout({
         </div>
         <div>
           <Label htmlFor="book-publisher">Publisher</Label>
-          <Select
-            id="book-publisher"
-            value={values.publisherId ?? ""}
-            onChange={(e) => setField("publisherId", e.target.value)}
-          >
-            <option value="">None</option>
-            {publishers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+          <div className="mb-2 mt-1 inline-flex rounded-md border border-border p-0.5" role="group" aria-label="Publisher entry mode">
+            <button type="button" aria-pressed={publisherMode === "existing"} onClick={() => setPublisherMode("existing")} className={`rounded px-3 py-1.5 text-xs ${publisherMode === "existing" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>Existing</button>
+            <button type="button" aria-pressed={publisherMode === "manual"} onClick={() => setPublisherMode("manual")} className={`rounded px-3 py-1.5 text-xs ${publisherMode === "manual" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>Type new</button>
+          </div>
+          {publisherMode === "existing" ? (
+            <Select id="book-publisher" value={values.publisherId ?? ""} onChange={(event) => setField("publisherId", event.target.value)}>
+              <option value="">None</option>
+              {publishers.map((publisher) => <option key={publisher.id} value={publisher.id}>{publisher.name}</option>)}
+            </Select>
+          ) : (
+            <Input id="book-publisher" value={manualPublisherName} onChange={(event) => setManualPublisherName(event.target.value)} placeholder="Type publisher name (optional)" />
+          )}
         </div>
       </div>
+
+      {manualEntryError && <p role="alert" className="text-sm text-destructive">{manualEntryError}</p>}
 
       <div>
         <Label htmlFor="book-cover">Cover image</Label>

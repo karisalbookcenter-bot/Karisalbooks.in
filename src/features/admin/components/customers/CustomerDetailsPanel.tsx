@@ -59,20 +59,11 @@ export function CustomerDetailsPanel({ customer, open, onClose, className }: Cus
     >
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          {customer.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={customer.avatar_url}
-              alt={customer.full_name}
-              className="h-14 w-14 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
-              {getCustomerInitials(customer.full_name)}
-            </span>
-          )}
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
+            {getCustomerInitials(customer.name)}
+          </span>
           <div>
-            <p className="text-base font-semibold text-foreground">{customer.full_name}</p>
+            <p className="text-base font-semibold text-foreground">{customer.name}</p>
             <StatusBadge status={customer.status} className="mt-1" />
           </div>
         </div>

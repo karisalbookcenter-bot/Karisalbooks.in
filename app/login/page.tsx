@@ -39,7 +39,10 @@ export default function LoginPage() {
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/admin";
+  const requestedRedirect = searchParams.get("redirectTo");
+  const redirectTo = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
+    ? requestedRedirect
+    : "/admin";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,17 +54,22 @@ function LoginForm() {
     setError(null);
     setIsSubmitting(true);
 
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (signInError) {
-      setError(signInError.message);
+      if (signInError) {
+        setError(signInError.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // A full navigation revalidates the Supabase cookie in server middleware.
+      window.location.assign(redirectTo);
+    } catch (signInFailure) {
+      setError(signInFailure instanceof Error ? signInFailure.message : "Unable to sign in.");
       setIsSubmitting(false);
-      return;
     }
-
-    // Full reload, not router.push — see doc comment above.
-    window.location.href = redirectTo;
   }
 
   return (

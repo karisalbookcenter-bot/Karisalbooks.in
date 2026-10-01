@@ -48,7 +48,7 @@ function mapRow(
 ):Customer{
 
 
-  return row as Customer;
+  return row as unknown as Customer;
 
 }
 

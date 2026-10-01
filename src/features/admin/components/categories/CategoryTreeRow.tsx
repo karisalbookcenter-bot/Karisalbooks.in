@@ -49,7 +49,12 @@ export function CategoryTreeRow({
   const FolderIcon = getIcon("folder-tree");
 
   return (
-    <li role="treeitem" aria-expanded={hasChildren ? isExpanded : undefined} aria-level={node.depth + 1}>
+    <li
+      role="treeitem"
+      aria-expanded={hasChildren ? isExpanded : undefined}
+      aria-selected={isSelected}
+      aria-level={node.depth + 1}
+    >
       <div
         className="group flex items-center gap-2 rounded-md py-2 pr-2 hover:bg-accent/50"
         style={{ paddingLeft: node.depth * 20 + 8 }}

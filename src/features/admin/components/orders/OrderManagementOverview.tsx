@@ -13,6 +13,8 @@ import {
 type OrderStatus =
   | "pending"
   | "confirmed"
+  | "processing"
+  | "packed"
   | "shipped"
   | "delivered"
   | "cancelled";
@@ -44,6 +46,8 @@ const ORDER_STATUS = [
   "all",
   "pending",
   "confirmed",
+  "processing",
+  "packed",
   "shipped",
   "delivered",
   "cancelled",
@@ -412,11 +416,19 @@ export function OrderManagementOverview() {
               >
 
                 <option value="pending">
-                  Pending
+                  New Orders
                 </option>
 
                 <option value="confirmed">
                   Confirmed
+                </option>
+
+                <option value="processing">
+                  Processing
+                </option>
+
+                <option value="packed">
+                  Packed
                 </option>
 
                 <option value="shipped">

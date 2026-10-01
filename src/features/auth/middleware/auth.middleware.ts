@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { createMiddlewareClient } from "@/lib/supabase/middleware";
 import { authConfig } from "@/config/auth";
-import { DEFAULT_ROLE, isAtLeastRole, type Role } from "@/constants/roles.constants";
+import { isAtLeastRole } from "@/constants/roles.constants";
+import { resolveServerRole } from "@/features/auth/services/role-resolver";
 
 /**
  * Auth Middleware — Sprint 05 (Authentication Foundation).
@@ -53,7 +54,7 @@ export async function handleAuthMiddleware(
   }
 
   if (requiresAdmin && user) {
-    const role = (user.app_metadata?.role as Role | undefined) ?? DEFAULT_ROLE;
+    const role = resolveServerRole(user);
     if (!isAtLeastRole(role, authConfig.minimumAdminRole)) {
       return NextResponse.redirect(new URL(authConfig.routes.unauthorized, request.url));
     }

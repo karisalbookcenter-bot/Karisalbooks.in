@@ -1,7 +1,8 @@
 # Membership Checkout Setup
 
-1. Apply `supabase/migrations/0004_membership_checkout_promotions.sql` to the Supabase project. It adds offer coupon codes and assigns a unique `KBM-YYYY-NNNNNN` membership number when a paid membership is inserted.
+1. Apply migrations `0004_membership_checkout_promotions.sql` through `0009_editable_social_links.sql`. They add coupon codes, 350-day validity, retry-safe payment IDs, carrier/status columns, tier IDs (`KB-ST-0001` / `KB-PR-0001`), order email, delivery-state storage, and editable public social links.
 2. Add `SUPABASE_SERVICE_ROLE_KEY` to the server environment using the project's service-role key. Keep it server-only; never prefix it with `NEXT_PUBLIC_`.
-3. Restart the Next.js server. The existing `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are used to create and verify payments.
+3. Courier rates are ₹60 for Tamil Nadu/Puducherry and ₹120 estimated for other states, up to 1 kg. Checkout uses the destination state; the server applies a 30% member courier offer. The existing `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` create and verify payments.
+4. For automatic notifications, configure `RESEND_API_KEY` + `ORDER_EMAIL_FROM` and/or WhatsApp Cloud API credentials with approved templates. Notifications are best-effort and do not reverse a captured payment if a provider is unavailable.
 
-Customers can apply at `/membership/apply`. Admins can set an optional coupon code on an offer; shoppers enter either that code or an active membership number at checkout. Only one discount is accepted per order.
+Customers can apply at `/membership/apply`. Admins can set an optional coupon code on an offer; shoppers choose India Post or Professional Courier and enter either a coupon or active membership number at checkout. Only one book discount is accepted per order. Standard members receive 15% on eligible publisher books or orders of at least ₹700; Premium members receive 20% only on eligible publisher books. Both membership tiers receive the 30% courier reduction.

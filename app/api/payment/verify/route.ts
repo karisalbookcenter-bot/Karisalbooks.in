@@ -2,11 +2,13 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import {
+  MEMBERSHIP_VALIDITY_DAYS,
   pricePurchase,
   type PurchaseInput,
 } from "@/features/checkout/server/purchase-pricing.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { razorpay } from "@/lib/razorpay";
+import { sendPurchaseNotifications } from "@/features/orders/notifications/order-notification.server";
 
 interface PaymentVerificationInput {
   purchase: PurchaseInput;
@@ -15,10 +17,11 @@ interface PaymentVerificationInput {
   razorpay_signature: string;
   customer?: {
     name: string;
-    email: string;
+    email?: string;
     mobile: string;
     address: string;
     district: string;
+    state: string;
     pincode: string;
   };
 }
@@ -51,6 +54,8 @@ export async function POST(request: Request) {
       order.amount !== priced.totalPaise ||
       order.currency !== "INR" ||
       order.notes?.flow !== purchase.flow ||
+      order.notes?.reference !== (purchase.flow === "membership" ? purchase.planId : "books") ||
+      order.notes?.shipping_method !== (purchase.flow === "books" ? priced.shippingMethod : "none") ||
       payment.order_id !== orderId ||
       payment.amount !== priced.totalPaise ||
       payment.currency !== "INR"
@@ -72,6 +77,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Customer details are required." }, { status: 400 });
       }
       if (!priced.plan) return NextResponse.json({ error: "Membership plan is unavailable." }, { status: 400 });
+
+      const { data: existingMembership, error: existingMembershipError } = await supabase
+        .from("memberships")
+        .select("membership_id, expiry_date")
+        .eq("payment_id", paymentId)
+        .maybeSingle();
+      if (existingMembershipError) throw new Error(existingMembershipError.message);
+      if (existingMembership) {
+        return NextResponse.json({
+          success: true,
+          flow: "membership",
+          membershipId: existingMembership.membership_id,
+          planName: priced.plan.name,
+          expiryDate: existingMembership.expiry_date,
+        });
+      }
 
       const email = body.customer.email.trim().toLowerCase();
       let { data: customer, error: customerLookupError } = await supabase
@@ -98,9 +119,9 @@ export async function POST(request: Request) {
         customer = createdCustomer;
       }
 
-      const startDate = new Date();
+      const startDate = new Date(order.created_at * 1000);
       const expiryDate = new Date(startDate);
-      expiryDate.setDate(expiryDate.getDate() + priced.plan.validityDays);
+      expiryDate.setDate(expiryDate.getDate() + MEMBERSHIP_VALIDITY_DAYS);
       const { data: membership, error: membershipError } = await supabase
         .from("memberships")
         .insert({
@@ -108,6 +129,7 @@ export async function POST(request: Request) {
           plan_id: priced.plan.id,
           payment_amount: priced.totalPaise / 100,
           payment_status: "paid",
+          payment_id: paymentId,
           start_date: startDate.toISOString().slice(0, 10),
           expiry_date: expiryDate.toISOString().slice(0, 10),
           status: "active",
@@ -121,6 +143,17 @@ export async function POST(request: Request) {
         .update({ membership_id: membership.membership_id })
         .eq("id", customer.id);
       if (customerUpdateError) throw new Error(customerUpdateError.message);
+
+      await sendPurchaseNotifications({
+        type: "membership",
+        name: body.customer.name.trim(),
+        email,
+        mobile: body.customer.mobile,
+        reference: membership.membership_id,
+        amount: priced.totalPaise / 100,
+        planName: priced.plan.name,
+        expiryDate: expiryDate.toISOString().slice(0, 10),
+      });
 
       return NextResponse.json({
         success: true,
@@ -136,15 +169,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Complete your delivery details before paying." }, { status: 400 });
     }
 
+    const { data: existingOrder, error: existingOrderError } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("payment_id", paymentId)
+      .maybeSingle();
+    if (existingOrderError) throw new Error(existingOrderError.message);
+    if (existingOrder) {
+      return NextResponse.json({ success: true, flow: "books", orderId: existingOrder.id });
+    }
+
     const { data: orderRow, error: orderInsertError } = await supabase
       .from("orders")
       .insert({
         customer_name: customer.name.trim(),
+        customer_email: customer.email?.trim().toLowerCase() || null,
         mobile: customer.mobile.trim(),
         address: customer.address.trim(),
         district: customer.district.trim(),
+        state: customer.state.trim(),
         pincode: customer.pincode.trim(),
         total_amount: priced.totalPaise / 100,
+        courier_name: priced.shippingMethod,
+        shipping_method: priced.shippingMethod,
+        subtotal_amount: priced.subtotalPaise / 100,
+        discount_amount: priced.bookDiscountPaise / 100,
+        courier_charge: (priced.courierChargePaise - priced.courierDiscountPaise) / 100,
+        courier_discount: priced.courierDiscountPaise / 100,
+        payment_status: "paid",
+        payment_method: "Razorpay",
+        payment_id: paymentId,
       })
       .select("id")
       .single();
@@ -160,6 +214,15 @@ export async function POST(request: Request) {
       }))
     );
     if (itemsError) throw new Error(itemsError.message);
+
+    await sendPurchaseNotifications({
+      type: "order",
+      name: customer.name.trim(),
+      email: customer.email,
+      mobile: customer.mobile,
+      reference: orderRow.id,
+      amount: priced.totalPaise / 100,
+    });
 
     return NextResponse.json({ success: true, flow: "books", orderId: orderRow.id });
   } catch (error) {

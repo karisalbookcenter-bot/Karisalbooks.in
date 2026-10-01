@@ -66,16 +66,19 @@ const BULK_ACTIONS = [
   {
     id:"activate",
     label:"Activate",
+    icon:"check-circle",
   },
 
   {
     id:"deactivate",
     label:"Deactivate",
+    icon:"x-circle",
   },
 
   {
     id:"delete",
     label:"Delete",
+    icon:"close",
   },
 
 ];

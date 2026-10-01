@@ -48,7 +48,7 @@ export interface UseBookFormResult {
   selectCoverImageFile: (file: File | null) => void;
   selectedCoverImageFile: File | null;
   reset: () => void;
-  submit: () => Promise<ApiResponse<Book>>;
+  submit: (overrides?: Partial<BookFormValues>) => Promise<ApiResponse<Book>>;
 }
 
 function toBookInsert(values: BookFormValues): BookInsert {
@@ -112,10 +112,10 @@ export function useBookForm(options: UseBookFormOptions = {}): UseBookFormResult
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const submit = useCallback(async (): Promise<ApiResponse<Book>> => {
+  const submit = useCallback(async (overrides: Partial<BookFormValues> = {}): Promise<ApiResponse<Book>> => {
     setSubmitError(null);
 
-    const payload = toBookInsert(values);
+    const payload = toBookInsert({ ...values, ...overrides });
     const validation = mode === "create" ? validateBookInsert(payload) : validateBookUpdate(payload);
 
     if (!validation.success) {

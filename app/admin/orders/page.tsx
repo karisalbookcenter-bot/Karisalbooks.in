@@ -26,6 +26,7 @@ type Order = {
   mobile: string;
   address: string;
   district: string;
+  state: string | null;
   pincode: string;
   total_amount: number;
   status: string;
@@ -247,6 +248,10 @@ export default function AdminOrdersPage() {
 
                         {" "}
 
+                        {order.state}
+
+                        {" "}
+
                         - {order.pincode}
 
                       </p>
@@ -371,7 +376,7 @@ export default function AdminOrdersPage() {
 
                         <option value="pending">
 
-                          Pending
+                          New Orders
 
                         </option>
 
@@ -379,6 +384,13 @@ export default function AdminOrdersPage() {
                         <option value="processing">
 
                           Processing
+
+                        </option>
+
+
+                        <option value="packed">
+
+                          Packed
 
                         </option>
 

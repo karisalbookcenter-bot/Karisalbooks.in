@@ -4,7 +4,8 @@ import { razorpay } from "@/lib/razorpay";
 
 export async function POST(request: Request) {
   try {
-    const purchase = (await request.json()) as PurchaseInput;
+    const body = (await request.json()) as { purchase?: PurchaseInput };
+    const purchase = body.purchase;
     if (!purchase || (purchase.flow !== "books" && purchase.flow !== "membership")) {
       return NextResponse.json({ error: "Invalid purchase type." }, { status: 400 });
     }
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
       notes: {
         flow: purchase.flow,
         reference: purchase.flow === "membership" ? purchase.planId : "books",
+        shipping_method: purchase.flow === "books" ? purchase.shippingMethod ?? "India Post" : "none",
       },
     });
 
@@ -25,6 +27,9 @@ export async function POST(request: Request) {
       keyId: process.env.RAZORPAY_KEY_ID,
       subtotal: priced.subtotalPaise / 100,
       discountAmount: priced.discountPaise / 100,
+      bookDiscountAmount: priced.bookDiscountPaise / 100,
+      courierCharge: priced.courierChargePaise / 100,
+      courierDiscount: priced.courierDiscountPaise / 100,
       discountPercentage: priced.discount?.percentage ?? 0,
       discountDescription: priced.discount?.description ?? null,
       total: priced.totalPaise / 100,
@@ -34,7 +39,7 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Unable to create payment order.";
     return NextResponse.json(
       { error: message },
-      { status: message.includes("SUPABASE_SERVICE_ROLE_KEY") ? 503 : 400 }
+      { status: message.includes("SUPABASE_SERVICE_ROLE_KEY") || message.includes("COURIER_CHARGE_INR") || message.includes("INDIA_POST_CHARGE_INR") || message.includes("PROFESSIONAL_COURIER_CHARGE_INR") ? 503 : 400 }
     );
   }
 }

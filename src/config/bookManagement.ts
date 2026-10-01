@@ -44,3 +44,8 @@ export const BOOK_SORT_OPTIONS = [
 ] as const;
 
 export const BOOK_PAGE_SIZE_DEFAULT = 20;
+
+export const BOOK_AUTHOR_LOOKUP_LIMIT = 1000;
+
+/** `null` means the catalog has no maximum number of books. */
+export const BOOK_CATALOG_LIMIT: number | null = null;

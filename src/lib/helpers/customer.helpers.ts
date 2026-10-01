@@ -16,7 +16,7 @@ export function searchCustomers(customers: Customer[], query: string): Customer[
   if (!normalized) return customers;
 
   return customers.filter((customer) =>
-    [customer.full_name, customer.email, customer.phone ?? ""].some((field) =>
+    [customer.name, customer.email ?? "", customer.phone ?? ""].some((field) =>
       field.toLowerCase().includes(normalized)
     )
   );

@@ -210,9 +210,7 @@ export function createCustomer(
       error:{
 
         message:
-          Object.values(
-            validation.errors ?? {}
-          ).join(" "),
+          validation.error.issues.map((issue) => issue.message).join(" "),
 
 
         code:
@@ -279,9 +277,7 @@ export function updateCustomer(
       error:{
 
         message:
-          Object.values(
-            validation.errors ?? {}
-          ).join(" "),
+          validation.error.issues.map((issue) => issue.message).join(" "),
 
 
         code:

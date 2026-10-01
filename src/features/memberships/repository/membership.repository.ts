@@ -458,13 +458,30 @@ export async function listMemberships(
 
  if(plan){
 
+ const {
+   data: plans,
+   error: plansError,
+ } = await supabase
+   .from("membership_plans")
+   .select("id")
+   .ilike("name", `${plan}%`);
 
- query =
- query.eq(
- "plan",
- plan
- );
+ if(plansError){
+   throw new Error(plansError.message);
+ }
 
+ const planIds = (plans ?? []).map((membershipPlan) => membershipPlan.id);
+ if(!planIds.length){
+   return {
+     items: [],
+     page,
+     pageSize,
+     totalItems: 0,
+     totalPages: 1,
+   };
+ }
+
+ query = query.in("plan_id", planIds);
 
  }
 

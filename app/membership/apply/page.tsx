@@ -6,6 +6,13 @@ import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import type { MembershipPlan } from "@/types/membership.types";
 
+interface MembershipPlanOption extends MembershipPlan {
+  baseAmount: number;
+  taxAmount: number;
+  platformFee: number;
+  totalAmount: number;
+}
+
 interface ApplicantDetails {
   name: string;
   email: string;
@@ -39,7 +46,7 @@ const INITIAL_APPLICANT: ApplicantDetails = {
 };
 
 export default function MembershipApplyPage() {
-  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [plans, setPlans] = useState<MembershipPlanOption[]>([]);
   const [planId, setPlanId] = useState("");
   const [applicant, setApplicant] = useState(INITIAL_APPLICANT);
   const [loadingPlans, setLoadingPlans] = useState(true);
@@ -51,7 +58,7 @@ export default function MembershipApplyPage() {
     let current = true;
     fetch("/api/membership/plans")
       .then(async (response) => {
-        const result = (await response.json()) as { plans?: MembershipPlan[]; error?: string };
+        const result = (await response.json()) as { plans?: MembershipPlanOption[]; error?: string };
         if (!response.ok) throw new Error(result.error ?? "Unable to load membership plans.");
         if (!current) return;
         setPlans(result.plans ?? []);
@@ -93,7 +100,7 @@ export default function MembershipApplyPage() {
         key: orderData.keyId,
         amount: orderData.order.amount,
         currency: orderData.order.currency,
-        name: "Bookery",
+        name: "Karisal Books",
         description: `${selectedPlan?.name ?? "Membership"} membership`,
         order_id: orderData.order.id,
         prefill: {
@@ -154,7 +161,7 @@ export default function MembershipApplyPage() {
           </div>
         ) : (
           <div className="mx-auto max-w-xl">
-            <h1 className="text-3xl font-bold">Join Bookery Membership</h1>
+            <h1 className="text-3xl font-bold">Join Karisal Books Membership</h1>
             <p className="mt-2 text-muted-foreground">Choose a plan and pay securely to receive your membership number.</p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -178,7 +185,7 @@ export default function MembershipApplyPage() {
                             {plan.discount_percentage}% book discount · {plan.validity_days} days
                           </span>
                         </span>
-                        <span className="font-semibold">₹{plan.price}</span>
+                        <span className="font-semibold">₹{plan.totalAmount.toFixed(2)}</span>
                       </span>
                     </label>
                   ))}
@@ -188,6 +195,16 @@ export default function MembershipApplyPage() {
               {loadingPlans && <p className="text-sm text-muted-foreground">Loading plans…</p>}
               {!loadingPlans && plans.length === 0 && (
                 <p className="text-sm text-muted-foreground">Membership plans are not available right now.</p>
+              )}
+
+              {selectedPlan && (
+                <dl className="space-y-2 border-y py-4 text-sm">
+                  <div className="flex justify-between"><dt>Membership amount</dt><dd>₹{selectedPlan.baseAmount.toFixed(2)}</dd></div>
+                  <div className="flex justify-between"><dt>Tax (8%)</dt><dd>₹{selectedPlan.taxAmount.toFixed(2)}</dd></div>
+                  <div className="flex justify-between"><dt>Payment platform fee (8%)</dt><dd>₹{selectedPlan.platformFee.toFixed(2)}</dd></div>
+                  <div className="flex justify-between border-t pt-2 font-semibold"><dt>Total payable</dt><dd>₹{selectedPlan.totalAmount.toFixed(2)}</dd></div>
+                  <div className="pt-1 text-muted-foreground">Membership validity: 350 days from application.</div>
+                </dl>
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -221,7 +238,7 @@ export default function MembershipApplyPage() {
 
               <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5">
                 <p className="text-lg font-semibold">
-                  {selectedPlan ? `Pay ₹${selectedPlan.price}` : "Select a plan"}
+                  {selectedPlan ? `Pay ₹${selectedPlan.totalAmount.toFixed(2)}` : "Select a plan"}
                 </p>
                 <button
                   type="submit"

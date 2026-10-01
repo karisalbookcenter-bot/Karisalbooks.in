@@ -196,14 +196,26 @@ export default async function CustomerOrderDetailPage({
 
         <StatusStep
 
-          label="Confirmed"
+          label="Processing"
 
           done={[
             "confirmed",
+            "processing",
+            "packed",
             "shipped",
             "delivered"
           ].includes(order.status)}
 
+        />
+
+
+        <StatusStep
+          label="Packed"
+          done={[
+            "packed",
+            "shipped",
+            "delivered"
+          ].includes(order.status)}
         />
 
 

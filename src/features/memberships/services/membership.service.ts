@@ -53,6 +53,8 @@ export interface ListMembershipsInput {
 
   search?: string;
 
+  plan?: string;
+
   status?: RecordStatus[];
 
   sortBy?: keyof Membership;
@@ -97,6 +99,9 @@ export function listMemberships(
 
       search:
         input.search,
+
+      plan:
+        input.plan,
 
       status:
         input.status,

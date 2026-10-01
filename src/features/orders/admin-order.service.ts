@@ -172,6 +172,8 @@ export async function updateOrderCourier(
 
       courier_name,
 
+      shipping_method: courier_name,
+
       tracking_number,
 
       updated_at:

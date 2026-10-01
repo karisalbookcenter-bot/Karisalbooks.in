@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -9,10 +9,16 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 
 interface DiscountResult {
-  code: string;
-  kind: "membership" | "coupon";
+  code?: string;
+  kind?: "membership" | "coupon";
   percentage: number;
   description: string;
+  subtotal: number;
+  bookDiscountAmount: number;
+  courierCharge: number;
+  courierDiscount: number;
+  discountAmount: number;
+  total: number;
 }
 
 interface CreateOrderResult {
@@ -21,6 +27,9 @@ interface CreateOrderResult {
   order: { id: string; amount: number; currency: string };
   subtotal: number;
   discountAmount: number;
+  bookDiscountAmount: number;
+  courierCharge: number;
+  courierDiscount: number;
   discountPercentage: number;
   total: number;
 }
@@ -30,46 +39,76 @@ interface VerificationResult {
   orderId?: string;
 }
 
+type ShippingMethod = "India Post" | "Professional Courier";
+
+const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
+];
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, clearCart } = useCart();
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [address, setAddress] = useState("");
   const [district, setDistrict] = useState("");
+  const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("India Post");
   const [code, setCode] = useState("");
-  const [discount, setDiscount] = useState<DiscountResult | null>(null);
-  const [isApplying, setIsApplying] = useState(false);
+  const [quote, setQuote] = useState<DiscountResult | null>(null);
+  const [isQuoting, setIsQuoting] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState("");
 
-  const displayedTotal = discount
-    ? subtotal * (1 - discount.percentage / 100)
-    : subtotal;
-
-  async function applyCode() {
+  const loadQuote = useCallback(async (discountCode?: string) => {
     setError("");
-    setIsApplying(true);
+    setIsQuoting(true);
     try {
       const response = await fetch("/api/discounts/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({
+          code: discountCode?.trim() || undefined,
+          items: items.map((item) => ({ book_id: item.id, quantity: item.quantity })),
+          shippingMethod,
+          state,
+        }),
       });
       const result = (await response.json()) as DiscountResult & { error?: string };
       if (!response.ok) throw new Error(result.error ?? "This code could not be applied.");
-      setDiscount(result);
-      setCode(result.code);
-    } catch (applyError) {
-      setDiscount(null);
-      setError(applyError instanceof Error ? applyError.message : "This code could not be applied.");
+      setQuote(result);
+      if (result.code) setCode(result.code);
+    } catch (quoteError) {
+      setQuote(null);
+      setError(quoteError instanceof Error ? quoteError.message : "Unable to price this order.");
     } finally {
-      setIsApplying(false);
+      setIsQuoting(false);
     }
+  }, [items, shippingMethod, state]);
+
+  useEffect(() => {
+    if (items.length && state) void loadQuote();
+    else {
+      setQuote(null);
+      setError("");
+    }
+  }, [items, loadQuote, state]);
+
+  async function applyCode() {
+    await loadQuote(code);
   }
+
+  const displayedTotal = quote?.total ?? subtotal;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -79,9 +118,11 @@ export default function CheckoutPage() {
     const purchase = {
       flow: "books" as const,
       items: items.map((item) => ({ book_id: item.id, quantity: item.quantity })),
-      discountCode: discount?.code,
+      shippingMethod,
+      state,
+      discountCode: quote?.code,
     };
-    const customer = { name, mobile, address, district, pincode };
+    const customer = { name, email, mobile, address, district, pincode };
 
     try {
       const orderResponse = await fetch("/api/payment/create-order", {
@@ -97,7 +138,7 @@ export default function CheckoutPage() {
         key: orderData.keyId,
         amount: orderData.order.amount,
         currency: orderData.order.currency,
-        name: "Bookery",
+        name: "Karisal Books",
         description: "Book order",
         order_id: orderData.order.id,
         prefill: { name, contact: mobile },
@@ -148,12 +189,23 @@ export default function CheckoutPage() {
               <input required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
             </label>
             <label className="space-y-1 text-sm font-medium">
+              Email for receipt
+              <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+            </label>
+            <label className="space-y-1 text-sm font-medium">
               Mobile
               <input required type="tel" autoComplete="tel" value={mobile} onChange={(event) => setMobile(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
             </label>
             <label className="space-y-1 text-sm font-medium">
               District
               <input required value={district} onChange={(event) => setDistrict(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+            </label>
+            <label className="space-y-1 text-sm font-medium">
+              State / Union Territory
+              <select required value={state} onChange={(event) => setState(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal">
+                <option value="">Choose state</option>
+                {INDIAN_STATES.map((stateName) => <option key={stateName} value={stateName}>{stateName}</option>)}
+              </select>
             </label>
             <label className="space-y-1 text-sm font-medium sm:col-span-2">
               Address
@@ -165,11 +217,31 @@ export default function CheckoutPage() {
             </label>
           </div>
 
+          <fieldset className="space-y-2 border-t pt-4">
+            <legend className="text-sm font-semibold">Shipping method</legend>
+            {(["India Post", "Professional Courier"] as const).map((method) => (
+              <label key={method} className="flex items-center gap-3 py-1 text-sm">
+                <input
+                  type="radio"
+                  name="shipping-method"
+                  value={method}
+                  checked={shippingMethod === method}
+                  onChange={() => setShippingMethod(method)}
+                  className="accent-primary"
+                />
+                <span>{method}<span className="block text-xs text-muted-foreground">₹60 TN/Puducherry · ₹120 other states (up to 1 kg)</span></span>
+              </label>
+            ))}
+            <p className="max-w-xl text-xs leading-5 text-muted-foreground">
+              For other states, ₹120 is an estimate up to 1 kg. Final India Post charges may change based on actual parcel weight and destination. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.
+            </p>
+          </fieldset>
+
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
           <button
             type="submit"
-            disabled={!items.length || isPaying}
+            disabled={!items.length || isPaying || isQuoting || !quote}
             className="rounded-md bg-primary px-6 py-3 font-semibold text-white disabled:opacity-50"
           >
             {isPaying ? "Waiting for payment…" : `Pay ${formatCurrency(displayedTotal)}`}
@@ -197,26 +269,28 @@ export default function CheckoutPage() {
                 value={code}
                 onChange={(event) => {
                   setCode(event.target.value.toUpperCase());
-                  setDiscount(null);
+                  setQuote(null);
                 }}
                 placeholder="Enter code"
                 className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm"
               />
-              <button type="button" onClick={applyCode} disabled={!code.trim() || isApplying} className="rounded-md border px-3 text-sm font-medium disabled:opacity-50">
-                {isApplying ? "Checking…" : discount ? "Applied" : "Apply"}
+              <button type="button" onClick={applyCode} disabled={!code.trim() || isQuoting} className="rounded-md border px-3 text-sm font-medium disabled:opacity-50">
+                {isQuoting ? "Checking…" : quote?.code === code ? "Applied" : "Apply"}
               </button>
             </div>
-            {discount && (
+            {quote?.code && (
               <div className="mt-2 flex items-center justify-between gap-2 text-sm text-primary">
-                <span>{discount.description} · {discount.percentage}% off</span>
-                <button type="button" onClick={() => setDiscount(null)} className="underline">Remove</button>
+                <span>{quote.description} · {quote.percentage}% off</span>
+                <button type="button" onClick={() => { setCode(""); void loadQuote(); }} className="underline">Remove</button>
               </div>
             )}
           </div>
 
           <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatCurrency(subtotal)}</dd></div>
-            {discount && <div className="flex justify-between text-primary"><dt>Discount</dt><dd>-{formatCurrency(subtotal - displayedTotal)}</dd></div>}
+            <div className="flex justify-between"><dt>Books subtotal</dt><dd>{formatCurrency(quote?.subtotal ?? subtotal)}</dd></div>
+            <div className="flex justify-between"><dt>Courier charge</dt><dd>{formatCurrency(quote?.courierCharge ?? 0)}</dd></div>
+            {!!quote?.bookDiscountAmount && <div className="flex justify-between text-primary"><dt>Book discount</dt><dd>-{formatCurrency(quote.bookDiscountAmount)}</dd></div>}
+            {!!quote?.courierDiscount && <div className="flex justify-between text-primary"><dt>Member courier offer</dt><dd>-{formatCurrency(quote.courierDiscount)}</dd></div>}
             <div className="flex justify-between border-t pt-3 text-base font-bold"><dt>Total</dt><dd>{formatCurrency(displayedTotal)}</dd></div>
           </dl>
           <p className="mt-3 text-xs text-muted-foreground">Only one membership or coupon discount can be used per order.</p>

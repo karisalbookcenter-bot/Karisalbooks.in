@@ -12,9 +12,10 @@ import type {
 export const customerInsertSchema =
 z.object({
 
-  full_name:
+  name:
     z
     .string()
+    .trim()
     .min(
       2,
       "Customer name required"
@@ -22,11 +23,10 @@ z.object({
 
 
   email:
-    z
-    .string()
-    .email(
-      "Invalid email"
-    ),
+    z.union([
+      z.string().trim().email("Invalid email"),
+      z.literal(""),
+    ]).nullable().optional().transform((value) => value || null),
 
 
   phone:
@@ -36,11 +36,19 @@ z.object({
     .optional(),
 
 
-  avatar_url:
-    z
-    .string()
-    .nullable()
-    .optional(),
+  address: z.string().nullable().optional(),
+
+  city: z.string().nullable().optional(),
+
+  state: z.string().nullable().optional(),
+
+  pincode: z.string().nullable().optional(),
+
+  membership_id: z.string().nullable().optional(),
+
+  user_id: z.string().nullable().optional(),
+
+  status: z.enum(["active", "inactive", "archived"]).optional(),
 
 
 });

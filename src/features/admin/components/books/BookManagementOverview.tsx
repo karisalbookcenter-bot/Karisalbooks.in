@@ -15,7 +15,12 @@ import { publisherService } from "@/features/publishers/services/publisher.servi
 // see docs/CATEGORY_SUBCATEGORY_BACKEND.md.
 import * as categoryService from "@/features/categories/services/category.service";
 import * as subcategoryService from "@/features/subcategories/services/subcategory.service";
-import { BOOK_BULK_ACTIONS, BOOK_PAGE_SIZE_DEFAULT } from "@/config/bookManagement";
+import {
+  BOOK_AUTHOR_LOOKUP_LIMIT,
+  BOOK_BULK_ACTIONS,
+  BOOK_CATALOG_LIMIT,
+  BOOK_PAGE_SIZE_DEFAULT,
+} from "@/config/bookManagement";
 import { BookToolbar } from "./BookToolbar";
 import { BookFilters } from "./BookFilters";
 import { BookTable } from "./BookTable";
@@ -96,13 +101,12 @@ export function BookManagementOverview() {
 
   async function loadDropdownData() {
 
-    const authorResult = await authorService.list({ pageSize: 1000 });
+    const authorResult = await authorService.list({ pageSize: BOOK_AUTHOR_LOOKUP_LIMIT });
     console.log("AUTHORS:", authorResult);
 
     if (authorResult.data) {
       setAuthors(authorResult.data.items);
     }
-
 
     const publisherResult = await publisherService.list({ pageSize: 1000 });
     console.log("PUBLISHERS:", publisherResult);
@@ -110,7 +114,6 @@ export function BookManagementOverview() {
     if (publisherResult.data) {
       setPublishers(publisherResult.data.items);
     }
-
 
     const categoryResult = await categoryService.listCategories({
       pageSize: 1000,
@@ -169,6 +172,7 @@ export function BookManagementOverview() {
 
   const showEmpty = !loading && books.length === 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / filters.pageSize));
+  const canAddBook = BOOK_CATALOG_LIMIT === null || totalCount < BOOK_CATALOG_LIMIT;
 
   return (
     <PageContainer title="Books" description={`${totalCount} book${totalCount === 1 ? "" : "s"} in catalog`}>
@@ -177,7 +181,7 @@ export function BookManagementOverview() {
         onSearchChange={(search) => setFilters((f) => ({ ...f, search, page: 1 }))}
         view={view}
         onViewChange={setView}
-        onAddBook={() => setEditingBook("new")}
+        onAddBook={canAddBook ? () => setEditingBook("new") : undefined}
         filtersSlot={
           <BookFilters
             categories={categories}
@@ -219,7 +223,7 @@ export function BookManagementOverview() {
       ) : showEmpty ? (
         <BookEmptyState
           variant={filters.search || filters.categoryId || filters.authorId ? "no-results" : "no-books"}
-          onAddBook={() => setEditingBook("new")}
+          onAddBook={canAddBook ? () => setEditingBook("new") : undefined}
         />
       ) : view === "table" ? (
         <BookTable

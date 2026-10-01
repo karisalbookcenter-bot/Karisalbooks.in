@@ -1,12 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 
 
 export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <OrderSuccessContent />
+    </Suspense>
+  );
+}
 
+function OrderSuccessContent() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId");
 
   return (
 
@@ -30,6 +41,12 @@ export default function OrderSuccessPage() {
         <p className="text-sm text-muted-foreground">
           நாங்கள் விரைவில் உங்கள் ஆர்டரை செயல்படுத்துவோம்.
         </p>
+
+        {orderId && (
+          <p className="text-sm font-medium">
+            Order reference: <span className="font-mono">{orderId}</span>
+          </p>
+        )}
 
 
 

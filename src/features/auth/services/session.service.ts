@@ -1,7 +1,8 @@
 import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_ROLE, isAtLeastRole, type Role } from "@/constants/roles.constants";
+import { isAtLeastRole, type Role } from "@/constants/roles.constants";
+import { resolveServerRole } from "@/features/auth/services/role-resolver";
 import { hasPermission, type Permission } from "@/constants/permissions.constants";
 import type { AuthUser } from "@/features/auth/types/auth.types";
 
@@ -20,7 +21,7 @@ import type { AuthUser } from "@/features/auth/types/auth.types";
 /** Same mapping logic as `auth.service.ts` — role lives in `app_metadata`,
  *  which only a trusted server context can write. */
 function mapSupabaseUserToAuthUser(user: User): AuthUser {
-  const role = (user.app_metadata?.role as Role | undefined) ?? DEFAULT_ROLE;
+  const role = resolveServerRole(user);
 
   return {
     id: user.id,
