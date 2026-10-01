@@ -16,6 +16,8 @@ import {
   getCart,
   saveCart,
   clearStoredCart,
+  getWishlist,
+  saveWishlist,
 } from "../services/cart.storage";
 
 
@@ -31,12 +33,16 @@ export function CartProvider({
 }) {
 
   const [items, setItems] = useState<CartItem[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<CartItem[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
 
 
   // Load cart when website opens
   useEffect(() => {
 
     setItems(getCart());
+    setWishlistItems(getWishlist());
+    setIsHydrated(true);
 
   }, []);
 
@@ -44,12 +50,12 @@ export function CartProvider({
 
   // Save whenever cart changes
   useEffect(() => {
+    if (isHydrated) saveCart(items);
+  }, [items, isHydrated]);
 
-    if (items.length >= 0) {
-      saveCart(items);
-    }
-
-  }, [items]);
+  useEffect(() => {
+    if (isHydrated) saveWishlist(wishlistItems);
+  }, [wishlistItems, isHydrated]);
 
 
 
@@ -85,6 +91,20 @@ export function CartProvider({
 
     });
 
+  }
+
+  function toggleWishlist(item: CartItem) {
+    setWishlistItems((current) => current.some((saved) => saved.id === item.id)
+      ? current.filter((saved) => saved.id !== item.id)
+      : [...current, { ...item, quantity: 1 }]);
+  }
+
+  function removeWishlistItem(id: string) {
+    setWishlistItems((current) => current.filter((item) => item.id !== id));
+  }
+
+  function isWishlisted(id: string) {
+    return wishlistItems.some((item) => item.id === id);
   }
 
 
@@ -158,7 +178,11 @@ export function CartProvider({
     <CartContext.Provider
       value={{
         items,
+        wishlistItems,
         addItem,
+        toggleWishlist,
+        removeWishlistItem,
+        isWishlisted,
         removeItem,
         updateQuantity,
         clearCart,

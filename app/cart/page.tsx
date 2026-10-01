@@ -68,7 +68,13 @@ export default function CartPage() {
 
 
                   <p className="text-sm text-muted-foreground">
-                    {formatCurrency(item.price)}
+                    {item.discountAmount ? (
+                      <>
+                        <span className="mr-2 font-semibold text-primary">{formatCurrency(item.price)}</span>
+                        <span className="line-through">{formatCurrency(item.originalPrice ?? item.price + item.discountAmount)}</span>
+                        <span className="mt-1 block text-xs font-medium text-emerald-700">7% off · Save {formatCurrency(item.discountAmount)}</span>
+                      </>
+                    ) : formatCurrency(item.price)}
                   </p>
 
 

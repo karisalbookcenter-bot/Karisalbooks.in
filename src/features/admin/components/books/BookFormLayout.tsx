@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { calculateBookPrice, isBookDiscountEligible } from "@/lib/helpers/book-pricing.helpers";
+import { formatCurrency } from "@/lib/helpers/format.helpers";
 import { useBookForm } from "@/features/books/hooks/useBookForm";
 import { authorService } from "@/features/authors/services/author.service";
 import { publisherService } from "@/features/publishers/services/publisher.service";
@@ -66,6 +68,11 @@ export function BookFormLayout({
     bookId: initialBook?.id,
     initialValues: initialBook ? bookToFormValues(initialBook) : undefined,
   });
+  const selectedCategory = categories.find((category) => category.id === values.categoryId);
+  const enteredPrice = Number(values.price);
+  const pricePreview = selectedCategory && Number.isFinite(enteredPrice) && enteredPrice > 0
+    ? calculateBookPrice(enteredPrice, isBookDiscountEligible(selectedCategory.name))
+    : null;
 
   const handleSave = async () => {
     setManualEntryError(null);
@@ -159,6 +166,13 @@ export function BookFormLayout({
             onChange={(e) => setField("price", e.target.value)}
           />
           {errors.price && <p className="mt-1 text-xs text-destructive">{errors.price}</p>}
+          {pricePreview && (
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {pricePreview.discountAmount > 0
+                ? `7% discount: save ${formatCurrency(pricePreview.discountAmount)} · customer pays ${formatCurrency(pricePreview.discountedPrice)}`
+                : "No discount for this category."}
+            </p>
+          )}
         </div>
       </div>
 

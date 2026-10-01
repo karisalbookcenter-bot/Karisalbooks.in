@@ -13,6 +13,7 @@
 export const ROUTES = {
   HOME: "/",
   BOOKS: "/books",
+  RECOMMENDATIONS: "/recommendations",
   COMPETITIVE_EXAMS: "/competitive-exams",
   PUBLICATION_SERVICES: "/publication-services",
   OFFER_ZONE: "/offer-zone",
@@ -34,6 +35,7 @@ export const ROUTES = {
   // work); this is only the centralized path list the sidebar points at.
   ADMIN_DASHBOARD: "/admin",
   ADMIN_BOOKS: "/admin/books",
+  ADMIN_RECOMMENDATIONS: "/admin/recommendations",
   ADMIN_CATEGORIES: "/admin/categories",
   ADMIN_AUTHORS: "/admin/authors",
   ADMIN_PUBLISHERS: "/admin/publishers",

@@ -56,14 +56,14 @@ export default function HomePage() {
   return (
     <MainLayout>
       <section className="bg-primary text-primary-foreground">
-        <div className="container grid gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
+        <div className="container grid gap-5 py-7 sm:gap-8 sm:py-16 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
           <div className="max-w-2xl">
             <p className="mb-3 text-xs font-semibold uppercase text-amber-200">தமிழ் · புத்தகம் · பதிப்பகம்</p>
             <h1 className="text-3xl font-semibold sm:text-5xl">Karisal Books</h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-primary-foreground/80 sm:text-base">
               {site.description}
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-wrap gap-2 sm:mt-7 sm:gap-3">
               <Link
                 href="/books"
                 className="inline-flex min-h-11 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-emerald-50"
@@ -71,6 +71,13 @@ export default function HomePage() {
                 <BookOpen className="h-4 w-4" aria-hidden="true" />
                 Browse books
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/recommendations"
+                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-white/35 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                <BookOpen className="h-4 w-4" aria-hidden="true" />
+                Recommendations
               </Link>
               <Link
                 href="/membership/apply"
@@ -94,21 +101,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-card">
-        <div className="container grid gap-6 py-8 sm:grid-cols-2 sm:gap-10 sm:py-10">
-          <div className="border-l-2 border-primary pl-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">For readers</p>
-            <h2 className="mt-2 text-lg font-semibold">Get early access to forthcoming titles.</h2>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">Reserve selected books during their pre-booking window and receive a personal reference by email.</p>
-            <Link href="/pre-booking" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">See open pre-bookings <ArrowRight size={15} /></Link>
-          </div>
-          <div className="border-l-2 border-amber-600 pl-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">For writers</p>
-            <h2 className="mt-2 text-lg font-semibold">Your manuscript deserves a thoughtful print edition.</h2>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">Share your files and production goals. Our publishing team will review them and prepare a tailored quotation.</p>
-            <Link href="/publication-services" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Explore publishing services <ArrowRight size={15} /></Link>
-          </div>
-        </div>
+      <section className="container py-6 sm:py-8">
+        <h2 className="mb-3 text-xl font-semibold">{site.arrivalsTitle}</h2>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : site.arrivalsSliderEnabled ? (
+          <BookCarousel books={recentBooks} authorNamesById={authorNamesById} publisherNamesById={publisherNamesById} intervalSeconds={site.arrivalsSliderIntervalSeconds} />
+        ) : (
+          <BookGrid books={recentBooks} authorNamesById={authorNamesById} publisherNamesById={publisherNamesById} />
+        )}
       </section>
 
       {categories.length > 0 && (
@@ -128,15 +129,21 @@ export default function HomePage() {
         </section>
       )}
 
-      <section className="container py-8">
-        <h2 className="mb-4 text-xl font-semibold">{site.arrivalsTitle}</h2>
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : site.arrivalsSliderEnabled ? (
-          <BookCarousel books={recentBooks} authorNamesById={authorNamesById} publisherNamesById={publisherNamesById} intervalSeconds={site.arrivalsSliderIntervalSeconds} />
-        ) : (
-          <BookGrid books={recentBooks} authorNamesById={authorNamesById} publisherNamesById={publisherNamesById} />
-        )}
+      <section className="border-y border-border bg-card">
+        <div className="container grid gap-4 py-5 sm:grid-cols-2 sm:gap-8 sm:py-8">
+          <div className="border-l-2 border-primary pl-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">For readers</p>
+            <h2 className="mt-1 text-base font-semibold sm:mt-2 sm:text-lg">Get early access to forthcoming titles.</h2>
+            <p className="mt-2 hidden max-w-lg text-sm leading-6 text-muted-foreground sm:block">Reserve selected books during their pre-booking window and receive a personal reference by email.</p>
+            <Link href="/pre-booking" className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline sm:mt-3">See open pre-bookings <ArrowRight size={15} /></Link>
+          </div>
+          <div className="border-l-2 border-amber-600 pl-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 sm:text-xs">For writers</p>
+            <h2 className="mt-1 text-base font-semibold sm:mt-2 sm:text-lg">Your manuscript deserves a thoughtful print edition.</h2>
+            <p className="mt-2 hidden max-w-lg text-sm leading-6 text-muted-foreground sm:block">Share your files and production goals. Our publishing team will review them and prepare a tailored quotation.</p>
+            <Link href="/publication-services" className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline sm:mt-3">Explore publishing services <ArrowRight size={15} /></Link>
+          </div>
+        </div>
       </section>
     </MainLayout>
   );

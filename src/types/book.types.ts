@@ -11,6 +11,7 @@ import type { BaseEntity } from "./common.types";
  */
 export interface Book extends BaseEntity {
   category_id: string;
+  category_name?: string;
   /** Nullable — a book may not yet have a specific subcategory assigned,
    *  mirroring the column's nullable `references subcategories(id)`. */
   subcategory_id: string | null;

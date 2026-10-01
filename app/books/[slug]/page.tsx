@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Heart, Minus, Plus, ShoppingCart } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { formatCurrency } from "@/lib/helpers/format.helpers";
@@ -15,11 +15,11 @@ import {
   getPublicPublisherName,
 } from "@/features/storefront/services/author-publisher.storefront";
 import { useCart } from "@/features/cart/hooks/useCart";
+import { calculateBookPrice, isBookDiscountEligible } from "@/lib/helpers/book-pricing.helpers";
 import type { Book } from "@/types/book.types";
 
 export default function BookDetailPage() {
-  const router = useRouter();
-  const { addItem } = useCart();
+  const { addItem, toggleWishlist, isWishlisted } = useCart();
   const params = useParams<{ slug: string }>();
 
   const [book, setBook] = useState<Book | null>(null);
@@ -29,6 +29,7 @@ export default function BookDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -90,6 +91,7 @@ export default function BookDetailPage() {
   }
 
   const inStock = book.stock_quantity > 0;
+  const price = calculateBookPrice(book.price, isBookDiscountEligible(book.category_name));
 
   return (
     <MainLayout>
@@ -123,7 +125,11 @@ export default function BookDetailPage() {
                 {publisherName && <p className="mt-1 text-xs text-muted-foreground">Published by {publisherName}</p>}
 
                 <div className="my-5 border-y border-border py-4">
-                  <p className="text-xl font-semibold tabular-nums text-primary">{formatCurrency(book.price)}</p>
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <p className="text-xl font-semibold tabular-nums text-primary">{formatCurrency(price.discountedPrice)}</p>
+                    {price.discountAmount > 0 && <p className="text-sm tabular-nums text-muted-foreground line-through">{formatCurrency(price.originalPrice)}</p>}
+                    {price.discountAmount > 0 && <span className="text-xs font-semibold text-emerald-700">7% off · Save {formatCurrency(price.discountAmount)}</span>}
+                  </div>
                   <p className={`mt-1 text-xs ${inStock ? "text-emerald-700" : "text-destructive"}`}>
                     {inStock ? `${book.stock_quantity} available` : "Currently unavailable"}
                   </p>
@@ -161,22 +167,46 @@ export default function BookDetailPage() {
                   )}
                   <button
                     type="button"
+                    aria-label={isWishlisted(book.id) ? "Remove from wishlist" : "Add to wishlist"}
+                    aria-pressed={isWishlisted(book.id)}
+                    title={isWishlisted(book.id) ? "Remove from wishlist" : "Add to wishlist"}
+                    onClick={() => toggleWishlist({
+                      id: book.id,
+                      title: book.title,
+                      slug: book.slug,
+                      price: price.discountedPrice,
+                      originalPrice: price.originalPrice,
+                      discountAmount: price.discountAmount,
+                      quantity: 1,
+                      coverImageUrl: book.cover_image_url,
+                      authorName: authorName ?? undefined,
+                      publisherName: publisherName ?? undefined,
+                      categoryName: book.category_name,
+                    })}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-border text-primary transition hover:bg-secondary"
+                  >
+                    <Heart size={18} fill={isWishlisted(book.id) ? "currentColor" : "none"} />
+                  </button>
+                  <button
+                    type="button"
                     disabled={!inStock}
                     onClick={() => {
                       addItem({
                         id: book.id,
                         title: book.title,
                         slug: book.slug,
-                        price: book.price,
+                        price: price.discountedPrice,
+                        originalPrice: price.originalPrice,
+                        discountAmount: price.discountAmount,
                         quantity,
                         coverImageUrl: book.cover_image_url,
                       });
-                      router.push("/checkout");
+                      setAddedToCart(true);
                     }}
                     className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                   >
                     <ShoppingCart size={16} />
-                    Buy now
+                    {addedToCart ? "Added to cart · add another" : "Add to cart"}
                   </button>
                 </div>
                 <div className="mt-4">

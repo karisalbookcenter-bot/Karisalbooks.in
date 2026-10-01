@@ -1,7 +1,24 @@
 import { createClient } from "@/lib/supabase/client";
 import { PUBLIC_VISIBLE_STATUS } from "../constants";
+import { listPublicCategories } from "./category.storefront";
 import type { Book } from "@/types/book.types";
 import type { PaginatedResult } from "@/types/common.types";
+
+let categoryNamesPromise: Promise<Map<string, string>> | null = null;
+
+async function addCategoryNames(books: Book[]) {
+  if (!categoryNamesPromise) {
+    categoryNamesPromise = listPublicCategories()
+      .then((categories) => new Map(categories.map((category) => [category.id, category.name])))
+      .catch((error) => {
+        categoryNamesPromise = null;
+        throw error;
+      });
+  }
+
+  const categoryNames = await categoryNamesPromise;
+  return books.map((book) => ({ ...book, category_name: categoryNames.get(book.category_id) }));
+}
 
 /**
  * book.storefront.ts — Sprint 18 (recreated).
@@ -93,7 +110,7 @@ export async function listPublicBooks(
   const totalItems = result.count ?? 0;
 
  return {
-  items: (result.data ?? []) as Book[],
+  items: await addCategoryNames((result.data ?? []) as Book[]),
   page,
   pageSize,
   totalItems,
@@ -111,5 +128,6 @@ export async function getPublicBookBySlug(slug: string): Promise<Book | null> {
   let result = await findBook(true);
   if (result.error && isMissingPrebookingSchema(result.error)) result = await findBook(false);
   if (result.error) throw result.error;
-  return (result.data as Book | null) ?? null;
+  if (!result.data) return null;
+  return (await addCategoryNames([result.data as Book]))[0];
 }

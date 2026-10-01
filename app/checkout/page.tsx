@@ -15,6 +15,7 @@ interface DiscountResult {
   description: string;
   subtotal: number;
   bookDiscountAmount: number;
+  automaticBookDiscountAmount: number;
   courierCharge: number;
   courierDiscount: number;
   discountAmount: number;
@@ -343,7 +344,8 @@ export default function CheckoutPage() {
           <dl className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between"><dt>{isPrebooking ? "Pre-booking subtotal" : "Books subtotal"}</dt><dd>{formatCurrency(quote?.subtotal ?? subtotal)}</dd></div>
             <div className="flex justify-between"><dt>Courier charge</dt><dd>{formatCurrency(quote?.courierCharge ?? 0)}</dd></div>
-            {!!quote?.bookDiscountAmount && <div className="flex justify-between text-primary"><dt>Book discount</dt><dd>-{formatCurrency(quote.bookDiscountAmount)}</dd></div>}
+            {!!quote?.automaticBookDiscountAmount && <div className="flex justify-between text-primary"><dt>Book discount (7%)</dt><dd>-{formatCurrency(quote.automaticBookDiscountAmount)}</dd></div>}
+            {!!quote && quote.bookDiscountAmount > quote.automaticBookDiscountAmount && <div className="flex justify-between text-primary"><dt>Membership / coupon</dt><dd>-{formatCurrency(quote.bookDiscountAmount - quote.automaticBookDiscountAmount)}</dd></div>}
             {!!quote?.courierDiscount && <div className="flex justify-between text-primary"><dt>Member courier offer</dt><dd>-{formatCurrency(quote.courierDiscount)}</dd></div>}
             <div className="flex justify-between border-t pt-3 text-base font-bold"><dt>Total</dt><dd>{formatCurrency(displayedTotal)}</dd></div>
           </dl>

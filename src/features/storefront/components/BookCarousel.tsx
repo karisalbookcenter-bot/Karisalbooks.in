@@ -46,7 +46,7 @@ export function BookCarousel({ books, authorNamesById, publisherNamesById, inter
       )}
       <div ref={track} className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 sm:gap-4">
         {books.map((book) => (
-          <div key={book.id} className="min-w-[68%] snap-start sm:min-w-[31%] lg:min-w-[23%]">
+          <div key={book.id} className="min-w-[46%] snap-start sm:min-w-[31%] lg:min-w-[23%]">
             <BookCard book={book} authorName={authorNamesById[book.author_id]} publisherName={book.publisher_id ? publisherNamesById[book.publisher_id] : undefined} />
           </div>
         ))}

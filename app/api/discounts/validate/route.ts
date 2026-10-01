@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       description: priced.discount?.description ?? "Valid membership",
       subtotal: priced.subtotalPaise / 100,
       bookDiscountAmount: priced.bookDiscountPaise / 100,
+      automaticBookDiscountAmount: (priced.automaticBookDiscountPaise ?? 0) / 100,
       courierCharge: priced.courierChargePaise / 100,
       courierDiscount: priced.courierDiscountPaise / 100,
       discountAmount: priced.discountPaise / 100,

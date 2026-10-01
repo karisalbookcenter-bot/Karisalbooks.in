@@ -1,4 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  calculatePercentageDiscountPaise,
+  GENERAL_BOOK_DISCOUNT_PERCENT,
+  isBookDiscountEligible,
+} from "@/lib/helpers/book-pricing.helpers";
 
 export interface BookPurchaseInput {
   flow: "books";
@@ -43,6 +48,7 @@ function isMissingPrebookingSchema(error: { code?: string; message?: string }) {
 
 interface PricingBookRow {
   id: string;
+  category_id: string;
   title: string;
   price: number;
   stock_quantity: number;
@@ -213,20 +219,32 @@ export async function pricePurchase(input: PurchaseInput) {
 
   const booksResult = await supabase
     .from("books")
-    .select("id, title, price, stock_quantity, status, publisher_id, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at")
+    .select("id, category_id, title, price, stock_quantity, status, publisher_id, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at")
     .in("id", [...requested.keys()]);
   let books: PricingBookRow[] | null = booksResult.data as PricingBookRow[] | null;
   let booksError = booksResult.error;
   if (input.flow === "books" && booksResult.error && isMissingPrebookingSchema(booksResult.error)) {
     const legacyResult = await supabase
       .from("books")
-      .select("id, title, price, stock_quantity, status, publisher_id")
+      .select("id, category_id, title, price, stock_quantity, status, publisher_id")
       .in("id", [...requested.keys()]);
     books = legacyResult.data as PricingBookRow[] | null;
     booksError = legacyResult.error;
   }
   if (booksError) throw new Error(booksError.message);
   if (!books || books.length !== requested.size) throw new Error("One or more books are unavailable.");
+
+  const categoryIds = [...new Set(books.map((book) => book.category_id))];
+  const { data: categories, error: categoryError } = await supabase
+    .from("categories")
+    .select("id, name")
+    .in("id", categoryIds);
+  if (categoryError) throw new Error(categoryError.message);
+  const discountEligibleCategoryIds = new Set(
+    (categories ?? [])
+      .filter((category) => isBookDiscountEligible(category.name))
+      .map((category) => category.id)
+  );
 
   const publisherIds = [...new Set(books.map((book) => book.publisher_id).filter((id): id is string => Boolean(id)))];
   const { data: publishers, error: publisherError } = publisherIds.length
@@ -262,6 +280,7 @@ export async function pricePurchase(input: PurchaseInput) {
       price,
       quantity,
       publisherName: book.publisher_id ? publisherNameById.get(book.publisher_id) ?? "" : "",
+      discountEligible: discountEligibleCategoryIds.has(book.category_id),
     };
   });
 
@@ -275,11 +294,16 @@ export async function pricePurchase(input: PurchaseInput) {
     (sum, item) => sum + Math.round(item.price * 100) * item.quantity,
     0
   );
-  const discount = input.flow === "books" && input.discountCode
+  const discountEligibleItems = input.flow === "books" ? items.filter((item) => item.discountEligible) : [];
+  const discountEligibleSubtotalPaise = discountEligibleItems.reduce(
+    (sum, item) => sum + Math.round(item.price * 100) * item.quantity,
+    0
+  );
+  const discount = input.flow === "books" && input.discountCode && discountEligibleItems.length > 0
     ? await resolveDiscountCode(input.discountCode)
     : null;
   const courierChargePaise = getCourierChargePaise(deliveryState);
-  const qualifyingItems = items.filter((item) => {
+  const qualifyingItems = discountEligibleItems.filter((item) => {
     const publisherName = item.publisherName.trim().toLowerCase();
     return [...MEMBER_DISCOUNT_PUBLISHERS].some((allowedName) =>
       publisherName.includes(allowedName)
@@ -290,20 +314,25 @@ export async function pricePurchase(input: PurchaseInput) {
     0
   );
 
-  let bookDiscountPaise = 0;
+  const automaticBookDiscountPaise = discountEligibleItems.reduce(
+    (sum, item) => sum + calculatePercentageDiscountPaise(Math.round(item.price * 100), GENERAL_BOOK_DISCOUNT_PERCENT) * item.quantity,
+    0
+  );
+  let bookDiscountPaise = automaticBookDiscountPaise;
   let courierDiscountPaise = 0;
   if (input.flow === "books" && discount?.kind === "coupon") {
-    bookDiscountPaise = Math.round((subtotalPaise * discount.percentage) / 100);
+    bookDiscountPaise += calculatePercentageDiscountPaise(discountEligibleSubtotalPaise, discount.percentage);
   } else if (input.flow === "books" && discount?.tier === "premium") {
-    bookDiscountPaise = Math.round((qualifyingSubtotalPaise * 20) / 100);
+    bookDiscountPaise += calculatePercentageDiscountPaise(qualifyingSubtotalPaise, 20);
     courierDiscountPaise = Math.round((courierChargePaise * MEMBER_COURIER_DISCOUNT_PERCENT) / 100);
   } else if (input.flow === "books" && discount?.tier === "standard") {
-    if (qualifyingItems.length > 0 || subtotalPaise >= 70000) {
-      bookDiscountPaise = Math.round((subtotalPaise * 15) / 100);
+    if (qualifyingItems.length > 0 || discountEligibleSubtotalPaise >= 70000) {
+      bookDiscountPaise += calculatePercentageDiscountPaise(discountEligibleSubtotalPaise, 15);
     }
     courierDiscountPaise = Math.round((courierChargePaise * MEMBER_COURIER_DISCOUNT_PERCENT) / 100);
   }
 
+  bookDiscountPaise = Math.min(bookDiscountPaise, subtotalPaise);
   const discountPaise = bookDiscountPaise + courierDiscountPaise;
   const totalPaise = subtotalPaise - bookDiscountPaise + courierChargePaise - courierDiscountPaise;
 
@@ -316,6 +345,7 @@ export async function pricePurchase(input: PurchaseInput) {
     subtotalPaise,
     discountPaise,
     bookDiscountPaise,
+    automaticBookDiscountPaise,
     courierChargePaise,
     courierDiscountPaise,
     shippingMethod,
