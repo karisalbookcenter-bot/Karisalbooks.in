@@ -51,6 +51,8 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const signupConfirmed = searchParams.get("signup") === "confirmed";
+  const confirmationError = searchParams.get("error") === "email-confirmation";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +86,16 @@ function LoginForm() {
       <div className="w-full max-w-sm rounded-md border border-border bg-card p-6">
         <h1 className="mb-1 text-xl font-semibold text-foreground">Sign in</h1>
         <p className="mb-6 text-sm text-muted-foreground">Sign in to continue.</p>
+        {signupConfirmed && (
+          <p role="status" className="mb-4 text-sm text-green-700">
+            Email verified. You can now sign in.
+          </p>
+        )}
+        {confirmationError && (
+          <p role="alert" className="mb-4 text-sm text-destructive">
+            Email verification link is invalid or expired. Please sign up again or contact support.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid gap-1.5">
@@ -135,6 +147,12 @@ function LoginForm() {
             {isSubmitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>
+        <p className="mt-5 text-center text-sm text-muted-foreground">
+          New customer?{" "}
+          <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   );

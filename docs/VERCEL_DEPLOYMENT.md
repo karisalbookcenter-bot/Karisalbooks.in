@@ -8,6 +8,8 @@ Admin signs in at `/login` with the email and password of an existing Supabase A
 
 Password recovery at `/forgot-password` sends a Supabase email recovery code. In Supabase Authentication → Email Templates → Reset Password, configure the message to display the one-time token (`{{ .Token }}`) so the user can enter the code on the site. Configure the allowed site URL in Supabase Authentication → URL Configuration. Recovery is available to existing Supabase Auth accounts; it does not create customer accounts. Email OTP here verifies password recovery only and is not a second factor on every sign-in.
 
+Customer registration is at `/signup`. Enable email confirmations in Supabase Authentication settings and add `https://<production-host>/auth/callback` (and any required preview callback URL) to the allowed redirect URLs. Configure the Confirm signup email template to link to `{{ .ConfirmationURL }}`. Public sign-up creates customer accounts only; grant admin access separately through the server-only `ADMIN_EMAILS` allowlist or a trusted Supabase Auth app metadata role.
+
 Apply Supabase migrations `0004` through `0009` before enabling paid membership/order checkout and editable social links. Notification delivery requires verified Resend sender details and approved WhatsApp Cloud API templates; without those provider settings, payments still complete and the existing manual WhatsApp action remains available.
 
 Run `npm run lint`, `npx tsc --noEmit`, and `npm run build` before deployment. Do not run `next dev` and `next build` concurrently in the same checkout; both use `.next` and can race during page-data collection.
