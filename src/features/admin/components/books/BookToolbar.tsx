@@ -28,7 +28,7 @@ export function BookToolbar({
         {filtersSlot}
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex rounded-md border border-border">
+        <div className="hidden rounded-md border border-border md:flex">
           <button
             aria-label="Table view"
             className={`p-2 ${view === "table" ? "bg-muted" : ""}`}

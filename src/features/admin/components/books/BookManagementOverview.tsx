@@ -226,29 +226,52 @@ export function BookManagementOverview() {
           onAddBook={canAddBook ? () => setEditingBook("new") : undefined}
         />
       ) : view === "table" ? (
-        <BookTable
-          books={books}
-          categories={categories}
-          authors={authors}
-          publishers={publishers}
-          selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
-          onEdit={setEditingBook}
-          onDelete={handleDelete}
-          sortBy={filters.sortBy}
-          sortDirection={filters.sortDirection}
-          onSortChange={(sortBy) =>
-            setFilters((f) => ({
-              ...f,
-              sortBy,
-              sortDirection: f.sortBy === sortBy && f.sortDirection === "asc" ? "desc" : "asc",
-            }))
-          }
-        />
+        <>
+          <div className="hidden md:block">
+            <BookTable
+              books={books}
+              categories={categories}
+              authors={authors}
+              publishers={publishers}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onEdit={setEditingBook}
+              onDelete={handleDelete}
+              sortBy={filters.sortBy}
+              sortDirection={filters.sortDirection}
+              onSortChange={(sortBy) =>
+                setFilters((f) => ({
+                  ...f,
+                  sortBy,
+                  sortDirection: f.sortBy === sortBy && f.sortDirection === "asc" ? "desc" : "asc",
+                }))
+              }
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {books.map((book) => (
+              <BookCard
+                key={book.id}
+                book={book}
+                categoryName={categories.find((category) => category.id === book.category_id)?.name}
+                authorName={authors.find((author) => author.id === book.author_id)?.name}
+                onEdit={setEditingBook}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {books.map((book) => (
-            <BookCard key={book.id} book={book} onEdit={setEditingBook} onDelete={handleDelete} />
+            <BookCard
+              key={book.id}
+              book={book}
+              categoryName={categories.find((category) => category.id === book.category_id)?.name}
+              authorName={authors.find((author) => author.id === book.author_id)?.name}
+              onEdit={setEditingBook}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}

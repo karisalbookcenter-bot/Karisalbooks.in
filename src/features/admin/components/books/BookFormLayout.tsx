@@ -152,7 +152,7 @@ export function BookFormLayout({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="book-isbn">ISBN</Label>
           <Input id="book-isbn" value={values.isbn ?? ""} onChange={(e) => setField("isbn", e.target.value)} />
@@ -176,7 +176,7 @@ export function BookFormLayout({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="book-stock">Stock quantity</Label>
           <Input
