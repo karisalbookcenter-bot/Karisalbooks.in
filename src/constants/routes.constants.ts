@@ -6,8 +6,7 @@
  * string like "/books" — they import ROUTES.BOOKS from here instead.
  * That way, renaming a URL later is a one-line change in this file.
  *
- * NOTE: This file only defines paths. It does not create the pages that
- * live at these paths — that is out of scope for this milestone.
+ * Route pages live under `app/`; aliases redirect to their canonical page.
  */
 
 export const ROUTES = {
@@ -29,10 +28,7 @@ export const ROUTES = {
   LOGIN: "/login",
   UNAUTHORIZED: "/unauthorized",
 
-  // Admin route constants (Sprint 06). Added because the Admin Sidebar
-  // navigation config built today needs real link targets — no admin
-  // page/route actually exists at any of these paths yet (that's future
-  // work); this is only the centralized path list the sidebar points at.
+  // Admin route constants used by the admin sidebar and page links.
   ADMIN_DASHBOARD: "/admin",
   ADMIN_BOOKS: "/admin/books",
   ADMIN_RECOMMENDATIONS: "/admin/recommendations",
