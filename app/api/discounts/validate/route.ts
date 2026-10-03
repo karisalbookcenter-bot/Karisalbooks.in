@@ -50,6 +50,8 @@ export async function POST(request: Request) {
       automaticBookDiscountAmount: (priced.automaticBookDiscountPaise ?? 0) / 100,
       courierCharge: priced.courierChargePaise / 100,
       courierDiscount: priced.courierDiscountPaise / 100,
+      indiaPostCourierCharge: priced.indiaPostCourierChargePaise / 100,
+      professionalCourierCharge: priced.professionalCourierChargePaise / 100,
       discountAmount: priced.discountPaise / 100,
       total: priced.totalPaise / 100,
     });

@@ -61,6 +61,8 @@ interface PricingBookRow {
   prebooking_offer_price?: number | null;
   prebooking_offer_start_at?: string | null;
   prebooking_offer_end_at?: string | null;
+  prebooking_professional_courier_charge?: number | null;
+  prebooking_postal_charge?: number | null;
 }
 
 const MEMBER_DISCOUNT_PUBLISHERS = new Set([
@@ -185,6 +187,8 @@ export async function pricePurchase(input: PurchaseInput) {
       bookDiscountPaise: 0,
       courierChargePaise: 0,
       courierDiscountPaise: 0,
+      indiaPostCourierChargePaise: 0,
+      professionalCourierChargePaise: 0,
       totalPaise: charge.totalPaise,
       discount: null,
       plan: {
@@ -219,7 +223,7 @@ export async function pricePurchase(input: PurchaseInput) {
 
   const booksResult = await supabase
     .from("books")
-    .select("id, category_id, title, price, stock_quantity, status, publisher_id, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at")
+    .select("id, category_id, title, price, stock_quantity, status, publisher_id, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at, prebooking_professional_courier_charge, prebooking_postal_charge")
     .in("id", [...requested.keys()]);
   let books: PricingBookRow[] | null = booksResult.data as PricingBookRow[] | null;
   let booksError = booksResult.error;
@@ -274,11 +278,22 @@ export async function pricePurchase(input: PurchaseInput) {
     if (book.status !== "active" || (input.flow === "books" && book.stock_quantity < quantity) || !Number.isFinite(price) || price < 0) {
       throw new Error(`${book.title} is unavailable in the requested quantity.`);
     }
+    const professionalCourierCharge = Number(book.prebooking_professional_courier_charge ?? 0);
+    const postalCharge = Number(book.prebooking_postal_charge ?? 0);
+    if (
+      input.flow === "prebooking" &&
+      (!Number.isFinite(professionalCourierCharge) || professionalCourierCharge < 0 ||
+        !Number.isFinite(postalCharge) || postalCharge < 0)
+    ) {
+      throw new Error(`${book.title} has invalid pre-booking delivery charges.`);
+    }
     return {
       book_id: book.id as string,
       title: book.title as string,
       price,
       quantity,
+      professionalCourierCharge,
+      postalCharge,
       publisherName: book.publisher_id ? publisherNameById.get(book.publisher_id) ?? "" : "",
       discountEligible: discountEligibleCategoryIds.has(book.category_id),
     };
@@ -302,7 +317,15 @@ export async function pricePurchase(input: PurchaseInput) {
   const discount = input.flow === "books" && input.discountCode && discountEligibleItems.length > 0
     ? await resolveDiscountCode(input.discountCode)
     : null;
-  const courierChargePaise = getCourierChargePaise(deliveryState);
+  const indiaPostCourierChargePaise = input.flow === "prebooking"
+    ? items.reduce((sum, item) => sum + Math.round(item.postalCharge * 100) * item.quantity, 0)
+    : getCourierChargePaise(deliveryState);
+  const professionalCourierChargePaise = input.flow === "prebooking"
+    ? items.reduce((sum, item) => sum + Math.round(item.professionalCourierCharge * 100) * item.quantity, 0)
+    : getCourierChargePaise(deliveryState);
+  const courierChargePaise = shippingMethod === "India Post"
+    ? indiaPostCourierChargePaise
+    : professionalCourierChargePaise;
   const qualifyingItems = discountEligibleItems.filter((item) => {
     const publisherName = item.publisherName.trim().toLowerCase();
     return [...MEMBER_DISCOUNT_PUBLISHERS].some((allowedName) =>
@@ -348,6 +371,8 @@ export async function pricePurchase(input: PurchaseInput) {
     automaticBookDiscountPaise,
     courierChargePaise,
     courierDiscountPaise,
+    indiaPostCourierChargePaise,
+    professionalCourierChargePaise,
     shippingMethod,
     deliveryState,
     totalPaise,

@@ -37,6 +37,8 @@ export interface Book extends BaseEntity {
   prebooking_offer_start_at?: string | null;
   prebooking_offer_end_at?: string | null;
   prebooking_ready_at?: string | null;
+  prebooking_professional_courier_charge?: number;
+  prebooking_postal_charge?: number;
 }
 
 /**
@@ -68,6 +70,8 @@ export interface BookInsert {
   prebooking_offer_start_at?: string | null;
   prebooking_offer_end_at?: string | null;
   prebooking_ready_at?: string | null;
+  prebooking_professional_courier_charge?: number;
+  prebooking_postal_charge?: number;
   status?: Book["status"];
 }
 

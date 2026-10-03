@@ -4,7 +4,7 @@ import { isAtLeastRole } from "@/constants/roles.constants";
 import { getServerAuthUser } from "@/features/auth/services/session.service";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const BOOK_FIELDS = "id, title, slug, price, cover_image_url, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at, prebooking_ready_at";
+const BOOK_FIELDS = "id, title, slug, price, cover_image_url, prebooking_enabled, prebooking_start_at, prebooking_end_at, prebooking_price, prebooking_offer_price, prebooking_offer_start_at, prebooking_offer_end_at, prebooking_ready_at, prebooking_professional_courier_charge, prebooking_postal_charge";
 
 async function requireAdmin() {
   const user = await getServerAuthUser();
@@ -39,6 +39,8 @@ export async function POST(request: Request) {
       startsAt?: string;
       endsAt?: string;
       price?: number;
+      professionalCourierCharge?: number;
+      postalCharge?: number;
       offerPrice?: number | null;
       offerStartsAt?: string | null;
       offerEndsAt?: string | null;
@@ -46,13 +48,15 @@ export async function POST(request: Request) {
     const startsAt = input.startsAt ? new Date(input.startsAt) : null;
     const endsAt = input.endsAt ? new Date(input.endsAt) : null;
     const price = Number(input.price);
+    const professionalCourierCharge = Number(input.professionalCourierCharge ?? 0);
+    const postalCharge = Number(input.postalCharge ?? 0);
     const hasOffer = input.offerPrice !== null && input.offerPrice !== undefined;
     const offerPrice = hasOffer ? Number(input.offerPrice) : null;
     const offerStartsAt = input.offerStartsAt ? new Date(input.offerStartsAt) : null;
     const offerEndsAt = input.offerEndsAt ? new Date(input.offerEndsAt) : null;
 
-    if (!input.bookId || !startsAt || !endsAt || !Number.isFinite(startsAt.getTime()) || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt || !Number.isFinite(price) || price < 0) {
-      return NextResponse.json({ error: "Choose a book, valid booking dates, and a non-negative pre-booking price." }, { status: 400 });
+    if (!input.bookId || !startsAt || !endsAt || !Number.isFinite(startsAt.getTime()) || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt || !Number.isFinite(price) || price < 0 || !Number.isFinite(professionalCourierCharge) || professionalCourierCharge < 0 || !Number.isFinite(postalCharge) || postalCharge < 0) {
+      return NextResponse.json({ error: "Choose a book, valid booking dates, and non-negative book and courier prices." }, { status: 400 });
     }
     if (hasOffer && (!Number.isFinite(offerPrice) || offerPrice! < 0 || offerPrice! >= price || !offerStartsAt || !offerEndsAt || !Number.isFinite(offerStartsAt.getTime()) || !Number.isFinite(offerEndsAt.getTime()) || offerStartsAt < startsAt || offerEndsAt > endsAt || offerEndsAt <= offerStartsAt)) {
       return NextResponse.json({ error: "The limited-time price must be lower than the pre-booking price and stay within the booking period." }, { status: 400 });
@@ -66,6 +70,8 @@ export async function POST(request: Request) {
         prebooking_start_at: startsAt.toISOString(),
         prebooking_end_at: endsAt.toISOString(),
         prebooking_price: price,
+        prebooking_professional_courier_charge: professionalCourierCharge,
+        prebooking_postal_charge: postalCharge,
         prebooking_offer_price: offerPrice,
         prebooking_offer_start_at: hasOffer ? offerStartsAt!.toISOString() : null,
         prebooking_offer_end_at: hasOffer ? offerEndsAt!.toISOString() : null,

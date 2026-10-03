@@ -18,6 +18,8 @@ interface DiscountResult {
   automaticBookDiscountAmount: number;
   courierCharge: number;
   courierDiscount: number;
+  indiaPostCourierCharge: number;
+  professionalCourierCharge: number;
   discountAmount: number;
   total: number;
 }
@@ -279,12 +281,22 @@ export default function CheckoutPage() {
                   onChange={() => setShippingMethod(method)}
                   className="accent-primary"
                 />
-                <span>{method}<span className="block text-xs text-muted-foreground">₹60 TN/Puducherry · ₹120 other states (up to 1 kg)</span></span>
+                <span>{method}<span className="block text-xs text-muted-foreground">
+                  {isPrebooking
+                    ? quote
+                      ? `${formatCurrency(method === "India Post" ? quote.indiaPostCourierCharge : quote.professionalCourierCharge)} total · quantity-based`
+                      : "Per-title delivery charge shown after selecting your state"
+                    : "₹60 TN/Puducherry · ₹120 other states (up to 1 kg)"}
+                </span></span>
               </label>
             ))}
-            <p className="max-w-xl text-xs leading-5 text-muted-foreground">
-              For other states, ₹120 is an estimate up to 1 kg. Final India Post charges may change based on actual parcel weight and destination. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.
-            </p>
+            {isPrebooking ? (
+              <p className="max-w-xl text-xs leading-5 text-muted-foreground">Pre-booking delivery charges are set separately for each title and multiplied by the quantity ordered. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.</p>
+            ) : (
+              <p className="max-w-xl text-xs leading-5 text-muted-foreground">
+                For other states, ₹120 is an estimate up to 1 kg. Final India Post charges may change based on actual parcel weight and destination. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.
+              </p>
+            )}
           </fieldset>
 
           <label className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">

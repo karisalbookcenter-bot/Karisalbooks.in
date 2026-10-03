@@ -113,6 +113,7 @@ export function PreBookingCatalog() {
                     <div className="mt-3 text-xs text-muted-foreground">
                       <p>Booking period: {dateLabel(book.prebooking_start_at)} – {dateLabel(book.prebooking_end_at)}</p>
                       <p>Distribution update: sent by email when ready</p>
+                      <p>Delivery per copy: Professional Courier {formatCurrency(Number(book.prebooking_professional_courier_charge ?? 0))} · India Post {formatCurrency(Number(book.prebooking_postal_charge ?? 0))}</p>
                     </div>
                     <div className="mt-auto pt-4">
                       <p className="text-lg font-semibold tabular-nums text-primary">{formatCurrency(price)}</p>
