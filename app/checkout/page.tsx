@@ -285,7 +285,7 @@ export default function CheckoutPage() {
                   {isPrebooking
                     ? quote
                       ? `${formatCurrency(method === "India Post" ? quote.indiaPostCourierCharge : quote.professionalCourierCharge)} total · quantity-based`
-                      : "Per-title delivery charge shown after selecting your state"
+                      : "Per-copy rate; total calculated for your quantity"
                     : "₹60 TN/Puducherry · ₹120 other states (up to 1 kg)"}
                 </span></span>
               </label>
