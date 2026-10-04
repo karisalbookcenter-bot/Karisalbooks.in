@@ -20,20 +20,19 @@ export default function HomePage() {
   const [authorNamesById, setAuthorNamesById] = useState<Record<string, string>>({});
   const [publisherNamesById, setPublisherNamesById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [site, setSite] = useState<PublicSiteSettings>(DEFAULT_SITE_SETTINGS);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const [booksResult, categoriesResult, authors, publishers] = await Promise.all([
+        const [booksResult, authors, publishers] = await Promise.all([
           listPublicBooks({ pageSize: 8 }),
-          listPublicCategories(),
           listPublicAuthorNames(),
           listPublicPublisherNames(),
         ]);
         setRecentBooks(booksResult.items);
-        setCategories(categoriesResult.filter((c) => c.parent_id === null));
         setAuthorNamesById(buildNameMap(authors));
         setPublisherNamesById(buildNameMap(publishers));
       } finally {
@@ -41,6 +40,14 @@ export default function HomePage() {
       }
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    listPublicCategories()
+      .then(setCategories)
+      .catch((error: unknown) => {
+        setCategoryError(error instanceof Error ? error.message : "Unable to load categories.");
+      });
   }, []);
 
   useEffect(() => {
@@ -112,20 +119,24 @@ export default function HomePage() {
         )}
       </section>
 
-      {categories.length > 0 && (
+      {(categories.length > 0 || categoryError) && (
         <section className="container py-8">
           <h2 className="mb-4 text-xl font-semibold">Shop by category</h2>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/categories/${category.slug}`}
-                className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-secondary"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </div>
+          {categoryError ? (
+            <p role="alert" className="text-sm text-destructive">Unable to load categories: {categoryError}</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/categories/${category.slug}`}
+                  className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-secondary"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

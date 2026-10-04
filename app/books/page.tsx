@@ -26,6 +26,7 @@ type Availability = NonNullable<ListPublicBooksParams["availability"]>;
 
 interface FilterFieldsProps {
   categories: Category[];
+  categoryError: string | null;
   authors: PublicNameRecord[];
   publishers: PublicNameRecord[];
   categoryId: string;
@@ -40,6 +41,7 @@ interface FilterFieldsProps {
 
 function FilterFields({
   categories,
+  categoryError,
   authors,
   publishers,
   categoryId,
@@ -62,6 +64,7 @@ function FilterFields({
           <option value="">All categories</option>
           {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
         </select>
+        {categoryError && <span role="alert" className="mt-1 block normal-case text-destructive">Unable to load categories: {categoryError}</span>}
       </label>
 
       <label className={labelClass}>
@@ -125,6 +128,7 @@ export default function BooksPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const loadBooks = useCallback(async () => {
     setLoading(true);
@@ -158,9 +162,14 @@ export default function BooksPage() {
   }, [loadBooks]);
 
   useEffect(() => {
-    Promise.all([listPublicCategories(), listPublicAuthorNames(), listPublicPublisherNames()])
-      .then(([categoryItems, authorItems, publisherItems]) => {
-        setCategories(categoryItems.filter((category) => category.parent_id === null));
+    listPublicCategories()
+      .then(setCategories)
+      .catch((loadError: unknown) => {
+        setCategoryError(loadError instanceof Error ? loadError.message : "Unable to load categories.");
+      });
+
+    Promise.all([listPublicAuthorNames(), listPublicPublisherNames()])
+      .then(([authorItems, publisherItems]) => {
         setAuthors(authorItems);
         setPublishers(publisherItems);
         setAuthorNamesById(buildNameMap(authorItems));
@@ -193,6 +202,7 @@ export default function BooksPage() {
   const filters = (
     <FilterFields
       categories={categories}
+      categoryError={categoryError}
       authors={authors}
       publishers={publishers}
       categoryId={categoryId}

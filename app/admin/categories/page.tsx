@@ -19,11 +19,17 @@ import type { Category } from "@/types/category.types";
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     const result = await categoryService.listCategories({ pageSize: 1000 });
-    if (result.data) setCategories(result.data.items);
+    if (result.error) {
+      setLoadError(result.error.message);
+    } else if (result.data) {
+      setCategories(result.data.items);
+    }
     setLoading(false);
   }, []);
 
@@ -31,5 +37,10 @@ export default function AdminCategoriesPage() {
     load();
   }, [load]);
 
-  return <CategoryManagementOverview categories={categories} loading={loading} onDataChange={load} />;
+  return (
+    <>
+      {loadError && <p role="alert" className="container pt-4 text-sm text-destructive">Unable to load categories: {loadError}</p>}
+      <CategoryManagementOverview categories={categories} loading={loading} onDataChange={load} />
+    </>
+  );
 }
