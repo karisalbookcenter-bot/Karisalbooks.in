@@ -99,6 +99,14 @@ npm run dev
    system now lives at `/admin` (see `docs/ADMIN_LAYOUT.md` and the Sprint 14
    activation notes for what's required to sign in and view it).
 
+4. **Apply the Supabase database migrations**
+
+   The SQL files in `supabase/migrations/` must be applied to your Supabase
+   project, in numeric order, before using the admin catalog. In particular,
+   `0001_taxonomy_and_contributors.sql` creates the categories and subcategories
+   tables, and `0012_tamil_category_taxonomy.sql` seeds the Tamil taxonomy.
+   Apply each migration only once; do not rerun already-applied migrations.
+
 ## shadcn/ui
 
 The project is pre-configured for shadcn/ui (`components.json`, theme tokens

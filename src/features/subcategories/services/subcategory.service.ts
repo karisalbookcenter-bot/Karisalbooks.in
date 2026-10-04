@@ -8,6 +8,19 @@ import type { Subcategory } from "@/types/subcategory.types";
 import type { ApiResponse, PaginatedResult } from "@/types/common.types";
 
 function toApiError(error: unknown): { message: string; code: string } {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = typeof error.message === "string" ? error.message : null;
+    if (message) {
+      const details = "details" in error && typeof error.details === "string" ? error.details : null;
+      const hint = "hint" in error && typeof error.hint === "string" ? error.hint : null;
+      const code = "code" in error && typeof error.code === "string" ? error.code : "SUBCATEGORY_ERROR";
+      return {
+        message: [message, details, hint].filter(Boolean).join(" "),
+        code,
+      };
+    }
+  }
+
   return {
     message: error instanceof Error ? error.message : "Something went wrong.",
     code: "SUBCATEGORY_ERROR",
