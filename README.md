@@ -104,7 +104,9 @@ npm run dev
    The SQL files in `supabase/migrations/` must be applied to your Supabase
    project, in numeric order, before using the admin catalog. In particular,
    `0001_taxonomy_and_contributors.sql` creates the categories and subcategories
-   tables, and `0012_tamil_category_taxonomy.sql` seeds the Tamil taxonomy.
+   tables, `0012_tamil_category_taxonomy.sql` seeds the Tamil taxonomy, and
+   `0015_category_management_rls.sql` enables public active-row reads and
+   admin-only catalog management.
    Apply each migration only once; do not rerun already-applied migrations.
 
 ## shadcn/ui
