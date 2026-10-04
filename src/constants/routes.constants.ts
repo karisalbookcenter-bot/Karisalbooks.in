@@ -33,6 +33,7 @@ export const ROUTES = {
   ADMIN_BOOKS: "/admin/books",
   ADMIN_RECOMMENDATIONS: "/admin/recommendations",
   ADMIN_CATEGORIES: "/admin/categories",
+  ADMIN_SUBCATEGORIES: "/admin/subcategories",
   ADMIN_AUTHORS: "/admin/authors",
   ADMIN_PUBLISHERS: "/admin/publishers",
   ADMIN_COMPETITIVE_EXAMS: "/admin/competitive-exams",

@@ -78,6 +78,12 @@ export const DASHBOARD_QUICK_ACTIONS: QuickActionDefinition[] = [
     permission: PERMISSIONS.MANAGE_CATEGORIES,
   },
   {
+    id: "add-subcategory",
+    label: "Add Subcategory",
+    icon: "folder-tree",
+    permission: PERMISSIONS.MANAGE_CATEGORIES,
+  },
+  {
     id: "add-author",
     label: "Add Author",
     icon: "users",

@@ -9,13 +9,8 @@ import type { QuickActionsProps } from "@/features/admin/types/dashboard.types";
 /**
  * QuickActions — Sprint 07 (Task 4 — UI only).
  *
- * Renders `DASHBOARD_QUICK_ACTIONS` (config-driven) as a responsive grid
- * of buttons. **Every button is a placeholder.** `onAction` defaults to a
- * no-op rather than navigating anywhere or calling any service — wiring
- * "Add Book" to an actual route/modal is explicitly out of scope this
- * sprint (no CRUD pages exist yet). A future sprint passes a real
- * `onAction` (e.g. `router.push` to each entity's create page) once those
- * pages exist; the button grid itself won't need to change.
+ * Renders `DASHBOARD_QUICK_ACTIONS` (config-driven) as a responsive grid.
+ * The dashboard wires category actions to their management pages.
  */
 export function QuickActions({ actions = DASHBOARD_QUICK_ACTIONS, onAction, className }: QuickActionsProps) {
   return (

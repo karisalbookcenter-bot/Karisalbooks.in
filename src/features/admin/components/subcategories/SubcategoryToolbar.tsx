@@ -69,10 +69,12 @@ export function SubcategoryToolbar({
           })}
         </div>
 
-        <Button type="button" onClick={onAddSubcategory}>
-          <PlusIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Add Subcategory
-        </Button>
+        {onAddSubcategory && (
+          <Button type="button" onClick={onAddSubcategory}>
+            <PlusIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add Subcategory
+          </Button>
+        )}
       </div>
     </div>
   );

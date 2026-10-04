@@ -40,10 +40,8 @@ type Panel = { mode: "create" } | { mode: "edit"; subcategory: Subcategory };
  * `SubcategoryFormLayout` actually mounted. `subcategories`/`categories`
  * remain plain props; `onDataChange` signals the owning page to refetch.
  *
- * The `!hasAnySubcategories` → `<SubcategoryEmptyState/>` gate is
- * intentionally UNCHANGED from Sprint 09, same reasoning and same known
- * consequence as `CategoryManagementOverview`'s — see that file's comment
- * and docs/CATEGORY_SUBCATEGORY_ADMIN_CRUD.md.
+ * The toolbar remains available when there are no subcategories yet;
+ * adding one is offered only after at least one category exists.
  */
 export function SubcategoryManagementOverview({
   subcategories = [],
@@ -117,101 +115,103 @@ export function SubcategoryManagementOverview({
       description="Refine each category with subcategories customers can browse and filter by."
       className={className}
     >
-      {!loading && !hasAnySubcategories ? (
-        <SubcategoryEmptyState variant="no-data" />
-      ) : (
-        <div className="flex flex-col gap-4">
-          <SubcategoryToolbar
-            searchValue={searchValue}
-            onSearchChange={updateSearch}
-            filtersValue={filtersValue}
-            onFiltersChange={updateFilters}
-            categories={categories}
-            view={view}
-            onViewChange={setView}
-            onAddSubcategory={() => setPanel({ mode: "create" })}
-          />
+      <div className="flex flex-col gap-4">
+        <SubcategoryToolbar
+          searchValue={searchValue}
+          onSearchChange={updateSearch}
+          filtersValue={filtersValue}
+          onFiltersChange={updateFilters}
+          categories={categories}
+          view={view}
+          onViewChange={setView}
+          onAddSubcategory={
+            categories.length > 0 ? () => setPanel({ mode: "create" }) : undefined
+          }
+        />
 
-          {panel && (
-            <div className="rounded-md border border-border bg-card p-4">
-              <SubcategoryFormLayout
-                mode={panel.mode}
-                subcategoryId={panel.mode === "edit" ? panel.subcategory.id : undefined}
-                defaultValues={
-                  panel.mode === "edit"
-                    ? {
-                        name: panel.subcategory.name,
-                        slug: panel.subcategory.slug,
-                        description: panel.subcategory.description ?? "",
-                        categoryId: panel.subcategory.category_id,
-                        status: panel.subcategory.status,
-                      }
-                    : undefined
-                }
+        {panel && (
+          <div className="rounded-md border border-border bg-card p-4">
+            <SubcategoryFormLayout
+              mode={panel.mode}
+              subcategoryId={panel.mode === "edit" ? panel.subcategory.id : undefined}
+              defaultValues={
+                panel.mode === "edit"
+                  ? {
+                      name: panel.subcategory.name,
+                      slug: panel.subcategory.slug,
+                      description: panel.subcategory.description ?? "",
+                      categoryId: panel.subcategory.category_id,
+                      status: panel.subcategory.status,
+                    }
+                  : undefined
+              }
+              categories={categories}
+              onCancel={() => setPanel(null)}
+              onSuccess={() => {
+                setPanel(null);
+                onDataChange?.();
+              }}
+            />
+          </div>
+        )}
+
+        {!loading && !hasAnySubcategories ? (
+          <SubcategoryEmptyState variant="no-data" />
+        ) : (
+          <>
+            <BulkActionBar
+              count={selectedIds.length}
+              actions={SUBCATEGORY_BULK_ACTIONS}
+              onAction={handleBulkAction}
+              onClear={() => setSelectedIds([])}
+            />
+
+            {view === "table" ? (
+              <SubcategoryTable
+                subcategories={paginated.items}
                 categories={categories}
-                onCancel={() => setPanel(null)}
-                onSuccess={() => {
-                  setPanel(null);
-                  onDataChange?.();
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                sort={sort}
+                onSortChange={setSort}
+                onClearFilters={clearFilters}
+                onEdit={(subcategory) => setPanel({ mode: "edit", subcategory })}
+                onDelete={handleDelete}
+                loading={loading}
+              />
+            ) : loading ? (
+              <SubcategoryEmptyState variant="no-results" />
+            ) : paginated.items.length === 0 ? (
+              <SubcategoryEmptyState variant="no-results" onClearFilters={clearFilters} />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {paginated.items.map((subcategory) => (
+                  <SubcategoryCard
+                    key={subcategory.id}
+                    subcategory={subcategory}
+                    categoryName={getSubcategoryCategoryName(subcategory, categories)}
+                    selected={selectedIds.includes(subcategory.id)}
+                    onToggleSelect={() => toggleSelect(subcategory.id)}
+                    onEdit={() => setPanel({ mode: "edit", subcategory })}
+                    onDelete={() => handleDelete(subcategory)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {!loading && filteredAndSorted.length > 0 && (
+              <Pagination
+                result={paginated}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(PAGINATION_DEFAULTS.PAGE);
                 }}
               />
-            </div>
-          )}
-
-          <BulkActionBar
-            count={selectedIds.length}
-            actions={SUBCATEGORY_BULK_ACTIONS}
-            onAction={handleBulkAction}
-            onClear={() => setSelectedIds([])}
-          />
-
-          {view === "table" ? (
-            <SubcategoryTable
-              subcategories={paginated.items}
-              categories={categories}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              sort={sort}
-              onSortChange={setSort}
-              onClearFilters={clearFilters}
-              onEdit={(subcategory) => setPanel({ mode: "edit", subcategory })}
-              onDelete={handleDelete}
-              loading={loading}
-            />
-          ) : loading ? (
-            <SubcategoryEmptyState variant="no-results" />
-          ) : paginated.items.length === 0 ? (
-            <SubcategoryEmptyState variant="no-results" onClearFilters={clearFilters} />
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {paginated.items.map((subcategory) => (
-                <SubcategoryCard
-                  key={subcategory.id}
-                  subcategory={subcategory}
-                  categoryName={getSubcategoryCategoryName(subcategory, categories)}
-                  selected={selectedIds.includes(subcategory.id)}
-                  onToggleSelect={() => toggleSelect(subcategory.id)}
-                  onEdit={() => setPanel({ mode: "edit", subcategory })}
-                  onDelete={() => handleDelete(subcategory)}
-                />
-              ))}
-            </div>
-          )}
-
-          {!loading && filteredAndSorted.length > 0 && (
-            <Pagination
-  result={paginated}
-  onPageChange={(pageNumber: number) => {
-    setPage(pageNumber);
-  }}
-  onPageSizeChange={(size) => {
-    setPageSize(size);
-    setPage(PAGINATION_DEFAULTS.PAGE);
-  }}
-/>
-          )}
-        </div>
-      )}
+            )}
+          </>
+        )}
+      </div>
     </PageContainer>
   );
 }

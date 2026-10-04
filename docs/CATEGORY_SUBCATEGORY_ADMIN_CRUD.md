@@ -1,47 +1,27 @@
-# Category & Subcategory Admin CRUD — Sprint 17 (final, restriction-compliant)
+# Category & Subcategory Admin CRUD
 
-## Two restrictions applied after initial implementation
+## Admin access
 
-**1. Do not modify `category.service.ts`/`subcategory.service.ts` unless a
-real compile error requires it.**
-The first draft added a 2-line type re-export to each so `CategoryFormLayout.tsx`/
-`SubcategoryFormLayout.tsx` could import `CategoryInsert`/`SubcategoryInsert`.
-That edit is gone. Instead, both form layouts import those types directly
-from `category.repository.ts`/`subcategory.repository.ts` — where they're
-already defined (Sprint 16 fix-pass v3) — so the service files need no
-change at all. **Neither service file is part of this package.**
+Use **Categories** or **Subcategories** in the admin sidebar to manage the
+catalog. The Dashboard also links directly to both management pages.
 
-**2. Do not change existing UI behaviour or layout — keep EmptyState/Toolbar
-exactly as-is.**
-The first draft restructured both Overviews so the toolbar stayed visible
-even with zero records (so "Add" would be reachable on an empty catalog).
-That restructuring is reverted. The original gate is back exactly as
-Sprint 08/09 wrote it:
+The Add buttons remain available when their lists are empty, so the first
+category can be created in the admin UI. A subcategory requires an existing
+category; the Subcategories page directs the admin to create one first when
+none exist.
 
-```
-!loading && !hasAnyCategories ? <CategoryEmptyState variant="no-data" /> : ( toolbar + panel + bulk + table/tree )
-```
-
-**Known, explicitly-accepted consequence:** when a catalog has zero
-categories (or zero subcategories), the toolbar — and therefore "Add" —
-is not reachable from this screen, because `CategoryEmptyStateProps`/
-`SubcategoryEmptyStateProps` expose no add-trigger of their own (only
-`onClearFilters`, for search/filter clearing). This is unchanged from
-Sprint 08/09's original behavior, preserved per explicit instruction
-rather than fixed. Bootstrapping the very first category currently
-requires a route other than this screen (e.g. direct Supabase insert)
-until a future sprint adds an add-affordance to the empty state itself —
-that would be a real (if small) UI change, and is out of scope here.
-
-## What Sprint 17 actually implements (unchanged from the approved plan)
+## Available operations
 - CRUD wiring: `onEdit`/`onDelete` wired to `CategoryTable`/`CategoryTreeView`/
   `SubcategoryTable`/`SubcategoryCard` — using prop contracts these
   components already had, never previously passed.
 - `onAction` wired to `BulkActionBar` for both screens.
 - `CategoryFormLayout`/`SubcategoryFormLayout` now mounted inside their
-  Overview (inside the same existing non-empty branch), with real
+  Overview, with real
   `handleSave` calling `category.service.ts`/`subcategory.service.ts`.
-- Two new route pages, each owning fetch + `onDataChange`-triggered refetch.
+- The Categories and Subcategories route pages own data fetching and
+  `onDataChange`-triggered refetch.
+- The Subcategories page is linked from the admin sidebar and loads both
+  categories and subcategories.
 - No new hook (proved unnecessary before writing code — see the
   conversation's earlier verification).
 

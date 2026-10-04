@@ -60,14 +60,8 @@ function getDescendantIds(tree: CategoryTreeNode[], rootId: string): Set<string>
  * `BulkActionBar`, and `CategoryFormLayout` actually mounted. Still no
  * fetching here — `categories` remains a plain prop, `onDataChange` is
  * how the owning page knows to refetch. Search/filter/tree-orphan
- * behavior is completely unchanged from Sprint 08.
- *
- * The `!hasAnyCategories` → `<CategoryEmptyState/>` gate (which also hides
- * the toolbar, and therefore "Add Category") is intentionally UNCHANGED
- * from Sprint 08 per explicit instruction to preserve existing
- * EmptyState/Toolbar behavior exactly. Known consequence: the very first
- * category in an empty catalog cannot be added from this screen. Flagged,
- * not silently fixed — see docs/CATEGORY_SUBCATEGORY_ADMIN_CRUD.md.
+ * behavior is completely unchanged from Sprint 08. The toolbar remains
+ * available when the catalog is empty so the first category can be added.
  */
 export function CategoryManagementOverview({
   categories = [],
@@ -128,77 +122,79 @@ export function CategoryManagementOverview({
       description="Organize your catalog into an unlimited-depth category hierarchy."
       className={className}
     >
-      {!loading && !hasAnyCategories ? (
-        <CategoryEmptyState variant="no-data" />
-      ) : (
-        <div className="flex flex-col gap-4">
-          <CategoryToolbar
-            searchValue={searchValue}
-            onSearchChange={setSearchValue}
-            filtersValue={filtersValue}
-            onFiltersChange={setFiltersValue}
-            view={view}
-            onViewChange={setView}
-            onAddCategory={() => setPanel({ mode: "create" })}
-          />
+      <div className="flex flex-col gap-4">
+        <CategoryToolbar
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          filtersValue={filtersValue}
+          onFiltersChange={setFiltersValue}
+          view={view}
+          onViewChange={setView}
+          onAddCategory={() => setPanel({ mode: "create" })}
+        />
 
-          {panel && (
-            <div className="rounded-md border border-border bg-card p-4">
-              <CategoryFormLayout
-                mode={panel.mode}
-                categoryId={panel.mode === "edit" ? panel.category.id : undefined}
-                defaultValues={
-                  panel.mode === "edit"
-                    ? {
-                        name: panel.category.name,
-                        slug: panel.category.slug,
-                        description: panel.category.description ?? "",
-                        parentId: panel.category.parent_id,
-                        status: panel.category.status,
-                      }
-                    : undefined
-                }
-                parentOptions={parentOptions}
-                onCancel={() => setPanel(null)}
-                onSuccess={() => {
-                  setPanel(null);
-                  onDataChange?.();
-                }}
+        {panel && (
+          <div className="rounded-md border border-border bg-card p-4">
+            <CategoryFormLayout
+              mode={panel.mode}
+              categoryId={panel.mode === "edit" ? panel.category.id : undefined}
+              defaultValues={
+                panel.mode === "edit"
+                  ? {
+                      name: panel.category.name,
+                      slug: panel.category.slug,
+                      description: panel.category.description ?? "",
+                      parentId: panel.category.parent_id,
+                      status: panel.category.status,
+                    }
+                  : undefined
+              }
+              parentOptions={parentOptions}
+              onCancel={() => setPanel(null)}
+              onSuccess={() => {
+                setPanel(null);
+                onDataChange?.();
+              }}
+            />
+          </div>
+        )}
+
+        {!loading && !hasAnyCategories ? (
+          <CategoryEmptyState variant="no-data" />
+        ) : (
+          <>
+            <BulkActionBar
+              count={selectedIds.length}
+              actions={CATEGORY_BULK_ACTIONS}
+              onAction={handleBulkAction}
+              onClear={() => setSelectedIds([])}
+            />
+
+            {view === "table" ? (
+              <CategoryTable
+                categories={filteredCategories}
+                allCategories={categories}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onClearFilters={clearFilters}
+                onEdit={(category) => setPanel({ mode: "edit", category })}
+                onDelete={handleDelete}
+                loading={loading}
               />
-            </div>
-          )}
-
-          <BulkActionBar
-            count={selectedIds.length}
-            actions={CATEGORY_BULK_ACTIONS}
-            onAction={handleBulkAction}
-            onClear={() => setSelectedIds([])}
-          />
-
-          {view === "table" ? (
-            <CategoryTable
-              categories={filteredCategories}
-              allCategories={categories}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onClearFilters={clearFilters}
-              onEdit={(category) => setPanel({ mode: "edit", category })}
-              onDelete={handleDelete}
-              loading={loading}
-            />
-          ) : (
-            <CategoryTreeView
-              nodes={tree}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onClearFilters={clearFilters}
-              onEdit={(category) => setPanel({ mode: "edit", category })}
-              onDelete={handleDelete}
-              loading={loading}
-            />
-          )}
-        </div>
-      )}
+            ) : (
+              <CategoryTreeView
+                nodes={tree}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onClearFilters={clearFilters}
+                onEdit={(category) => setPanel({ mode: "edit", category })}
+                onDelete={handleDelete}
+                loading={loading}
+              />
+            )}
+          </>
+        )}
+      </div>
     </PageContainer>
   );
 }

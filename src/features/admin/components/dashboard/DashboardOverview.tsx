@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/constants/routes.constants";
 
 import { PageContainer } from "@/components/common/PageContainer";
 
@@ -21,6 +23,7 @@ export function DashboardOverview({
   loading,
   className,
 }: DashboardOverviewProps) {
+  const router = useRouter();
 
 
   const [stats, setStats] = useState({
@@ -106,7 +109,12 @@ export function DashboardOverview({
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-          <QuickActions />
+          <QuickActions
+            onAction={(actionId) => {
+              if (actionId === "add-category") router.push(ROUTES.ADMIN_CATEGORIES);
+              if (actionId === "add-subcategory") router.push(ROUTES.ADMIN_SUBCATEGORIES);
+            }}
+          />
 
           <SystemStatus />
 
