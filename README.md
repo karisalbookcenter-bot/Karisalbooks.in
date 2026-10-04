@@ -106,7 +106,8 @@ npm run dev
    `0001_taxonomy_and_contributors.sql` creates the categories and subcategories
    tables, `0012_tamil_category_taxonomy.sql` seeds the Tamil taxonomy, and
    `0015_category_management_rls.sql` enables public active-row reads and
-   admin-only catalog management.
+   admin-only catalog management. Apply `0016_whatsapp_qr_checkout.sql` to
+   enable the WhatsApp/QR checkout settings.
    Apply each migration only once; do not rerun already-applied migrations.
 
 ## shadcn/ui

@@ -67,6 +67,14 @@ export default async function OrderDetailPage({
           Total : ₹{order.total_amount}
         </p>
 
+        <p>
+          Payment status : {order.payment_status ?? "unknown"}
+        </p>
+
+        <p>
+          Payment method : {order.payment_method ?? "unknown"}
+        </p>
+
         <OrderWorkflowActions
   order={order}
 />

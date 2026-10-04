@@ -9,6 +9,7 @@ import {
   type PublicSocialLinks,
 } from "@/features/site-settings/site-settings.types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getWhatsAppPhoneNumber } from "@/features/site-settings/whatsapp.helpers";
 
 function isSafeSocialLink(value: unknown): value is string {
   if (typeof value !== "string") return false;
@@ -26,7 +27,7 @@ export async function GET() {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("site_settings")
-      .select("social_links, site_logo_url, site_description, homepage_slider_enabled, homepage_slider_interval_seconds, homepage_arrivals_title")
+      .select("social_links, site_logo_url, site_description, homepage_slider_enabled, homepage_slider_interval_seconds, homepage_arrivals_title, whatsapp_orders_enabled, qr_payment_enabled, payment_qr_url")
       .eq("id", "public")
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -39,6 +40,9 @@ export async function GET() {
         arrivalsSliderEnabled: data.homepage_slider_enabled ?? DEFAULT_SITE_SETTINGS.arrivalsSliderEnabled,
         arrivalsSliderIntervalSeconds: data.homepage_slider_interval_seconds ?? DEFAULT_SITE_SETTINGS.arrivalsSliderIntervalSeconds,
         arrivalsTitle: data.homepage_arrivals_title ?? DEFAULT_SITE_SETTINGS.arrivalsTitle,
+        whatsappOrdersEnabled: data.whatsapp_orders_enabled ?? DEFAULT_SITE_SETTINGS.whatsappOrdersEnabled,
+        qrPaymentEnabled: data.qr_payment_enabled ?? DEFAULT_SITE_SETTINGS.qrPaymentEnabled,
+        paymentQrUrl: data.payment_qr_url ?? DEFAULT_SITE_SETTINGS.paymentQrUrl,
       } : DEFAULT_SITE_SETTINGS,
     });
   } catch (error) {
@@ -64,7 +68,7 @@ export async function PUT(request: Request) {
     if (!social || !Object.keys(DEFAULT_SOCIAL_LINKS).every((key) => isSafeSocialLink(social[key as keyof PublicSocialLinks] ?? ""))) {
       return NextResponse.json({ error: "Enter valid http or https social URLs." }, { status: 400 });
     }
-    if (!isSafeSocialLink(site.logoUrl) || typeof site.description !== "string" || site.description.trim().length > 500 || typeof site.arrivalsTitle !== "string" || !site.arrivalsTitle.trim() || site.arrivalsTitle.length > 100 || !Number.isInteger(site.arrivalsSliderIntervalSeconds) || site.arrivalsSliderIntervalSeconds < 3 || site.arrivalsSliderIntervalSeconds > 20) {
+    if (!isSafeSocialLink(site.logoUrl) || !isSafeSocialLink(site.paymentQrUrl) || typeof site.description !== "string" || site.description.trim().length > 500 || typeof site.arrivalsTitle !== "string" || !site.arrivalsTitle.trim() || site.arrivalsTitle.length > 100 || !Number.isInteger(site.arrivalsSliderIntervalSeconds) || site.arrivalsSliderIntervalSeconds < 3 || site.arrivalsSliderIntervalSeconds > 20 || typeof site.whatsappOrdersEnabled !== "boolean" || typeof site.qrPaymentEnabled !== "boolean") {
       return NextResponse.json({ error: "Enter valid branding text and a carousel interval between 3 and 20 seconds." }, { status: 400 });
     }
 
@@ -75,12 +79,21 @@ export async function PUT(request: Request) {
       x: (social.x ?? "").trim(),
       whatsapp: (social.whatsapp ?? "").trim(),
     };
+    if (site.whatsappOrdersEnabled && !getWhatsAppPhoneNumber(normalized.whatsapp)) {
+      return NextResponse.json({ error: "Enter a valid WhatsApp contact link before enabling WhatsApp orders." }, { status: 400 });
+    }
+    if (site.qrPaymentEnabled && !site.paymentQrUrl.trim()) {
+      return NextResponse.json({ error: "Upload your payment QR image before enabling QR payments." }, { status: 400 });
+    }
     const normalizedSite: PublicSiteSettings = {
       logoUrl: site.logoUrl.trim(),
       description: site.description.trim(),
       arrivalsSliderEnabled: Boolean(site.arrivalsSliderEnabled),
       arrivalsSliderIntervalSeconds: site.arrivalsSliderIntervalSeconds,
       arrivalsTitle: site.arrivalsTitle.trim(),
+      whatsappOrdersEnabled: site.whatsappOrdersEnabled,
+      qrPaymentEnabled: site.qrPaymentEnabled,
+      paymentQrUrl: site.paymentQrUrl.trim(),
     };
 
     const supabase = createAdminClient();
@@ -94,6 +107,9 @@ export async function PUT(request: Request) {
         homepage_slider_enabled: normalizedSite.arrivalsSliderEnabled,
         homepage_slider_interval_seconds: normalizedSite.arrivalsSliderIntervalSeconds,
         homepage_arrivals_title: normalizedSite.arrivalsTitle,
+        whatsapp_orders_enabled: normalizedSite.whatsappOrdersEnabled,
+        qr_payment_enabled: normalizedSite.qrPaymentEnabled,
+        payment_qr_url: normalizedSite.paymentQrUrl,
         updated_by: user.id,
       }, { onConflict: "id" });
     if (error) throw new Error(error.message);

@@ -22,13 +22,14 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const file = form.get("file");
+  const assetType = form.get("assetType") === "payment-qr" ? "payment-qr" : "logo";
   if (!(file instanceof File) || !MIME_EXTENSIONS[file.type] || file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "Upload a JPG, PNG, or WEBP logo up to 5 MB." }, { status: 400 });
+    return NextResponse.json({ error: `Upload a JPG, PNG, or WEBP ${assetType === "logo" ? "logo" : "payment QR"} up to 5 MB.` }, { status: 400 });
   }
 
   try {
     const supabase = createAdminClient();
-    const path = `logos/${crypto.randomUUID()}.${MIME_EXTENSIONS[file.type]}`;
+    const path = `${assetType === "logo" ? "logos" : "payment-qr"}/${crypto.randomUUID()}.${MIME_EXTENSIONS[file.type]}`;
     const { error } = await supabase.storage.from("site-assets").upload(path, new Uint8Array(await file.arrayBuffer()), {
       contentType: file.type,
       upsert: false,

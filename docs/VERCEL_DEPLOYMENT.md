@@ -14,4 +14,6 @@ Customer registration is at `/signup`. Enable email confirmations in Supabase Au
 
 Apply Supabase migrations `0004` through `0009` before enabling paid membership/order checkout and editable social links. Notification delivery requires verified Resend sender details and approved WhatsApp Cloud API templates; without those provider settings, payments still complete and the existing manual WhatsApp action remains available.
 
+For the temporary WhatsApp/UPI QR checkout, apply migrations `0015_category_management_rls.sql` and `0016_whatsapp_qr_checkout.sql`. In Admin → Settings, configure the WhatsApp contact URL, enable WhatsApp orders, upload the static payment QR, and enable QR payments if desired. These manual orders remain pending until payment is verified and must be reviewed before fulfillment. Membership and pre-booking payments continue to use their existing payment flow.
+
 Run `npm run lint`, `npx tsc --noEmit`, and `npm run build` before deployment. Do not run `next dev` and `next build` concurrently in the same checkout; both use `.next` and can race during page-data collection.

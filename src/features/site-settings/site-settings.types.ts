@@ -12,6 +12,9 @@ export interface PublicSiteSettings {
   arrivalsSliderEnabled: boolean;
   arrivalsSliderIntervalSeconds: number;
   arrivalsTitle: string;
+  whatsappOrdersEnabled: boolean;
+  qrPaymentEnabled: boolean;
+  paymentQrUrl: string;
 }
 
 export const DEFAULT_SOCIAL_LINKS: PublicSocialLinks = {
@@ -28,4 +31,7 @@ export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   arrivalsSliderEnabled: true,
   arrivalsSliderIntervalSeconds: 6,
   arrivalsTitle: "New arrivals",
+  whatsappOrdersEnabled: false,
+  qrPaymentEnabled: false,
+  paymentQrUrl: "",
 };
