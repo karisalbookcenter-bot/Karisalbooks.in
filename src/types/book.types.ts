@@ -1,4 +1,3 @@
-```ts
 import type { BaseEntity } from "./common.types";
 
 /**
@@ -111,4 +110,3 @@ export interface BookInsert {
  * Shape for updating a book.
  */
 export type BookUpdate = Partial<BookInsert>;
-```

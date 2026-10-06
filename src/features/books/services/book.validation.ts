@@ -1,4 +1,3 @@
-```ts
 import { z } from "zod";
 import type { BookInsert, BookUpdate } from "@/types/book.types";
 
@@ -6,7 +5,9 @@ import type { BookInsert, BookUpdate } from "@/types/book.types";
  * Book validation.
  */
 
-const uuid = z.string().uuid({ message: "Must be a valid id." });
+const uuid = z.string().uuid({
+  message: "Must be a valid id.",
+});
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -16,6 +17,9 @@ const highlightTypeSchema = z.enum([
   "new_launch",
 ]);
 
+/**
+ * Book insert schema.
+ */
 export const bookInsertSchema = z.object({
   category_id: uuid,
 
@@ -93,9 +97,7 @@ export const bookInsertSchema = z.object({
   /**
    * Homepage highlight settings.
    */
-  is_highlighted: z
-    .boolean()
-    .optional(),
+  is_highlighted: z.boolean().optional(),
 
   highlight_type: highlightTypeSchema
     .nullable()
@@ -114,6 +116,9 @@ export const bookInsertSchema = z.object({
     .optional(),
 });
 
+/**
+ * Book update schema.
+ */
 export const bookUpdateSchema =
   bookInsertSchema.partial() satisfies z.ZodType<
     BookUpdate,
@@ -121,16 +126,25 @@ export const bookUpdateSchema =
     unknown
   >;
 
+/**
+ * Validation errors returned by the book forms.
+ */
 export type BookValidationErrors = Partial<
   Record<keyof BookInsert, string>
 >;
 
+/**
+ * Generic validation result.
+ */
 export interface BookValidationResult<T> {
   success: boolean;
   data?: T;
   errors?: BookValidationErrors;
 }
 
+/**
+ * Convert Zod errors into field-based errors.
+ */
 function toFieldErrors(
   error: z.ZodError
 ): BookValidationErrors {
@@ -148,6 +162,9 @@ function toFieldErrors(
   return errors;
 }
 
+/**
+ * Validate a new book.
+ */
 export function validateBookInsert(
   input: unknown
 ): BookValidationResult<BookInsert> {
@@ -166,6 +183,22 @@ export function validateBookInsert(
   };
 }
 
+/**
+ * Alias used by the book form.
+ *
+ * Some parts of the application use the name
+ * "validateBookCreate", while the schema itself
+ * uses "BookInsert".
+ */
+export function validateBookCreate(
+  input: unknown
+): BookValidationResult<BookInsert> {
+  return validateBookInsert(input);
+}
+
+/**
+ * Validate an existing book update.
+ */
 export function validateBookUpdate(
   input: unknown
 ): BookValidationResult<BookUpdate> {
@@ -183,4 +216,3 @@ export function validateBookUpdate(
     errors: toFieldErrors(result.error),
   };
 }
-```
