@@ -4,6 +4,7 @@ import { listPublicCategories } from "./category.storefront";
 import type { Book } from "@/types/book.types";
 import type { PaginatedResult } from "@/types/common.types";
 
+
 let categoryNamesPromise: Promise<Map<string, string>> | null = null;
 
 async function addCategoryNames(books: Book[]) {
@@ -130,4 +131,29 @@ export async function getPublicBookBySlug(slug: string): Promise<Book | null> {
   if (result.error) throw result.error;
   if (!result.data) return null;
   return (await addCategoryNames([result.data as Book]))[0];
+}
+
+export async function listPublicHighlightedBooks(): Promise<Book[]> {
+  const supabase = createClient();
+
+  const result = await supabase
+    .from("books")
+    .select("*")
+    .eq("status", PUBLIC_VISIBLE_STATUS)
+    .eq("is_highlighted", true)
+    .order("highlight_order", {
+      ascending: true,
+      nullsFirst: false,
+    })
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return addCategoryNames(
+    (result.data ?? []) as Book[]
+  );
 }

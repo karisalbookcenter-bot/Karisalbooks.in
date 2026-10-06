@@ -1,3 +1,4 @@
+```ts
 import { z } from "zod";
 import type { BookInsert, BookUpdate } from "@/types/book.types";
 
@@ -8,6 +9,12 @@ import type { BookInsert, BookUpdate } from "@/types/book.types";
 const uuid = z.string().uuid({ message: "Must be a valid id." });
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const highlightTypeSchema = z.enum([
+  "featured",
+  "prebooking",
+  "new_launch",
+]);
 
 export const bookInsertSchema = z.object({
   category_id: uuid,
@@ -81,6 +88,25 @@ export const bookInsertSchema = z.object({
     .string()
     .url("Must be a valid URL.")
     .nullable()
+    .optional(),
+
+  /**
+   * Homepage highlight settings.
+   */
+  is_highlighted: z
+    .boolean()
+    .optional(),
+
+  highlight_type: highlightTypeSchema
+    .nullable()
+    .optional(),
+
+  highlight_order: z
+    .number({
+      invalid_type_error: "Highlight order must be a number.",
+    })
+    .int("Highlight order must be a whole number.")
+    .min(0, "Highlight order cannot be negative.")
     .optional(),
 
   status: z
@@ -157,3 +183,4 @@ export function validateBookUpdate(
     errors: toFieldErrors(result.error),
   };
 }
+```

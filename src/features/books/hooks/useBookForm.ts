@@ -84,6 +84,22 @@ function toBookInsert(
       values.coverImageUrl || null,
 
     status: values.status,
+
+    /**
+     * Homepage Highlight settings
+     */
+    is_highlighted:
+      values.isHighlighted,
+
+    highlight_type:
+      values.isHighlighted && values.highlightType
+        ? values.highlightType
+        : null,
+
+    highlight_order:
+      values.isHighlighted
+        ? Number(values.highlightOrder) || 0
+        : 0,
   };
 }
 

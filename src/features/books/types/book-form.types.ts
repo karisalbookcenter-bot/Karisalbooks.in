@@ -1,3 +1,4 @@
+```ts
 import type { RecordStatus } from "@/types/common.types";
 
 /**
@@ -28,6 +29,13 @@ export interface BookFormValues {
 
   coverImageUrl: string;
   status: RecordStatus;
+
+  /**
+   * Homepage highlight settings.
+   */
+  isHighlighted: boolean;
+  highlightType: "featured" | "prebooking" | "new_launch" | "";
+  highlightOrder: string;
 }
 
 export const DEFAULT_BOOK_FORM_VALUES: BookFormValues = {
@@ -47,4 +55,10 @@ export const DEFAULT_BOOK_FORM_VALUES: BookFormValues = {
 
   coverImageUrl: "",
   status: "active",
+
+  // Homepage highlight defaults.
+  isHighlighted: false,
+  highlightType: "",
+  highlightOrder: "0",
 };
+```

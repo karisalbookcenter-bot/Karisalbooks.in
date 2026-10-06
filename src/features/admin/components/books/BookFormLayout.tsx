@@ -38,7 +38,18 @@ function bookToFormValues(
 
     coverImageUrl:
       book.cover_image_url ?? "",
+
     status: book.status,
+
+    // Homepage Highlight settings
+    isHighlighted:
+      book.is_highlighted ?? false,
+
+    highlightType:
+      book.highlight_type ?? "",
+
+    highlightOrder:
+      String(book.highlight_order ?? 1),
   };
 }
 
@@ -703,6 +714,143 @@ export function BookFormLayout({
           {manualEntryError}
         </p>
       )}
+
+      {/* Homepage Highlight Settings */}
+      <div className="rounded-lg border border-border bg-muted/20 p-4">
+        <div className="flex items-start gap-3">
+          <input
+            id="book-is-highlighted"
+            type="checkbox"
+            checked={values.isHighlighted}
+            onChange={(e) => {
+              const checked =
+                e.target.checked;
+
+              setField(
+                "isHighlighted",
+                checked
+              );
+
+              if (!checked) {
+                setField(
+                  "highlightType",
+                  ""
+                );
+
+                setField(
+                  "highlightOrder",
+                  "0"
+                );
+              } else {
+                if (!values.highlightType) {
+                  setField(
+                    "highlightType",
+                    "featured"
+                  );
+                }
+
+                if (
+                  Number(values.highlightOrder) <=
+                  0
+                ) {
+                  setField(
+                    "highlightOrder",
+                    "1"
+                  );
+                }
+              }
+            }}
+            className="mt-1 h-4 w-4 rounded border-border"
+          />
+
+          <div>
+            <Label
+              htmlFor="book-is-highlighted"
+              className="cursor-pointer"
+            >
+              Show this book in Homepage Highlights
+            </Label>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              Highlighted books will appear above the
+              Latest Arrivals section on the homepage.
+            </p>
+          </div>
+        </div>
+
+        {values.isHighlighted && (
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="book-highlight-type">
+                Highlight Type
+              </Label>
+
+              <Select
+                id="book-highlight-type"
+                value={values.highlightType}
+                onChange={(e) =>
+                  setField(
+                    "highlightType",
+                    e.target.value as BookFormValues["highlightType"]
+                  )
+                }
+              >
+                <option value="">
+                  Select highlight type
+                </option>
+
+                <option value="featured">
+                  Featured
+                </option>
+
+                <option value="prebooking">
+                  Pre-booking
+                </option>
+
+                <option value="new_launch">
+                  New Launch
+                </option>
+              </Select>
+
+              {errors.highlight_type && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errors.highlight_type}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="book-highlight-order">
+                Display Order
+              </Label>
+
+              <Input
+                id="book-highlight-order"
+                type="number"
+                min="1"
+                step="1"
+                value={values.highlightOrder}
+                onChange={(e) =>
+                  setField(
+                    "highlightOrder",
+                    e.target.value
+                  )
+                }
+              />
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                1 appears first, 2 second, 3 third, etc.
+              </p>
+
+              {errors.highlight_order && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errors.highlight_order}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div>
         <Label htmlFor="book-cover">

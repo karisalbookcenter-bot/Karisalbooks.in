@@ -1,4 +1,13 @@
+```ts
 import type { BaseEntity } from "./common.types";
+
+/**
+ * Homepage highlight types.
+ */
+export type BookHighlightType =
+  | "featured"
+  | "prebooking"
+  | "new_launch";
 
 /**
  * Book entity types — Sprint 10 (Book CRUD + Supabase Integration).
@@ -33,6 +42,13 @@ export interface Book extends BaseEntity {
   weight_kg: number;
 
   cover_image_url: string | null;
+
+  /**
+   * Homepage highlight settings.
+   */
+  is_highlighted: boolean;
+  highlight_type: BookHighlightType | null;
+  highlight_order: number;
 
   prebooking_enabled?: boolean;
   prebooking_start_at?: string | null;
@@ -70,6 +86,13 @@ export interface BookInsert {
 
   cover_image_url?: string | null;
 
+  /**
+   * Homepage highlight settings.
+   */
+  is_highlighted?: boolean;
+  highlight_type?: BookHighlightType | null;
+  highlight_order?: number;
+
   prebooking_enabled?: boolean;
   prebooking_start_at?: string | null;
   prebooking_end_at?: string | null;
@@ -88,3 +111,4 @@ export interface BookInsert {
  * Shape for updating a book.
  */
 export type BookUpdate = Partial<BookInsert>;
+```
