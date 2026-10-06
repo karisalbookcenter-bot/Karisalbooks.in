@@ -157,3 +157,25 @@ export async function listPublicHighlightedBooks(): Promise<Book[]> {
     (result.data ?? []) as Book[]
   );
 }
+
+export async function listPublicCustomizeBooks(): Promise<Book[]> {
+  const supabase = createClient();
+
+  const result = await supabase
+    .from("books")
+    .select("*")
+    .eq("status", PUBLIC_VISIBLE_STATUS)
+    .eq("prebooking_customize_enabled", true)
+    .not("customize_price", "is", null)
+    .order("title", {
+      ascending: true,
+    });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return addCategoryNames(
+    (result.data ?? []) as Book[],
+  );
+}
