@@ -148,11 +148,8 @@ function LoginForm() {
           </Button>
         </form>
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          New customer?{" "}
-          <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
-            Create an account
-          </Link>
-        </p>
+  Admin access only
+</p>
       </div>
     </div>
   );
