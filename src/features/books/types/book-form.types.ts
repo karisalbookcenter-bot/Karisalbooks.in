@@ -62,6 +62,10 @@ export interface BookFormValues {
   isHighlighted: boolean;
   highlightType: BookHighlightType;
   highlightOrder: string;
+
+    /** Optional pre-booking delivery charges in INR. Blank = default charge. */
+  prebookingPostalCharge: string;
+  prebookingProfessionalCourierCharge: string;
 }
 
 /**
@@ -92,4 +96,7 @@ export const DEFAULT_BOOK_FORM_VALUES: BookFormValues = {
   isHighlighted: false,
   highlightType: "",
   highlightOrder: "0",
+
+    prebookingPostalCharge: "",
+  prebookingProfessionalCourierCharge: "",
 };

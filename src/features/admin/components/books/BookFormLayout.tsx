@@ -32,6 +32,15 @@ function bookToFormValues(
     isbn: book.isbn ?? "",
     price: String(book.price),
     stockQuantity: String(book.stock_quantity),
+        prebookingPostalCharge:
+      book.prebooking_postal_charge == null
+        ? ""
+        : String(book.prebooking_postal_charge),
+
+    prebookingProfessionalCourierCharge:
+      book.prebooking_professional_courier_charge == null
+        ? ""
+        : String(book.prebooking_professional_courier_charge),
 
     // Load existing book weight into Edit form.
     weightKg: String(book.weight_kg ?? 0),
@@ -439,6 +448,59 @@ export function BookFormLayout({
               {errors.weight_kg}
             </p>
           )}
+        </div>
+      </div>
+      
+            {/* Optional pre-booking shipping charges */}
+      <div className="rounded-lg border border-border p-4">
+        <h3 className="text-sm font-semibold">
+          Pre-booking Delivery Charges (Optional)
+        </h3>
+
+        <p className="mt-1 text-xs text-muted-foreground">
+          Leave blank to use the existing default shipping charge.
+          These settings apply to pre-booking orders only.
+        </p>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="prebooking-postal-charge">
+              India Post Charge (₹)
+            </Label>
+
+            <Input
+              id="prebooking-postal-charge"
+              type="number"
+              min="0"
+              step="0.01"
+              value={values.prebookingPostalCharge}
+              onChange={(e) =>
+                setField("prebookingPostalCharge", e.target.value)
+              }
+              placeholder="Default charge"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="prebooking-professional-charge">
+              Professional Courier Charge (₹)
+            </Label>
+
+            <Input
+              id="prebooking-professional-charge"
+              type="number"
+              min="0"
+              step="0.01"
+              value={values.prebookingProfessionalCourierCharge}
+              onChange={(e) =>
+                setField(
+                  "prebookingProfessionalCourierCharge",
+                  e.target.value
+                )
+              }
+              placeholder="Default charge"
+            />
+          </div>
         </div>
       </div>
 

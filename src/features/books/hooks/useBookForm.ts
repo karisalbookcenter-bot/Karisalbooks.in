@@ -1,18 +1,24 @@
 "use client";
 
 import { useCallback, useState } from "react";
+
 import { slugify } from "@/lib/helpers/string.helpers";
+
 import {
   validateBookInsert,
   validateBookUpdate,
   type BookValidationErrors,
 } from "@/features/books/services/book.validation";
+
 import * as bookService from "@/features/books/services/book.service";
+
 import { uploadBookCoverImage } from "@/features/books/services/image-upload.service";
+
 import {
   DEFAULT_BOOK_FORM_VALUES,
   type BookFormValues,
 } from "@/features/books/types/book-form.types";
+
 import type { Book, BookInsert } from "@/types/book.types";
 import type { ApiResponse } from "@/types/common.types";
 
@@ -36,6 +42,7 @@ export interface UseBookFormResult {
 
   selectCoverImageFile: (file: File | null) => void;
   selectedCoverImageFile: File | null;
+
   reset: () => void;
 
   submit: (
@@ -43,101 +50,90 @@ export interface UseBookFormResult {
   ) => Promise<ApiResponse<Book>>;
 }
 
-function toBookInsert(
-  values: BookFormValues
-): BookInsert {
+/**
+ * Convert the admin book form values into the database payload.
+ */
+function toBookInsert(values: BookFormValues): BookInsert {
   return {
     title: values.title.trim(),
 
-    slug:
-      values.slug.trim() ||
-      slugify(values.title),
+    slug: values.slug.trim() || slugify(values.title),
 
-    description:
-      values.description.trim() || null,
+    description: values.description.trim() || null,
 
     category_id: values.categoryId,
 
-    subcategory_id:
-      values.subcategoryId || null,
+    subcategory_id: values.subcategoryId || null,
 
     author_id: values.authorId,
 
-    publisher_id:
-      values.publisherId || null,
+    publisher_id: values.publisherId || null,
 
-    isbn:
-      values.isbn.trim() || null,
+    isbn: values.isbn.trim() || null,
 
     price: Number(values.price),
 
-    stock_quantity:
-      Number(values.stockQuantity),
+    stock_quantity: Number(values.stockQuantity),
 
-    /**
-     * Convert form string to number before saving.
-     */
-    weight_kg:
-      Number(values.weightKg),
+    weight_kg: Number(values.weightKg),
 
-    cover_image_url:
-      values.coverImageUrl || null,
+    cover_image_url: values.coverImageUrl || null,
 
     status: values.status,
 
-    /**
-     * Homepage Highlight settings
-     */
-    is_highlighted:
-      values.isHighlighted,
+    // Homepage highlight settings
+    is_highlighted: values.isHighlighted,
 
     highlight_type:
       values.isHighlighted && values.highlightType
         ? values.highlightType
         : null,
 
-    highlight_order:
-      values.isHighlighted
-        ? Number(values.highlightOrder) || 0
-        : 0,
+    highlight_order: values.isHighlighted
+      ? Number(values.highlightOrder) || 0
+      : 0,
+
+    // Pre-booking shipping charges.
+    // Blank fields are saved as NULL so the default shipping
+    // charge can be applied during checkout.
+    prebooking_postal_charge:
+      values.prebookingPostalCharge.trim() === ""
+        ? null
+        : Number(values.prebookingPostalCharge),
+
+    prebooking_professional_courier_charge:
+      values.prebookingProfessionalCourierCharge.trim() === ""
+        ? null
+        : Number(values.prebookingProfessionalCourierCharge),
   };
 }
 
 export function useBookForm(
   options: UseBookFormOptions = {}
 ): UseBookFormResult {
-  const {
-    mode = "create",
-    bookId,
-  } = options;
+  const { mode = "create", bookId } = options;
 
-  const [values, setValues] =
-    useState<BookFormValues>({
-      ...DEFAULT_BOOK_FORM_VALUES,
-      ...options.initialValues,
-    });
+  const [values, setValues] = useState<BookFormValues>({
+    ...DEFAULT_BOOK_FORM_VALUES,
+    ...options.initialValues,
+  });
 
-  const [slugTouched, setSlugTouched] =
-    useState(Boolean(options.initialValues?.slug));
+  const [slugTouched, setSlugTouched] = useState(
+    Boolean(options.initialValues?.slug)
+  );
 
-  const [errors, setErrors] =
-    useState<BookValidationErrors>({});
+  const [errors, setErrors] = useState<BookValidationErrors>({});
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [isUploadingImage, setIsUploadingImage] =
-    useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const [submitError, setSubmitError] =
-    useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [selectedCoverImageFile, setSelectedCoverImageFile] =
     useState<File | null>(null);
 
-  const setField = useCallback<
-    UseBookFormResult["setField"]
-  >(
+  const setField = useCallback<UseBookFormResult["setField"]>(
     (field, value) => {
       setValues((prev) => {
         const next = {
@@ -145,13 +141,8 @@ export function useBookForm(
           [field]: value,
         };
 
-        if (
-          field === "title" &&
-          !slugTouched
-        ) {
-          next.slug = slugify(
-            String(value)
-          );
+        if (field === "title" && !slugTouched) {
+          next.slug = slugify(String(value));
         }
 
         return next;
@@ -166,9 +157,7 @@ export function useBookForm(
           return prev;
         }
 
-        const next = {
-          ...prev,
-        };
+        const next = { ...prev };
 
         delete next[field as keyof BookInsert];
 
@@ -178,12 +167,9 @@ export function useBookForm(
     [slugTouched]
   );
 
-  const selectCoverImageFile = useCallback(
-    (file: File | null) => {
-      setSelectedCoverImageFile(file);
-    },
-    []
-  );
+  const selectCoverImageFile = useCallback((file: File | null) => {
+    setSelectedCoverImageFile(file);
+  }, []);
 
   const reset = useCallback(() => {
     setValues({
@@ -191,9 +177,7 @@ export function useBookForm(
       ...options.initialValues,
     });
 
-    setSlugTouched(
-      Boolean(options.initialValues?.slug)
-    );
+    setSlugTouched(Boolean(options.initialValues?.slug));
 
     setErrors({});
     setSubmitError(null);
@@ -208,10 +192,12 @@ export function useBookForm(
     ): Promise<ApiResponse<Book>> => {
       setSubmitError(null);
 
-      const payload = toBookInsert({
+      const formValues: BookFormValues = {
         ...values,
         ...overrides,
-      });
+      };
+
+      const payload = toBookInsert(formValues);
 
       const validation =
         mode === "create"
@@ -219,15 +205,12 @@ export function useBookForm(
           : validateBookUpdate(payload);
 
       if (!validation.success) {
-        setErrors(
-          validation.errors ?? {}
-        );
+        setErrors(validation.errors ?? {});
 
         return {
           data: null,
           error: {
-            message:
-              "Please fix the highlighted fields.",
+            message: "Please fix the highlighted fields.",
             code: "VALIDATION_ERROR",
           },
         };
@@ -235,24 +218,20 @@ export function useBookForm(
 
       setErrors({});
 
-      let coverImageUrl =
-        payload.cover_image_url ?? undefined;
+      let coverImageUrl = payload.cover_image_url ?? undefined;
 
       if (selectedCoverImageFile) {
         setIsUploadingImage(true);
 
-        const uploadResult =
-          await uploadBookCoverImage(
-            selectedCoverImageFile,
-            bookId
-          );
+        const uploadResult = await uploadBookCoverImage(
+          selectedCoverImageFile,
+          bookId
+        );
 
         setIsUploadingImage(false);
 
         if (uploadResult.error) {
-          setSubmitError(
-            uploadResult.error.message
-          );
+          setSubmitError(uploadResult.error.message);
 
           return {
             data: null,
@@ -260,44 +239,48 @@ export function useBookForm(
           };
         }
 
-        coverImageUrl =
-          uploadResult.data.publicUrl;
+        coverImageUrl = uploadResult.data.publicUrl;
       }
 
       setIsSubmitting(true);
 
-      const result =
-        mode === "edit" && bookId
-          ? await bookService.updateBook(
-              bookId,
-              {
+      try {
+        const result =
+          mode === "edit" && bookId
+            ? await bookService.updateBook(bookId, {
                 ...payload,
-                cover_image_url:
-                  coverImageUrl,
-              }
-            )
-          : await bookService.createBook({
-              ...payload,
-              cover_image_url:
-                coverImageUrl,
-            } as BookInsert);
+                cover_image_url: coverImageUrl,
+              })
+            : await bookService.createBook({
+                ...payload,
+                cover_image_url: coverImageUrl,
+              } as BookInsert);
 
-      setIsSubmitting(false);
+        if (result.error) {
+          setSubmitError(result.error.message);
+        }
 
-      if (result.error) {
-        setSubmitError(
-          result.error.message
-        );
+        return result;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to save the book.";
+
+        setSubmitError(message);
+
+        return {
+          data: null,
+          error: {
+            message,
+            code: "BOOK_SAVE_ERROR",
+          },
+        };
+      } finally {
+        setIsSubmitting(false);
       }
-
-      return result;
     },
-    [
-      values,
-      mode,
-      bookId,
-      selectedCoverImageFile,
-    ]
+    [values, mode, bookId, selectedCoverImageFile]
   );
 
   return {

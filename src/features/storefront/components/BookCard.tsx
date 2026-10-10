@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,12 +28,81 @@ export function BookCard({
   const { addItem, toggleWishlist, isWishlisted } = useCart();
 
   const [added, setAdded] = useState(false);
-  const inStock = book.stock_quantity > 0;
 
-  const price = calculateBookPrice(
+  // --------------------------------------------------
+  // PRE-BOOKING PERIOD CHECK
+  // --------------------------------------------------
+
+  const now = Date.now();
+
+  const bookingStart = book.prebooking_start_at
+    ? new Date(book.prebooking_start_at).getTime()
+    : Number.POSITIVE_INFINITY;
+
+  const bookingEnd = book.prebooking_end_at
+    ? new Date(book.prebooking_end_at).getTime()
+    : 0;
+
+  const isPrebooking =
+    book.prebooking_enabled === true &&
+    Number.isFinite(bookingStart) &&
+    Number.isFinite(bookingEnd) &&
+    bookingStart <= now &&
+    bookingEnd >= now &&
+    book.prebooking_price != null &&
+    Number.isFinite(Number(book.prebooking_price)) &&
+    Number(book.prebooking_price) >= 0;
+
+  // --------------------------------------------------
+  // PRE-BOOKING OFFER CHECK
+  // --------------------------------------------------
+
+  const offerStart = book.prebooking_offer_start_at
+    ? new Date(book.prebooking_offer_start_at).getTime()
+    : Number.POSITIVE_INFINITY;
+
+  const offerEnd = book.prebooking_offer_end_at
+    ? new Date(book.prebooking_offer_end_at).getTime()
+    : 0;
+
+  const hasActiveOffer =
+    isPrebooking &&
+    book.prebooking_offer_price != null &&
+    Number.isFinite(offerStart) &&
+    Number.isFinite(offerEnd) &&
+    offerStart <= now &&
+    offerEnd >= now &&
+    Number.isFinite(Number(book.prebooking_offer_price)) &&
+    Number(book.prebooking_offer_price) >= 0 &&
+    Number(book.prebooking_offer_price) <= Number(book.prebooking_price);
+
+  // --------------------------------------------------
+  // PRICE CALCULATION
+  // Regular books retain the existing discount logic.
+  // --------------------------------------------------
+
+  const regularPrice = calculateBookPrice(
     book.price,
     isBookDiscountEligible(book.category_name)
   );
+
+  const price = isPrebooking
+    ? {
+        originalPrice: Number(book.prebooking_price),
+        discountedPrice: Number(
+          hasActiveOffer
+            ? book.prebooking_offer_price
+            : book.prebooking_price
+        ),
+        discountAmount: hasActiveOffer
+          ? Number(book.prebooking_price) -
+            Number(book.prebooking_offer_price)
+          : 0,
+      }
+    : regularPrice;
+
+  // An active pre-booking does not require stock_quantity > 0.
+  const inStock = isPrebooking || book.stock_quantity > 0;
 
   const wishlisted = isWishlisted(book.id);
 
@@ -45,6 +115,9 @@ export function BookCard({
       originalPrice: price.originalPrice,
       discountAmount: price.discountAmount,
       quantity: 1,
+      purchaseType: isPrebooking
+        ? ("prebooking" as const)
+        : ("books" as const),
       coverImageUrl: book.cover_image_url,
       authorName,
       publisherName,
@@ -111,6 +184,18 @@ export function BookCard({
             className={wishlisted ? "text-primary" : "text-foreground"}
           />
         </button>
+
+        {isPrebooking && (
+          <span className="absolute left-2 top-2 rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
+            Pre-booking
+          </span>
+        )}
+
+        {isPrebooking && hasActiveOffer && (
+          <span className="absolute bottom-2 left-2 rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white">
+            Offer
+          </span>
+        )}
       </div>
 
       {/* Book information */}
@@ -143,14 +228,21 @@ export function BookCard({
               {formatCurrency(price.discountedPrice)}
             </span>
 
-            {price.discountAmount > 0 && (
+            {price.originalPrice > price.discountedPrice && (
               <span className="text-sm tabular-nums text-muted-foreground line-through">
                 {formatCurrency(price.originalPrice)}
               </span>
             )}
           </div>
 
-          {price.discountAmount > 0 && (
+          {isPrebooking && hasActiveOffer && (
+            <p className="mt-1 text-xs font-medium text-emerald-700">
+              Pre-booking offer · Save{" "}
+              {formatCurrency(price.discountAmount)}
+            </p>
+          )}
+
+          {!isPrebooking && price.discountAmount > 0 && (
             <p className="mt-1 text-xs font-medium text-emerald-700">
               7% off · Save {formatCurrency(price.discountAmount)}
             </p>
@@ -161,7 +253,11 @@ export function BookCard({
               inStock ? "text-emerald-700" : "text-destructive"
             }`}
           >
-            {inStock ? "In stock" : "Currently unavailable"}
+            {isPrebooking
+              ? "Available for pre-booking"
+              : inStock
+                ? "In stock"
+                : "Currently unavailable"}
           </p>
         </div>
 
@@ -202,3 +298,4 @@ export function BookCard({
     </article>
   );
 }
+
