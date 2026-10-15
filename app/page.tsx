@@ -48,6 +48,7 @@ export default function HomePage() {
   >({});
 
   const [loading, setLoading] = useState(true);
+  const [siteSettingsLoading, setSiteSettingsLoading] = useState(true);
   const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const [site, setSite] =
@@ -141,8 +142,11 @@ export default function HomePage() {
           });
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setSiteSettingsLoading(false));
   }, []);
+
+  const arrivalsLoading = loading || siteSettingsLoading;
 
   return (
     <MainLayout>
@@ -231,7 +235,7 @@ export default function HomePage() {
           HOMEPAGE HIGHLIGHTS
           ===================================================== */}
 
-      {!loading && highlightedBooks.length > 0 && (
+      {!arrivalsLoading && highlightedBooks.length > 0 && (
         <section className="container py-6 sm:py-8">
           <div className="mb-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">
@@ -265,10 +269,48 @@ export default function HomePage() {
           {site.arrivalsTitle}
         </h2>
 
-        {loading ? (
-          <p className="text-sm text-muted-foreground">
-            Loading…
-          </p>
+        {arrivalsLoading ? (
+          <div
+            role="status"
+            aria-label="Loading latest arrivals"
+            className={
+              site.arrivalsSliderEnabled
+                ? "flex gap-3 overflow-hidden pb-3 sm:gap-4"
+                : "grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5"
+            }
+          >
+            {Array.from(
+              { length: site.arrivalsSliderEnabled ? 4 : 8 },
+              (_, index) => (
+                <div
+                  key={index}
+                  aria-hidden="true"
+                  className={
+                    site.arrivalsSliderEnabled
+                      ? "min-w-[46%] snap-start sm:min-w-[31%] lg:min-w-[23%]"
+                      : "min-w-0"
+                  }
+                >
+                  <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
+                    <div className="aspect-[3/4] bg-muted" />
+                    <div className="flex min-h-[20rem] flex-1 flex-col p-3 sm:p-4">
+                      <div className="h-3 w-3/5 rounded bg-muted" />
+                      <div className="mt-2 h-12 rounded bg-muted" />
+                      <div className="mt-2 h-10 rounded bg-muted" />
+                      <div className="mt-auto border-t border-border/70 pt-3">
+                        <div className="h-5 w-2/5 rounded bg-muted" />
+                        <div className="mt-2 h-5 w-3/5 rounded bg-muted" />
+                        <div className="mt-3 flex gap-2">
+                          <div className="h-12 flex-1 rounded-lg bg-muted" />
+                          <div className="h-12 flex-1 rounded-lg bg-muted" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
         ) : site.arrivalsSliderEnabled ? (
           <BookCarousel
             books={recentBooks}

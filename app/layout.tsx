@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "@/features/cart/context/CartProvider";
 import { appConfig } from "@/config/app";
+
+const notoSansTamil = localFont({
+  src: "../public/font/NotoSansTamil-VariableFont_wdth,wght.ttf",
+  variable: "--font-noto-sans-tamil",
+  weight: "100 900",
+  display: "swap",
+  preload: false,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(appConfig.url),
@@ -56,7 +65,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-IN" suppressHydrationWarning>
-      <body>
+      <body className={notoSansTamil.variable}>
   <CartProvider>
     {children}
   </CartProvider>

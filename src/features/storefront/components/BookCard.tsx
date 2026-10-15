@@ -14,11 +14,18 @@ import {
 import { useCart } from "@/features/cart/hooks/useCart";
 import type { Book } from "@/types/book.types";
 
+export const BOOK_GRID_IMAGE_SIZES =
+  "(max-width: 639px) calc((100vw - 4.75rem) / 2), (max-width: 767px) 282px, (max-width: 1023px) 224px, (max-width: 1279px) 228px, (max-width: 1399px) 289px, 319px";
+
+export const BOOK_CAROUSEL_IMAGE_SIZES =
+  "(max-width: 639px) 39vw, (max-width: 767px) 265px, (max-width: 1023px) 218px, (max-width: 1279px) 221px, (max-width: 1399px) 280px, 307px";
+
 interface BookCardProps {
   book: Book;
   authorName?: string;
   publisherName?: string;
   priority?: boolean;
+  imageSizes?: string;
 }
 
 export function BookCard({
@@ -26,6 +33,7 @@ export function BookCard({
   authorName,
   publisherName,
   priority = false,
+  imageSizes = BOOK_GRID_IMAGE_SIZES,
 }: BookCardProps) {
   const router = useRouter();
   const { addItem, toggleWishlist, isWishlisted } = useCart();
@@ -157,7 +165,7 @@ export function BookCard({
                 src={book.cover_image_url}
                 alt={`Cover of ${book.title}`}
                 fill
-                sizes="(max-width: 640px) 46vw, (max-width: 768px) 30vw, (max-width: 1024px) 23vw, 25vw"
+                sizes={imageSizes}
                 priority={priority}
                 className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
               />

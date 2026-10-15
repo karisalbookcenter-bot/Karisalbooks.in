@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { BookCard } from "./BookCard";
+import { BookCard, BOOK_CAROUSEL_IMAGE_SIZES } from "./BookCard";
 import type { Book } from "@/types/book.types";
 
 interface BookCarouselProps {
@@ -57,6 +57,7 @@ export function BookCarousel({
             <BookCard
               book={book}
               priority={prioritizeFirstImage && index === 0}
+              imageSizes={BOOK_CAROUSEL_IMAGE_SIZES}
               authorName={authorNamesById[book.author_id]}
               publisherName={book.publisher_id ? publisherNamesById[book.publisher_id] : undefined}
             />

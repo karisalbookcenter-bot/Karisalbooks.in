@@ -1,4 +1,4 @@
-import { BookCard } from "./BookCard";
+import { BookCard, BOOK_GRID_IMAGE_SIZES } from "./BookCard";
 import type { Book } from "@/types/book.types";
 
 interface BookGridProps {
@@ -45,6 +45,7 @@ export function BookGrid({
           <BookCard
             book={book}
             priority={prioritizeFirstImage && index === 0}
+            imageSizes={BOOK_GRID_IMAGE_SIZES}
             authorName={authorNamesById[book.author_id]}
             publisherName={
               book.publisher_id
