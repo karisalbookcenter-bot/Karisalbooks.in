@@ -10,9 +10,16 @@ interface BookCarouselProps {
   authorNamesById: Record<string, string>;
   publisherNamesById: Record<string, string>;
   intervalSeconds: number;
+  prioritizeFirstImage?: boolean;
 }
 
-export function BookCarousel({ books, authorNamesById, publisherNamesById, intervalSeconds }: BookCarouselProps) {
+export function BookCarousel({
+  books,
+  authorNamesById,
+  publisherNamesById,
+  intervalSeconds,
+  prioritizeFirstImage = false,
+}: BookCarouselProps) {
   const track = useRef<HTMLDivElement>(null);
 
   function move(direction: -1 | 1) {
@@ -45,9 +52,14 @@ export function BookCarousel({ books, authorNamesById, publisherNamesById, inter
         </div>
       )}
       <div ref={track} className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 sm:gap-4">
-        {books.map((book) => (
+        {books.map((book, index) => (
           <div key={book.id} className="min-w-[46%] snap-start sm:min-w-[31%] lg:min-w-[23%]">
-            <BookCard book={book} authorName={authorNamesById[book.author_id]} publisherName={book.publisher_id ? publisherNamesById[book.publisher_id] : undefined} />
+            <BookCard
+              book={book}
+              priority={prioritizeFirstImage && index === 0}
+              authorName={authorNamesById[book.author_id]}
+              publisherName={book.publisher_id ? publisherNamesById[book.publisher_id] : undefined}
+            />
           </div>
         ))}
       </div>

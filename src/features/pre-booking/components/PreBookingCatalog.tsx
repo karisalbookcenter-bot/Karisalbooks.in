@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   CalendarDays,
@@ -597,10 +598,11 @@ export function PreBookingCatalog() {
                         <div className="flex min-w-0 items-center gap-4">
                           <div className="flex h-20 w-14 shrink-0 items-center justify-center bg-white p-1">
                             {book.cover_image_url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
+                              <Image
                                 src={book.cover_image_url}
                                 alt={book.title}
+                                width={56}
+                                height={80}
                                 className="h-full w-full object-contain"
                               />
                             ) : (
@@ -764,12 +766,13 @@ export function PreBookingCatalog() {
                     key={book.id}
                     className="grid grid-cols-[112px_minmax(0,1fr)] gap-4 border-b border-border pb-5 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-5"
                   >
-                    <div className="flex aspect-[3/4] items-center justify-center bg-white p-2">
+                    <div className="relative flex aspect-[3/4] items-center justify-center bg-white p-2">
                       {book.cover_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={book.cover_image_url}
                           alt={book.title}
+                          fill
+                          sizes="(max-width: 640px) 40vw, 25vw"
                           className="h-full w-full object-contain"
                         />
                       ) : (

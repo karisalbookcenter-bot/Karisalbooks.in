@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Minus, Plus, ShoppingCart } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -262,13 +263,15 @@ function makeCartItem(itemQuantity: number): CartItem {
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_250px]">
           <div className="min-w-0 space-y-6">
             <section className="grid overflow-hidden rounded-lg border border-border bg-card md:grid-cols-[minmax(240px,0.9fr)_1.1fr]">
-              <div className="flex min-h-[360px] items-center justify-center bg-white p-5 sm:min-h-[480px] sm:p-8">
+              <div className="relative flex min-h-[360px] items-center justify-center bg-white sm:min-h-[480px]">
                 {book.cover_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={book.cover_image_url}
                     alt={book.title}
-                    className="max-h-[560px] w-full object-contain"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 55vw"
+                    priority
+                    className="object-contain p-5 sm:p-8"
                   />
                 ) : (
                   <span className="text-sm text-muted-foreground">
@@ -494,10 +497,11 @@ function makeCartItem(itemQuantity: number): CartItem {
                         className="flex gap-3"
                       >
                         {relatedBook.cover_image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={relatedBook.cover_image_url}
                             alt=""
+                            width={48}
+                            height={64}
                             className="h-16 w-12 rounded-sm object-contain"
                           />
                         ) : (

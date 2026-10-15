@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingCart, ArrowRight } from "lucide-react";
 
 import { useCart } from "@/features/cart/hooks/useCart";
@@ -225,10 +226,11 @@ export function CustomizeCatalog() {
                     <div className="flex gap-5">
                       <div className="flex h-36 w-24 shrink-0 items-center justify-center bg-white p-2">
                         {book.cover_image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={book.cover_image_url}
                             alt={book.title}
+                            width={96}
+                            height={144}
                             className="h-full w-full object-contain"
                           />
                         ) : (

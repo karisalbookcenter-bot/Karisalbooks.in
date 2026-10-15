@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Heart, ShoppingCart, Zap } from "lucide-react";
@@ -17,12 +18,14 @@ interface BookCardProps {
   book: Book;
   authorName?: string;
   publisherName?: string;
+  priority?: boolean;
 }
 
 export function BookCard({
   book,
   authorName,
   publisherName,
+  priority = false,
 }: BookCardProps) {
   const router = useRouter();
   const { addItem, toggleWishlist, isWishlisted } = useCart();
@@ -150,11 +153,12 @@ export function BookCard({
         >
           <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-white p-2 sm:p-3">
             {book.cover_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={book.cover_image_url}
                 alt={`Cover of ${book.title}`}
-                loading="lazy"
+                fill
+                sizes="(max-width: 640px) 46vw, (max-width: 768px) 30vw, (max-width: 1024px) 23vw, 25vw"
+                priority={priority}
                 className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
               />
             ) : (
@@ -298,4 +302,3 @@ export function BookCard({
     </article>
   );
 }
-

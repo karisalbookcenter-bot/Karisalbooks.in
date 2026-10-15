@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { CalendarClock, Crown, Tag } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { createClient } from "@/lib/supabase/client";
@@ -84,8 +85,15 @@ export default function OfferZonePage() {
               {offers.map((offer) => (
                 <article key={offer.id} className="border border-border p-4">
                   {offer.campaign_poster_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={offer.campaign_poster_url} alt={`${offer.title} offer`} className="mb-4 max-h-56 w-full object-contain" />
+                    <div className="relative mb-4 h-56 w-full">
+                      <Image
+                        src={offer.campaign_poster_url}
+                        alt={`${offer.title} offer`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-contain"
+                      />
+                    </div>
                   )}
                   <p className="text-xs font-semibold uppercase text-primary">{offer.discount_percentage}% off</p>
                   <h3 className="mt-2 text-base font-semibold">{offer.title}</h3>

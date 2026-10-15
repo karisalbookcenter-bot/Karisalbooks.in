@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useCart } from "@/features/cart/hooks/useCart";
@@ -31,8 +32,14 @@ export default function WishlistPage() {
               <article key={item.id} className="flex gap-3 py-4 first:pt-0 sm:gap-5">
                 <Link href={`/books/${item.slug}`} className="flex h-28 w-20 shrink-0 items-center justify-center bg-secondary sm:h-36 sm:w-24">
                   {item.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.coverImageUrl} alt="" className="h-full w-full object-contain" />
+                    <Image
+                      src={item.coverImageUrl}
+                      alt=""
+                      width={96}
+                      height={144}
+                      sizes="(max-width: 640px) 80px, 96px"
+                      className="h-full w-full object-contain"
+                    />
                   ) : <span className="px-1 text-center text-[10px] text-muted-foreground">Cover coming soon</span>}
                 </Link>
                 <div className="flex min-w-0 flex-1 flex-col">

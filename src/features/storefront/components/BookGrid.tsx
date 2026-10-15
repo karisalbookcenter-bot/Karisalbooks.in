@@ -6,6 +6,7 @@ interface BookGridProps {
   authorNamesById: Record<string, string>;
   publisherNamesById: Record<string, string>;
   emptyMessage?: string;
+  prioritizeFirstImage?: boolean;
 }
 
 export function BookGrid({
@@ -13,6 +14,7 @@ export function BookGrid({
   authorNamesById,
   publisherNamesById,
   emptyMessage,
+  prioritizeFirstImage = false,
 }: BookGridProps) {
   if (books.length === 0) {
     return (
@@ -38,10 +40,11 @@ export function BookGrid({
       className="grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5"
       aria-label="புத்தகங்கள்"
     >
-      {books.map((book) => (
+      {books.map((book, index) => (
         <div key={book.id} className="min-w-0">
           <BookCard
             book={book}
+            priority={prioritizeFirstImage && index === 0}
             authorName={authorNamesById[book.author_id]}
             publisherName={
               book.publisher_id
@@ -54,4 +57,3 @@ export function BookGrid({
     </div>
   );
 }
-

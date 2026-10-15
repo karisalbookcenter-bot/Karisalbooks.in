@@ -251,6 +251,7 @@ export default function HomePage() {
             books={highlightedBooks}
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
+            prioritizeFirstImage
           />
         </section>
       )}
@@ -274,12 +275,14 @@ export default function HomePage() {
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
             intervalSeconds={site.arrivalsSliderIntervalSeconds}
+            prioritizeFirstImage={highlightedBooks.length === 0}
           />
         ) : (
           <BookGrid
             books={recentBooks}
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
+            prioritizeFirstImage={highlightedBooks.length === 0}
           />
         )}
       </section>
