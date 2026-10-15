@@ -35,6 +35,24 @@ import {
 
 import type { Book } from "@/types/book.types";
 
+interface RecentlyViewedBook {
+  id: string;
+  slug: string;
+  title: string;
+  coverImageUrl: string | null;
+}
+
+function isRecentlyViewedBook(value: unknown): value is RecentlyViewedBook {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<RecentlyViewedBook>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.slug === "string" &&
+    typeof item.title === "string" &&
+    (typeof item.coverImageUrl === "string" || item.coverImageUrl === null)
+  );
+}
+
 export default function BookDetailPage() {
   const { addItem, toggleWishlist, isWishlisted } = useCart();
   const params = useParams<{ slug: string }>();
@@ -43,6 +61,9 @@ export default function BookDetailPage() {
   const [authorName, setAuthorName] = useState<string | null>(null);
   const [publisherName, setPublisherName] = useState<string | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
+  const [recentlyViewedBooks, setRecentlyViewedBooks] = useState<
+    RecentlyViewedBook[]
+  >([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -69,6 +90,41 @@ export default function BookDetailPage() {
         }
 
         setBook(result);
+        try {
+          const stored = localStorage.getItem("karisal-recently-viewed-books");
+          let previous: RecentlyViewedBook[] = [];
+          if (stored) {
+            try {
+              const parsed: unknown = JSON.parse(stored);
+              if (Array.isArray(parsed)) {
+                previous = parsed.filter(isRecentlyViewedBook);
+              }
+            } catch (error) {
+              console.error("Unable to read recently viewed books:", error);
+            }
+          }
+
+          const current: RecentlyViewedBook = {
+            id: result.id,
+            slug: result.slug,
+            title: result.title,
+            coverImageUrl: result.cover_image_url ?? null,
+          };
+          const next = [
+            current,
+            ...previous.filter((item) => item.id !== result.id),
+          ].slice(0, 8);
+
+          setRecentlyViewedBooks(
+            next.filter((item) => item.id !== result.id).slice(0, 6)
+          );
+          localStorage.setItem(
+            "karisal-recently-viewed-books",
+            JSON.stringify(next)
+          );
+        } catch (error) {
+          console.error("Unable to update recently viewed books:", error);
+        }
 
         const [author, publisher, related] = await Promise.all([
           getPublicAuthorName(result.author_id),
@@ -538,6 +594,45 @@ function makeCartItem(itemQuantity: number): CartItem {
             </Link>
           </aside>
         </div>
+
+        {recentlyViewedBooks.length > 0 && (
+          <section className="mt-10" aria-labelledby="recently-viewed-title">
+            <h2
+              id="recently-viewed-title"
+              className="mb-4 border-b border-border pb-2 text-base font-semibold"
+            >
+              Recently viewed
+            </h2>
+            <div className="flex gap-3 overflow-x-auto pb-3 sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible">
+              {recentlyViewedBooks.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/books/${item.slug}`}
+                  className="w-36 shrink-0 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40 sm:w-auto"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden rounded bg-white">
+                    {item.coverImageUrl ? (
+                      <Image
+                        src={item.coverImageUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 639px) 144px, 20vw"
+                        className="object-contain p-2"
+                      />
+                    ) : (
+                      <span className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                        Cover unavailable
+                      </span>
+                    )}
+                  </div>
+                  <span className="mt-2 line-clamp-2 block text-sm font-medium">
+                    {item.title}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </MainLayout>
   );

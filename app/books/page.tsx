@@ -201,12 +201,21 @@ export default function BooksPage() {
   const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
+  const [queryReady, setQueryReady] = useState(false);
   const [error, setError] = useState("");
   const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const requestIdRef = useRef(0);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearch(params.get("search") ?? "");
+    setAuthorId(params.get("authorId") ?? "");
+    setQueryReady(true);
+  }, []);
+
   const loadBooks = useCallback(async () => {
+    if (!queryReady) return;
     const requestId = ++requestIdRef.current;
 
     setLoading(true);
@@ -256,11 +265,13 @@ export default function BooksPage() {
     maxPrice,
     sortBy,
     page,
+    queryReady,
   ]);
 
   useEffect(() => {
+    if (!queryReady) return;
     void loadBooks();
-  }, [loadBooks]);
+  }, [loadBooks, queryReady]);
 
   useEffect(() => {
     let active = true;
@@ -353,7 +364,7 @@ export default function BooksPage() {
 
   return (
     <MainLayout>
-      <main className="container py-6 sm:py-10">
+      <div className="container py-6 sm:py-10">
         <header className="border-b border-border pb-6">
           <p className="text-sm font-semibold text-primary">
             Karisal Books
@@ -364,7 +375,7 @@ export default function BooksPage() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-base leading-7 text-muted-foreground">
-            Find Tamil literature, publishers and exam books.
+            Browse and filter books by title, author, publisher or price.
           </p>
 
           <label className="relative mt-5 block w-full">
@@ -556,7 +567,7 @@ export default function BooksPage() {
             )}
           </div>
         </div>
-      </main>
+      </div>
     </MainLayout>
   );
 }
