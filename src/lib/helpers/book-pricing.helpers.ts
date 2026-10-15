@@ -1,4 +1,4 @@
-export const GENERAL_BOOK_DISCOUNT_PERCENT = 7;
+export const GENERAL_BOOK_DISCOUNT_PERCENT = 10;
 export const NO_DISCOUNT_CATEGORY_NAME = "மக்கள் பதிப்பு";
 
 export function isBookDiscountEligible(categoryName?: string | null) {

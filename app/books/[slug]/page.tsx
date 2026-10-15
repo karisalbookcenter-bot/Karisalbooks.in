@@ -28,6 +28,7 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import type { CartItem } from "@/features/cart/types/cart.types";
 
 import {
+  GENERAL_BOOK_DISCOUNT_PERCENT,
   calculateBookPrice,
   isBookDiscountEligible,
 } from "@/lib/helpers/book-pricing.helpers";
@@ -331,7 +332,8 @@ function makeCartItem(itemQuantity: number): CartItem {
 
                     {!isPrebooking && price.discountAmount > 0 && (
                       <span className="text-xs font-semibold text-emerald-700">
-                        7% off · Save {formatCurrency(price.discountAmount)}
+                        {GENERAL_BOOK_DISCOUNT_PERCENT}% off · Save{" "}
+                        {formatCurrency(price.discountAmount)}
                       </span>
                     )}
                   </div>

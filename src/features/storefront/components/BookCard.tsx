@@ -8,6 +8,7 @@ import { Heart, ShoppingCart, Zap } from "lucide-react";
 
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 import {
+  GENERAL_BOOK_DISCOUNT_PERCENT,
   calculateBookPrice,
   isBookDiscountEligible,
 } from "@/lib/helpers/book-pricing.helpers";
@@ -256,7 +257,8 @@ export function BookCard({
 
           {!isPrebooking && price.discountAmount > 0 && (
             <p className="mt-1 text-xs font-medium text-emerald-700">
-              7% off · Save {formatCurrency(price.discountAmount)}
+              {GENERAL_BOOK_DISCOUNT_PERCENT}% off · Save{" "}
+              {formatCurrency(price.discountAmount)}
             </p>
           )}
 

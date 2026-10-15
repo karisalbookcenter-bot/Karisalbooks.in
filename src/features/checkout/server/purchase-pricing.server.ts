@@ -765,7 +765,7 @@ export async function pricePurchase(input: PurchaseInput) {
   /*
    * CUSTOMIZE has fixed admin-set pricing.
    *
-   * No automatic 7% discount.
+   * No automatic 10% discount.
    * No membership discount.
    * No coupon discount.
    * No courier discount.

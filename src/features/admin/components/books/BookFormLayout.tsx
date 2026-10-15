@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
+  GENERAL_BOOK_DISCOUNT_PERCENT,
   calculateBookPrice,
   isBookDiscountEligible,
 } from "@/lib/helpers/book-pricing.helpers";
@@ -379,7 +380,7 @@ export function BookFormLayout({
           {pricePreview && (
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               {pricePreview.discountAmount > 0
-                ? `7% discount: save ${formatCurrency(
+                ? `${GENERAL_BOOK_DISCOUNT_PERCENT}% discount: save ${formatCurrency(
                     pricePreview.discountAmount
                   )} · customer pays ${formatCurrency(
                     pricePreview.discountedPrice
