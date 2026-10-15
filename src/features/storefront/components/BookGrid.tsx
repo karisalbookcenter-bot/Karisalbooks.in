@@ -44,7 +44,7 @@ export function BookGrid({
         <div key={book.id} className="min-w-0">
           <BookCard
             book={book}
-            priority={prioritizeFirstImage && index === 0}
+            priority={prioritizeFirstImage && index < 2}
             imageSizes={BOOK_GRID_IMAGE_SIZES}
             authorName={authorNamesById[book.author_id]}
             publisherName={

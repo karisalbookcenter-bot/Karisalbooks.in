@@ -56,7 +56,7 @@ export function BookCarousel({
           <div key={book.id} className="min-w-[46%] snap-start sm:min-w-[31%] lg:min-w-[23%]">
             <BookCard
               book={book}
-              priority={prioritizeFirstImage && index === 0}
+              priority={prioritizeFirstImage && index < 2}
               imageSizes={BOOK_CAROUSEL_IMAGE_SIZES}
               authorName={authorNamesById[book.author_id]}
               publisherName={book.publisher_id ? publisherNamesById[book.publisher_id] : undefined}

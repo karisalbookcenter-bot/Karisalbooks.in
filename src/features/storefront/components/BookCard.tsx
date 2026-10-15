@@ -167,7 +167,10 @@ export function BookCard({
                 alt={`Cover of ${book.title}`}
                 fill
                 sizes={imageSizes}
+                quality={70}
                 priority={priority}
+                loading={priority ? "eager" : "lazy"}
+                fetchPriority={priority ? "high" : "auto"}
                 className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
               />
             ) : (
