@@ -11,6 +11,7 @@ interface BookCarouselProps {
   publisherNamesById: Record<string, string>;
   intervalSeconds: number;
   prioritizeFirstImage?: boolean;
+  compact?: boolean;
 }
 
 export function BookCarousel({
@@ -19,6 +20,7 @@ export function BookCarousel({
   publisherNamesById,
   intervalSeconds,
   prioritizeFirstImage = false,
+  compact = false,
 }: BookCarouselProps) {
   const track = useRef<HTMLDivElement>(null);
 
@@ -44,7 +46,7 @@ export function BookCarousel({
   }, [books.length, intervalSeconds]);
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 overflow-hidden">
       {books.length > 1 && (
         <div className="mb-3 flex justify-end gap-2">
           <button type="button" aria-label="Previous arrivals" onClick={() => move(-1)} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"><ChevronLeft size={17} /></button>
@@ -58,6 +60,7 @@ export function BookCarousel({
               book={book}
               priority={prioritizeFirstImage && index < 2}
               imageSizes={BOOK_CAROUSEL_IMAGE_SIZES}
+              compact={compact}
               authorName={authorNamesById[book.author_id]}
               publisherName={book.publisher_id ? publisherNamesById[book.publisher_id] : undefined}
             />

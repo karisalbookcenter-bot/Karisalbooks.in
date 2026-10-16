@@ -73,12 +73,10 @@ export default function HomePage() {
           publishers,
         ] = await Promise.all([
           /*
-           * Existing Latest Arrivals.
-           * Keep this at 8 so existing behaviour
-           * remains unchanged.
+           * Load enough arrivals to fill the compact tile layout.
            */
           listPublicBooks({
-            pageSize: 8,
+            pageSize: 12,
           }),
 
           /*
@@ -155,7 +153,7 @@ export default function HomePage() {
           ===================================================== */}
 
       <section className="bg-primary text-primary-foreground">
-        <div className="container grid gap-5 py-7 sm:gap-8 sm:py-16 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
+        <div className="container grid gap-4 py-5 sm:gap-8 sm:py-16 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
           <div className="max-w-2xl">
             <p className="mb-3 text-xs font-semibold uppercase text-amber-200">
               தமிழ் · புத்தகம் · பதிப்பகம்
@@ -169,30 +167,30 @@ export default function HomePage() {
               {site.description}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2 sm:mt-7 sm:gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:flex-wrap sm:gap-3">
               <Link
                 href="/books"
-                className="inline-flex min-h-11 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-emerald-50"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-white px-2.5 text-xs font-semibold text-primary transition-colors hover:bg-emerald-50 sm:min-h-11 sm:gap-2 sm:px-5 sm:text-sm"
               >
                 <BookOpen
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                   aria-hidden="true"
                 />
 
                 Browse books
 
                 <ArrowRight
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                   aria-hidden="true"
                 />
               </Link>
 
               <Link
                 href="/recommendations"
-                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-white/35 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-white/35 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/10 sm:min-h-11 sm:gap-2 sm:px-5 sm:text-sm"
               >
                 <BookOpen
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                   aria-hidden="true"
                 />
 
@@ -201,10 +199,10 @@ export default function HomePage() {
 
               <Link
                 href="/membership/apply"
-                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-white/35 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-white/35 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/10 sm:min-h-11 sm:gap-2 sm:px-5 sm:text-sm"
               >
                 <Crown
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                   aria-hidden="true"
                 />
 
@@ -213,10 +211,10 @@ export default function HomePage() {
 
               <Link
                 href="/pre-booking"
-                className="inline-flex min-h-11 items-center gap-2 rounded-md border border-white/35 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-white/35 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/10 sm:min-h-11 sm:gap-2 sm:px-5 sm:text-sm"
               >
                 <CalendarClock
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                   aria-hidden="true"
                 />
 
@@ -256,6 +254,7 @@ export default function HomePage() {
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
             prioritizeFirstImage
+            compact
           />
         </section>
       )}
@@ -276,11 +275,11 @@ export default function HomePage() {
             className={
               site.arrivalsSliderEnabled
                 ? "flex gap-3 overflow-hidden pb-3 sm:gap-4"
-                : "grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5"
+                : "grid grid-cols-2 items-stretch gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5"
             }
           >
             {Array.from(
-              { length: site.arrivalsSliderEnabled ? 4 : 8 },
+              { length: site.arrivalsSliderEnabled ? 4 : 12 },
               (_, index) => (
                 <div
                   key={index}
@@ -291,21 +290,9 @@ export default function HomePage() {
                       : "min-w-0"
                   }
                 >
-                  <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
-                    <div className="aspect-[3/4] bg-muted" />
-                    <div className="flex min-h-[20rem] flex-1 flex-col p-3 sm:p-4">
-                      <div className="h-3 w-3/5 rounded bg-muted" />
-                      <div className="mt-2 h-12 rounded bg-muted" />
-                      <div className="mt-2 h-10 rounded bg-muted" />
-                      <div className="mt-auto border-t border-border/70 pt-3">
-                        <div className="h-5 w-2/5 rounded bg-muted" />
-                        <div className="mt-2 h-5 w-3/5 rounded bg-muted" />
-                        <div className="mt-3 flex gap-2">
-                          <div className="h-12 flex-1 rounded-lg bg-muted" />
-                          <div className="h-12 flex-1 rounded-lg bg-muted" />
-                        </div>
-                      </div>
-                    </div>
+                  <div className="aspect-[0.9] overflow-hidden rounded-lg border border-border bg-card">
+                    <div className="h-[55%] bg-muted" />
+                    <div className="h-[45%]" />
                   </div>
                 </div>
               )
@@ -318,6 +305,7 @@ export default function HomePage() {
             publisherNamesById={publisherNamesById}
             intervalSeconds={site.arrivalsSliderIntervalSeconds}
             prioritizeFirstImage={highlightedBooks.length === 0}
+            compact
           />
         ) : (
           <BookGrid
@@ -325,6 +313,7 @@ export default function HomePage() {
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
             prioritizeFirstImage={highlightedBooks.length === 0}
+            compact
           />
         )}
       </section>
@@ -367,52 +356,22 @@ export default function HomePage() {
           ===================================================== */}
 
       <section className="border-y border-border bg-card">
-        <div className="container grid gap-4 py-5 sm:grid-cols-2 sm:gap-8 sm:py-8">
-          <div className="border-l-2 border-primary pl-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">
-              For readers
-            </p>
-
-            <h2 className="mt-1 text-base font-semibold sm:mt-2 sm:text-lg">
-              Get early access to forthcoming titles.
-            </h2>
-
-            <p className="mt-2 hidden max-w-lg text-sm leading-6 text-muted-foreground sm:block">
-              Reserve selected books during their pre-booking window and
-              receive a personal reference by email.
-            </p>
-
+        <div className="container grid grid-cols-2 gap-2 py-4 sm:grid-cols-4 sm:gap-3 sm:py-6">
+          {[
+            { href: "/recommendations", label: "For Readers" },
+            { href: "/publication-services", label: "For New Writers" },
+            { href: "/pre-booking?mode=bulk", label: "Bulk Booking" },
+            { href: "/customize", label: "Customize" },
+          ].map(({ href, label }) => (
             <Link
-              href="/pre-booking"
-              className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline sm:mt-3"
+              key={label}
+              href={href}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-center text-xs font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-secondary sm:text-sm"
             >
-              See open pre-bookings
-              <ArrowRight size={15} />
+              {label}
+              <ArrowRight size={14} aria-hidden="true" />
             </Link>
-          </div>
-
-          <div className="border-l-2 border-amber-600 pl-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 sm:text-xs">
-              For writers
-            </p>
-
-            <h2 className="mt-1 text-base font-semibold sm:mt-2 sm:text-lg">
-              Your manuscript deserves a thoughtful print edition.
-            </h2>
-
-            <p className="mt-2 hidden max-w-lg text-sm leading-6 text-muted-foreground sm:block">
-              Share your files and production goals. Our publishing team
-              will review them and prepare a tailored quotation.
-            </p>
-
-            <Link
-              href="/publication-services"
-              className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline sm:mt-3"
-            >
-              Explore publishing services
-              <ArrowRight size={15} />
-            </Link>
-          </div>
+          ))}
         </div>
       </section>
     </MainLayout>

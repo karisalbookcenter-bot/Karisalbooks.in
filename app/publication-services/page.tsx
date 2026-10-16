@@ -17,8 +17,8 @@ export default function PublicationServicesPage() {
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-primary">Karisal Books · Publishing services</p>
             <h1 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-5xl">உங்கள் எழுத்தை அழகான நூலாக மாற்றுவோம்.</h1>
-            <p className="mt-4 max-w-2xl text-base font-medium">Your words deserve a thoughtful, professional print edition.</p>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">From manuscript review to print-ready production, we help independent writers take the next step with confidence. Tell us what you are creating; our team will review your files and prepare a quotation around your needs.</p>
+            <p className="mt-4 max-w-2xl text-base font-medium">உங்கள் கையெழுத்துப் பிரதியை அழகான நூலாக வெளியிட உதவுகிறோம்.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">உங்கள் நூல் விவரங்களைப் பகிருங்கள்; பொருத்தமான பதிப்பு மற்றும் அச்சுத் திட்டத்தைப் பரிந்துரைக்கிறோம்.</p>
             <Link href="#quotation" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90">Plan my book</Link>
           </div>
           <div className="border-l border-border pl-5 text-sm leading-6 text-muted-foreground">

@@ -18,6 +18,9 @@ import type { Book } from "@/types/book.types";
 export const BOOK_GRID_IMAGE_SIZES =
   "(max-width: 639px) calc((100vw - 4.75rem) / 2), (max-width: 767px) 282px, (max-width: 1023px) 224px, (max-width: 1279px) 228px, (max-width: 1399px) 289px, 319px";
 
+export const BOOK_COMPACT_GRID_IMAGE_SIZES =
+  "(max-width: 639px) calc((100vw - 5.5rem) / 2), (max-width: 1023px) calc((100vw - 5rem) / 3), (max-width: 1279px) calc((100vw - 6rem) / 4), 240px";
+
 export const BOOK_CAROUSEL_IMAGE_SIZES =
   "(max-width: 639px) 39vw, (max-width: 767px) 265px, (max-width: 1023px) 218px, (max-width: 1279px) 221px, (max-width: 1399px) 280px, 307px";
 
@@ -27,6 +30,7 @@ interface BookCardProps {
   publisherName?: string;
   priority?: boolean;
   imageSizes?: string;
+  compact?: boolean;
 }
 
 export function BookCard({
@@ -35,6 +39,7 @@ export function BookCard({
   publisherName,
   priority = false,
   imageSizes = BOOK_GRID_IMAGE_SIZES,
+  compact = false,
 }: BookCardProps) {
   const router = useRouter();
   const { addItem, toggleWishlist, isWishlisted } = useCart();
@@ -149,6 +154,75 @@ export function BookCard({
 
     addItem(makeCartItem());
     router.push("/cart");
+  }
+
+  if (compact) {
+    return (
+      <article className="group flex aspect-[0.9] min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/40">
+        <Link
+          href={`/books/${book.slug}`}
+          aria-label={`View details for ${book.title}`}
+          className="relative min-h-0 flex-1 bg-white p-2"
+        >
+          {book.cover_image_url ? (
+            <Image
+              src={book.cover_image_url}
+              alt={`Cover of ${book.title}`}
+              fill
+              sizes={imageSizes}
+              quality={70}
+              priority={priority}
+              loading={priority ? "eager" : "lazy"}
+              fetchPriority={priority ? "high" : "auto"}
+              className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+          ) : (
+            <span className="flex h-full items-center justify-center bg-secondary px-2 text-center text-xs text-muted-foreground">
+              Cover coming soon
+            </span>
+          )}
+        </Link>
+
+        <div className="flex h-[45%] min-h-0 flex-col px-2 pb-2 pt-1">
+          <h3 className="line-clamp-2 min-h-0 flex-1 text-xs font-semibold leading-4 text-foreground">
+            <Link
+              href={`/books/${book.slug}`}
+              className="rounded-sm hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {book.title}
+            </Link>
+          </h3>
+          <p className="mt-1 truncate text-xs font-bold text-primary">
+            {formatCurrency(price.discountedPrice)}
+          </p>
+          <div className="mt-1 flex gap-1">
+            <button
+              type="button"
+              disabled={!inStock}
+              onClick={handleAddToCart}
+              aria-label={`Add ${book.title} to cart`}
+              className="inline-flex min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md bg-primary px-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ShoppingCart size={13} aria-hidden="true" />
+              சேர்
+            </button>
+            <button
+              type="button"
+              disabled={!inStock}
+              onClick={handleBuyNow}
+              aria-label={`Buy ${book.title} now`}
+              className="inline-flex min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md border border-primary px-1 text-[11px] font-semibold text-primary hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Zap size={13} aria-hidden="true" />
+              வாங்கு
+            </button>
+          </div>
+          <p className="sr-only" aria-live="polite">
+            {added ? `${book.title} added to cart.` : ""}
+          </p>
+        </div>
+      </article>
+    );
   }
 
   return (

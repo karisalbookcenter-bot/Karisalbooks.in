@@ -25,7 +25,7 @@ export default function RecommendationsPage() {
         <header className="mb-8 border-b border-border pb-5">
           <p className="text-xs font-semibold uppercase text-primary">Handpicked for your next read</p>
           <h1 className="mt-1 text-3xl font-semibold">Recommendations</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Thoughtful collections for every kind of reader, selected by our team.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">உங்கள் அடுத்த வாசிப்புக்கு, எங்கள் குழு தேர்ந்தெடுத்த நூல்கள்.</p>
         </header>
 
         {loading ? <p className="py-12 text-sm text-muted-foreground">Finding your next read…</p> : error ? (

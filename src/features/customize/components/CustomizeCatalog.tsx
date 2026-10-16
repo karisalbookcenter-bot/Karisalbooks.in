@@ -142,21 +142,19 @@ export function CustomizeCatalog() {
           </p>
 
           <h1 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-4xl">
-            Create customized books for your function or event.
+            உங்கள் விழாவுக்கான தனிப்பயன் நூல்கள்.
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Choose a title selected for Customize printing,
-            enter the quantity and provide the function or
-            event details to be printed.
+            200 பிரதிகள் முதல், தேர்ந்தெடுத்த நூல்களில் உங்கள்
+            விழா விவரங்களை அச்சிடலாம்.
           </p>
 
           <div className="mt-5 rounded-md border border-border bg-card p-4 text-sm">
-            <strong>Minimum order: 200 copies for one title.</strong>
+            <strong>குறைந்தபட்ச ஆர்டர்: ஒரு தலைப்புக்கு 200 பிரதிகள்.</strong>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Quantities from different titles cannot be
-              combined to meet the 200-copy minimum.
+              வெவ்வேறு தலைப்புகளின் எண்ணிக்கையை ஒன்றாகக் கணக்கிட முடியாது.
             </p>
           </div>
         </div>

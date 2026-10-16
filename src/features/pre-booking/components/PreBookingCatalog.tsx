@@ -85,6 +85,13 @@ export function PreBookingCatalog() {
     (item) => item.purchaseType !== "prebooking",
   );
 
+  useEffect(() => {
+    const mode = new URLSearchParams(window.location.search).get("mode");
+    if (mode === "bulk" || mode === "customize") {
+      setBookingMode(mode);
+    }
+  }, []);
+
   /*
    * Open pre-booking titles
    */
@@ -312,14 +319,12 @@ export function PreBookingCatalog() {
           </p>
 
           <h1 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-4xl">
-            Be among the first to read what’s coming next.
+            விரைவில் வெளியாகும் நூல்களை முன்பதிவு செய்யுங்கள்.
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Reserve forthcoming titles during their booking
-            period. Your pre-booking ID is emailed after
-            payment, and we’ll let you know when the book is
-            ready to ship.
+            தேர்ந்தெடுத்த நூல்களை முன்பதிவு செய்து, வெளியானதும்
+            உங்கள் வீட்டிலேயே பெறுங்கள்.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-xs text-muted-foreground">
@@ -348,8 +353,8 @@ export function PreBookingCatalog() {
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Choose regular Pre-booking, Bulk Booking, or
-              Customize according to your requirement.
+              முன்பதிவு, மொத்த ஆர்டர் அல்லது தனிப்பயன் நூல்களைத்
+              தேர்வு செய்யுங்கள்.
             </p>
           </div>
 
@@ -470,8 +475,8 @@ export function PreBookingCatalog() {
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Select a book from the catalogue and enter the
-              quantity. There is no minimum quantity.
+              விரும்பிய நூலையும் எண்ணிக்கையையும் தேர்வு செய்து
+              மொத்தமாக ஆர்டர் செய்யுங்கள்.
             </p>
 
             {catalogueLoading ? (

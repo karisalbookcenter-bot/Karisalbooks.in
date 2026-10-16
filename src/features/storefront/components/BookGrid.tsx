@@ -1,4 +1,8 @@
-import { BookCard, BOOK_GRID_IMAGE_SIZES } from "./BookCard";
+import {
+  BookCard,
+  BOOK_COMPACT_GRID_IMAGE_SIZES,
+  BOOK_GRID_IMAGE_SIZES,
+} from "./BookCard";
 import type { Book } from "@/types/book.types";
 
 interface BookGridProps {
@@ -7,6 +11,7 @@ interface BookGridProps {
   publisherNamesById: Record<string, string>;
   emptyMessage?: string;
   prioritizeFirstImage?: boolean;
+  compact?: boolean;
 }
 
 export function BookGrid({
@@ -15,6 +20,7 @@ export function BookGrid({
   publisherNamesById,
   emptyMessage,
   prioritizeFirstImage = false,
+  compact = false,
 }: BookGridProps) {
   if (books.length === 0) {
     return (
@@ -37,7 +43,11 @@ export function BookGrid({
 
   return (
     <div
-      className="grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5"
+      className={
+        compact
+          ? "grid grid-cols-2 items-stretch gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5"
+          : "grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-5"
+      }
       aria-label="புத்தகங்கள்"
     >
       {books.map((book, index) => (
@@ -45,7 +55,10 @@ export function BookGrid({
           <BookCard
             book={book}
             priority={prioritizeFirstImage && index < 2}
-            imageSizes={BOOK_GRID_IMAGE_SIZES}
+            imageSizes={
+              compact ? BOOK_COMPACT_GRID_IMAGE_SIZES : BOOK_GRID_IMAGE_SIZES
+            }
+            compact={compact}
             authorName={authorNamesById[book.author_id]}
             publisherName={
               book.publisher_id
