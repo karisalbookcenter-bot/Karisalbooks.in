@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import type { PublicSocialLinks } from "@/features/site-settings/site-settings.types";
+import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 const DEFAULT_LINKS: PublicSocialLinks = {
   facebook: "",
@@ -24,13 +25,24 @@ export function SocialLinks() {
   const [links, setLinks] = useState(DEFAULT_LINKS);
 
   useEffect(() => {
-    fetch("/api/site-settings")
+    let active = true;
+    const loadLinks = () => fetch("/api/site-settings", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
         const result = (await response.json()) as { social?: Partial<PublicSocialLinks> };
-        if (result.social) setLinks({ ...DEFAULT_LINKS, ...result.social });
+        if (active && result.social) setLinks({ ...DEFAULT_LINKS, ...result.social });
       })
       .catch(() => undefined);
+
+    void loadLinks();
+    const unsubscribe = subscribeToSiteSettingsUpdates(({ social }) => {
+      setLinks({ ...DEFAULT_LINKS, ...social });
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const activeLinks = PLATFORM_LABELS.filter(({ key }) => Boolean(links[key]));

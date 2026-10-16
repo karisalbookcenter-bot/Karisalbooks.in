@@ -33,6 +33,7 @@ import {
   DEFAULT_SITE_SETTINGS,
   type PublicSiteSettings,
 } from "@/features/site-settings/site-settings.types";
+import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 export default function HomePage() {
   const [recentBooks, setRecentBooks] = useState<Book[]>([]);
@@ -123,7 +124,7 @@ export default function HomePage() {
    * Load site settings
    */
   useEffect(() => {
-    fetch("/api/site-settings")
+    fetch("/api/site-settings", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) {
           return;
@@ -142,6 +143,11 @@ export default function HomePage() {
       })
       .catch(() => undefined)
       .finally(() => setSiteSettingsLoading(false));
+
+    return subscribeToSiteSettingsUpdates(({ site }) => {
+      setSite({ ...DEFAULT_SITE_SETTINGS, ...site });
+      setSiteSettingsLoading(false);
+    });
   }, []);
 
   const arrivalsLoading = loading || siteSettingsLoading;

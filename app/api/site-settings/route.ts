@@ -11,6 +11,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getWhatsAppPhoneNumber } from "@/features/site-settings/whatsapp.helpers";
 
+export const dynamic = "force-dynamic";
+
 function isSafeSocialLink(value: unknown): value is string {
   if (typeof value !== "string") return false;
   if (!value.trim()) return true;
@@ -44,13 +46,19 @@ export async function GET() {
         qrPaymentEnabled: data.qr_payment_enabled ?? DEFAULT_SITE_SETTINGS.qrPaymentEnabled,
         paymentQrUrl: data.payment_qr_url ?? DEFAULT_SITE_SETTINGS.paymentQrUrl,
       } : DEFAULT_SITE_SETTINGS,
-    });
+    }, { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load site settings.";
     if (message.toLowerCase().includes("site_settings") || message.toLowerCase().includes("relation")) {
-      return NextResponse.json({ social: DEFAULT_SOCIAL_LINKS, site: DEFAULT_SITE_SETTINGS, migrationPending: true });
+      return NextResponse.json(
+        { social: DEFAULT_SOCIAL_LINKS, site: DEFAULT_SITE_SETTINGS, migrationPending: true },
+        { headers: { "Cache-Control": "no-store, max-age=0" } },
+      );
     }
-    return NextResponse.json({ error: message }, { status: 503 });
+    return NextResponse.json(
+      { error: message },
+      { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } },
+    );
   }
 }
 

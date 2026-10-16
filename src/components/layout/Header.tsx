@@ -12,18 +12,30 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StorefrontSearch } from "@/features/storefront/components/StorefrontSearch";
+import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 export function Header() {
   const [logoUrl, setLogoUrl] = useState("");
 
   useEffect(() => {
-    fetch("/api/site-settings")
+    let active = true;
+    const loadLogo = () => fetch("/api/site-settings", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
         const result = await response.json() as { site?: { logoUrl?: string } };
-        if (result.site?.logoUrl) setLogoUrl(result.site.logoUrl);
+        if (active) setLogoUrl(result.site?.logoUrl ?? "");
       })
       .catch(() => undefined);
+
+    void loadLogo();
+    const unsubscribe = subscribeToSiteSettingsUpdates(({ site }) => {
+      setLogoUrl(site.logoUrl);
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   return (
@@ -36,12 +48,14 @@ export function Header() {
         >
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" width={32} height={32} className="h-8 w-8 shrink-0 object-contain" />
+            <img src={logoUrl} alt="Karisal Books" width={120} height={40} className="h-10 w-[120px] shrink-0 object-contain" />
           ) : (
-            <Image src="/karisalbooks-mark.svg" alt="" width={32} height={32} priority className="h-8 w-8 shrink-0" />
+            <>
+              <Image src="/karisalbooks-mark.svg" alt="" width={32} height={32} priority className="h-8 w-8 shrink-0" />
+              <span className="hidden text-sm min-[360px]:inline sm:hidden">Karisal</span>
+              <span className="hidden text-lg sm:inline">Karisal Books</span>
+            </>
           )}
-          <span className="hidden text-sm min-[360px]:inline sm:hidden">Karisal</span>
-          <span className="hidden text-lg sm:inline">Karisal Books</span>
         </Link>
 
         <nav aria-label="Main navigation" className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground sm:gap-4 sm:text-sm">

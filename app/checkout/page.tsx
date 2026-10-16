@@ -11,6 +11,7 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 import { GENERAL_BOOK_DISCOUNT_PERCENT } from "@/lib/helpers/book-pricing.helpers";
 import { DEFAULT_SITE_SETTINGS, type PublicSiteSettings } from "@/features/site-settings/site-settings.types";
+import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 interface DiscountResult {
   code?: string;
@@ -107,7 +108,7 @@ export default function CheckoutPage() {
   const isWhatsAppCheckout = purchaseFlow === "books" && siteSettings.whatsappOrdersEnabled;
 
   useEffect(() => {
-    fetch("/api/site-settings")
+    fetch("/api/site-settings", { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json() as { site?: PublicSiteSettings; error?: string };
         if (!response.ok) throw new Error(result.error ?? "Unable to load checkout settings.");
@@ -117,6 +118,11 @@ export default function CheckoutPage() {
         setError(settingsError instanceof Error ? settingsError.message : "Unable to load checkout settings.");
       })
       .finally(() => setSettingsLoading(false));
+
+    return subscribeToSiteSettingsUpdates(({ site }) => {
+      setSiteSettings({ ...DEFAULT_SITE_SETTINGS, ...site });
+      setSettingsLoading(false);
+    });
   }, []);
 
   useEffect(() => {

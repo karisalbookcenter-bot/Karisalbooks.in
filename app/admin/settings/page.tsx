@@ -11,6 +11,7 @@ import {
   type PublicSiteSettings,
   type PublicSocialLinks,
 } from "@/features/site-settings/site-settings.types";
+import { notifySiteSettingsUpdated } from "@/features/site-settings/site-settings.events";
 
 const FIELDS: { key: keyof PublicSocialLinks; label: string; placeholder: string }[] = [
   { key: "facebook", label: "Facebook", placeholder: "https://facebook.com/…" },
@@ -35,12 +36,15 @@ export default function AdminSettingsPage() {
   const [site, setSite] = useState<PublicSiteSettings>(DEFAULT_SITE_SETTINGS);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [assetNotice, setAssetNotice] = useState("");
+  const [migrationPending, setMigrationPending] = useState(false);
 
   useEffect(() => {
     fetch("/api/site-settings")
       .then(async (response) => {
-        const result = (await response.json()) as { social?: PublicSocialLinks; site?: PublicSiteSettings; error?: string };
+        const result = (await response.json()) as { social?: PublicSocialLinks; site?: PublicSiteSettings; error?: string; migrationPending?: boolean };
         if (!response.ok) throw new Error(result.error ?? "Unable to load site settings.");
+        setMigrationPending(result.migrationPending === true);
         if (result.social) setSocial(result.social);
         if (result.site) setSite(result.site);
       })
@@ -65,6 +69,10 @@ export default function AdminSettingsPage() {
       if (!response.ok) throw new Error(result.error ?? "Unable to save site settings.");
       if (result.social) setSocial(result.social);
       if (result.site) setSite(result.site);
+      if (result.social && result.site) {
+        notifySiteSettingsUpdated({ social: result.social, site: result.site });
+      }
+      setAssetNotice("");
       setSaved(true);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save site settings.");
@@ -76,6 +84,8 @@ export default function AdminSettingsPage() {
   async function uploadAsset(file: File | undefined, assetType: "logo" | "payment-qr") {
     if (!file) return;
     setError("");
+    setSaved(false);
+    setAssetNotice("");
     if (assetType === "logo") setUploadingLogo(true);
     else setUploadingQr(true);
     try {
@@ -88,6 +98,7 @@ export default function AdminSettingsPage() {
       setSite((current) => assetType === "logo"
         ? { ...current, logoUrl: result.url! }
         : { ...current, paymentQrUrl: result.url! });
+      setAssetNotice("Image uploaded. Click Save settings to publish the change.");
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : `Unable to upload ${assetType === "logo" ? "the logo" : "the payment QR"}.`);
     } finally {
@@ -103,6 +114,12 @@ export default function AdminSettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">Manage the public social links shown on the storefront.</p>
       </header>
 
+      {migrationPending && (
+        <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          Site settings are not set up in the database yet. Apply the pending Supabase migrations before saving these options.
+        </p>
+      )}
+
       <form onSubmit={saveSettings} className="space-y-5">
         <section className="space-y-3 border-b border-border pb-5">
           <h2 className="text-base font-semibold">Storefront identity</h2>
@@ -112,6 +129,7 @@ export default function AdminSettingsPage() {
           </label>
           {uploadingLogo && <p className="text-xs text-muted-foreground">Uploading logo…</p>}
           {site.logoUrl && <div className="relative h-16 w-48"><Image src={site.logoUrl} alt="Current storefront logo" fill sizes="192px" className="object-contain" /></div>}
+          {assetNotice && <p role="status" className="text-xs text-primary">{assetNotice}</p>}
           <label className="block space-y-1.5 text-sm font-medium">
             Homepage description
             <textarea maxLength={500} rows={3} value={site.description} onChange={(event) => setSite((current) => ({ ...current, description: event.target.value }))} className="w-full rounded-md border bg-background px-3 py-2 text-sm font-normal" />
@@ -211,7 +229,7 @@ export default function AdminSettingsPage() {
         {saved && <p role="status" className="text-sm text-primary">Settings saved.</p>}
 
         <div className="flex justify-end border-t pt-4">
-          <Button type="submit" disabled={loading || saving || uploadingLogo || uploadingQr}>
+          <Button type="submit" disabled={loading || saving || uploadingLogo || uploadingQr || migrationPending}>
             {saving ? "Saving…" : "Save settings"}
           </Button>
         </div>
