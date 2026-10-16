@@ -162,7 +162,7 @@ export default function MembershipApplyPage() {
         ) : (
           <div className="mx-auto max-w-xl">
             <h1 className="text-3xl font-bold">Join Karisal Books Membership</h1>
-            <p className="mt-2 text-muted-foreground">Choose a plan and pay securely to receive your membership number.</p>
+            <p className="mt-2 text-muted-foreground">உங்கள் உறுப்பினர் எண்ணைப் பெற, ஒரு திட்டத்தைத் தேர்ந்தெடுத்து பாதுகாப்பாகப் பணம் செலுத்துங்கள்.</p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <fieldset disabled={loadingPlans || isPaying || plans.length === 0}>

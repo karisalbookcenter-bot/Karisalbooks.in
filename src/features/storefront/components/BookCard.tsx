@@ -22,7 +22,7 @@ export const BOOK_COMPACT_GRID_IMAGE_SIZES =
   "(max-width: 639px) calc((100vw - 5.5rem) / 2), (max-width: 1023px) calc((100vw - 5rem) / 3), (max-width: 1279px) calc((100vw - 6rem) / 4), 240px";
 
 export const BOOK_CAROUSEL_IMAGE_SIZES =
-  "(max-width: 639px) 39vw, (max-width: 767px) 265px, (max-width: 1023px) 218px, (max-width: 1279px) 221px, (max-width: 1399px) 280px, 307px";
+  "(max-width: 639px) 46vw, (max-width: 767px) 265px, (max-width: 1023px) 218px, (max-width: 1279px) 221px, (max-width: 1399px) 280px, 307px";
 
 interface BookCardProps {
   book: Book;
@@ -204,7 +204,7 @@ export function BookCard({
               className="inline-flex min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md bg-primary px-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShoppingCart size={13} aria-hidden="true" />
-              சேர்
+              <span className="truncate">Add to cart</span>
             </button>
             <button
               type="button"
@@ -214,7 +214,7 @@ export function BookCard({
               className="inline-flex min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md border border-primary px-1 text-[11px] font-semibold text-primary hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Zap size={13} aria-hidden="true" />
-              வாங்கு
+              <span className="truncate">Buy now</span>
             </button>
           </div>
           <p className="sr-only" aria-live="polite">

@@ -13,6 +13,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { BookGrid } from "@/features/storefront/components/BookGrid";
 import { BookCarousel } from "@/features/storefront/components/BookCarousel";
 import { buildNameMap } from "@/features/storefront/utils";
+import { NO_DISCOUNT_CATEGORY_NAME } from "@/lib/helpers/book-pricing.helpers";
 
 import {
   listPublicBooks,
@@ -38,6 +39,7 @@ import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-se
 export default function HomePage() {
   const [recentBooks, setRecentBooks] = useState<Book[]>([]);
   const [highlightedBooks, setHighlightedBooks] = useState<Book[]>([]);
+  const [makkalBooks, setMakkalBooks] = useState<Book[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
   const [authorNamesById, setAuthorNamesById] = useState<
@@ -51,6 +53,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [siteSettingsLoading, setSiteSettingsLoading] = useState(true);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [makkalBooksError, setMakkalBooksError] = useState<string | null>(null);
 
   const [site, setSite] =
     useState<PublicSiteSettings>(DEFAULT_SITE_SETTINGS);
@@ -105,19 +108,37 @@ export default function HomePage() {
     load();
   }, []);
 
-  /*
-   * Load categories
-   */
   useEffect(() => {
-    listPublicCategories()
-      .then(setCategories)
-      .catch((error: unknown) => {
+    async function loadCategories() {
+      try {
+        const publicCategories = await listPublicCategories();
+        setCategories(publicCategories);
+
+        const makkalCategory = publicCategories.find(
+          (category) => category.name.trim() === NO_DISCOUNT_CATEGORY_NAME
+        );
+        if (!makkalCategory) return;
+
+        try {
+          const result = await listPublicBooks({
+            categoryId: makkalCategory.id,
+            pageSize: 12,
+          });
+          setMakkalBooks(result.items);
+        } catch (error) {
+          console.error("Unable to load Makkal Pathippu books:", error);
+          setMakkalBooksError("Unable to load books in this collection.");
+        }
+      } catch (error) {
         setCategoryError(
           error instanceof Error
             ? error.message
             : "Unable to load categories."
         );
-      });
+      }
+    }
+
+    loadCategories();
   }, []);
 
   /*
@@ -235,32 +256,42 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="container pt-5 sm:pt-7">
+        <div className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-secondary/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+          <div>
+            <span className="inline-flex rounded-full bg-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-foreground">
+              New Announcement
+            </span>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+              Discover the latest titles and curated collections at Karisal Books.
+            </p>
+          </div>
+          <Link
+            href="/books"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-primary/25 bg-card px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            Explore books
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
+
       {/* =====================================================
           HOMEPAGE HIGHLIGHTS
           ===================================================== */}
 
       {!arrivalsLoading && highlightedBooks.length > 0 && (
-        <section className="container py-6 sm:py-8">
-          <div className="mb-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-              Featured
-            </p>
+        <section className="container py-5 sm:py-7">
+          <h2 className="mb-3 inline-flex rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            Highlights
+          </h2>
 
-            <h2 className="mt-1 text-xl font-semibold">
-              Homepage Highlights
-            </h2>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              முக்கியமாக highlight செய்யப்பட்ட புத்தகங்கள்
-            </p>
-          </div>
-
-          <BookGrid
+          <BookCarousel
             books={highlightedBooks}
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
+            intervalSeconds={site.arrivalsSliderIntervalSeconds}
             prioritizeFirstImage
-            compact
           />
         </section>
       )}
@@ -269,8 +300,8 @@ export default function HomePage() {
           LATEST ARRIVALS
           ===================================================== */}
 
-      <section className="container py-6 sm:py-8">
-        <h2 className="mb-3 text-xl font-semibold">
+      <section className="container py-5 sm:py-7">
+        <h2 className="mb-3 text-xl font-semibold sm:text-2xl">
           {site.arrivalsTitle}
         </h2>
 
@@ -296,9 +327,9 @@ export default function HomePage() {
                       : "min-w-0"
                   }
                 >
-                  <div className="aspect-[0.9] overflow-hidden rounded-lg border border-border bg-card">
-                    <div className="h-[55%] bg-muted" />
-                    <div className="h-[45%]" />
+                  <div className="aspect-[0.75] overflow-hidden rounded-lg border border-border bg-card">
+                    <div className="h-[62%] bg-muted" />
+                    <div className="h-[38%]" />
                   </div>
                 </div>
               )
@@ -311,7 +342,6 @@ export default function HomePage() {
             publisherNamesById={publisherNamesById}
             intervalSeconds={site.arrivalsSliderIntervalSeconds}
             prioritizeFirstImage={highlightedBooks.length === 0}
-            compact
           />
         ) : (
           <BookGrid
@@ -319,10 +349,29 @@ export default function HomePage() {
             authorNamesById={authorNamesById}
             publisherNamesById={publisherNamesById}
             prioritizeFirstImage={highlightedBooks.length === 0}
-            compact
           />
         )}
       </section>
+
+      {makkalBooks.length > 0 || makkalBooksError ? (
+        <section className="container py-5 sm:py-7">
+          <h2 className="mb-3 text-xl font-semibold sm:text-2xl">
+            {NO_DISCOUNT_CATEGORY_NAME}
+          </h2>
+          {makkalBooksError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {makkalBooksError}
+            </p>
+          ) : (
+            <BookCarousel
+              books={makkalBooks}
+              authorNamesById={authorNamesById}
+              publisherNamesById={publisherNamesById}
+              intervalSeconds={site.arrivalsSliderIntervalSeconds}
+            />
+          )}
+        </section>
+      ) : null}
 
       {/* =====================================================
           CATEGORIES

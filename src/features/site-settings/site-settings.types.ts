@@ -30,7 +30,7 @@ export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   description: "Tamil books, independent publishers, and thoughtful publishing services.",
   arrivalsSliderEnabled: true,
   arrivalsSliderIntervalSeconds: 6,
-  arrivalsTitle: "New arrivals",
+  arrivalsTitle: "New Arrivals",
   whatsappOrdersEnabled: false,
   qrPaymentEnabled: false,
   paymentQrUrl: "",
