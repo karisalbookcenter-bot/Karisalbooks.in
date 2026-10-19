@@ -64,7 +64,10 @@ export function StorefrontHero({
   }
 
   return (
-    <section className="overflow-hidden bg-[#202044] text-white" aria-label="Welcome to Karisal Books">
+    <section
+      className="relative overflow-hidden border-b border-[#c8a85e]/40 bg-[radial-gradient(ellipse_at_78%_38%,rgba(185,153,86,0.25),transparent_27%),radial-gradient(ellipse_at_18%_110%,rgba(31,115,82,0.45),transparent_45%),linear-gradient(118deg,#071a15_0%,#0d3027_48%,#164737_76%,#10271f_100%)] text-white"
+      aria-label="Welcome to Karisal Books"
+    >
       <div className="container relative grid min-h-[17rem] grid-cols-[minmax(0,1fr)_minmax(7rem,0.8fr)] items-center gap-2 py-5 sm:min-h-[25rem] sm:grid-cols-[1.1fr_0.9fr] sm:gap-10 sm:py-10 lg:min-h-[29rem] lg:py-12">
         <div className="relative z-10">
           <p className="mb-2 inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.16em] text-amber-300 sm:mb-3 sm:text-[11px] sm:tracking-[0.2em]">
@@ -99,7 +102,7 @@ export function StorefrontHero({
         >
           <span className="absolute h-40 w-40 rounded-full bg-amber-400/20 blur-2xl sm:h-72 sm:w-72" aria-hidden="true" />
           <span className="absolute right-[12%] top-[9%] h-3 w-3 rounded-full bg-amber-300" aria-hidden="true" />
-          <span className="absolute bottom-[12%] left-[15%] h-2 w-2 rounded-full bg-indigo-300" aria-hidden="true" />
+          <span className="absolute bottom-[12%] left-[15%] h-2 w-2 rounded-full bg-emerald-200" aria-hidden="true" />
 
           <div
             key={activeOffer ? `offer-${activeOffer.id}` : activeBook?.id ?? (loading ? "loading" : "bookshop")}
@@ -139,7 +142,7 @@ export function StorefrontHero({
             ) : loading ? (
               <div className="h-40 w-28 animate-pulse rounded-md bg-white/70 shadow-xl sm:h-72 sm:w-48" aria-hidden="true" />
             ) : (
-              <div className="flex h-40 w-28 -rotate-2 flex-col items-center justify-center rounded-md border border-white/80 bg-gradient-to-br from-indigo-500 to-[#202044] p-3 text-center text-white shadow-[0_24px_45px_rgba(8,8,30,0.35)] sm:h-72 sm:w-48 sm:p-5">
+              <div className="flex h-40 w-28 -rotate-2 flex-col items-center justify-center rounded-md border border-amber-100/80 bg-gradient-to-br from-emerald-700 via-[#124735] to-[#0b211a] p-3 text-center text-white shadow-[0_24px_45px_rgba(4,20,14,0.5)] sm:h-72 sm:w-48 sm:p-5">
                 <BookOpen size={34} strokeWidth={1.4} aria-hidden="true" />
                 <span className="mt-4 font-serif text-lg">Karisal Books</span>
                 <span className="mt-2 text-xs text-white/75">Find your next read</span>
@@ -154,7 +157,7 @@ export function StorefrontHero({
                   {activeOffer.discountPercentage}% off · limited time
                 </p>
               )}
-              <p className="mt-0.5 line-clamp-1 text-xs font-semibold text-[#202044] sm:mt-1 sm:text-sm">
+              <p className="mt-0.5 line-clamp-1 text-xs font-semibold text-[#18392b] sm:mt-1 sm:text-sm">
                 {activeOffer?.title ?? activeBook?.title}
               </p>
               {activeBook && authorNamesById[activeBook.author_id] && (
@@ -176,7 +179,7 @@ export function StorefrontHero({
                 type="button"
                 aria-label="Previous featured book"
                 onClick={() => moveSlide(-1)}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/80 bg-white/90 text-[#202044] shadow-sm transition-colors hover:bg-white sm:h-9 sm:w-9"
+                className="grid h-8 w-8 place-items-center rounded-full border border-amber-200/80 bg-[#fffdf6]/95 text-[#17382b] shadow-sm transition-colors hover:bg-white sm:h-9 sm:w-9"
               >
                 <ArrowLeft size={16} aria-hidden="true" />
               </button>
@@ -185,7 +188,7 @@ export function StorefrontHero({
                   type="button"
                   aria-label={paused ? "Play book slideshow" : "Pause book slideshow"}
                   onClick={() => setPaused((value) => !value)}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/80 bg-white/90 text-[#202044] shadow-sm transition-colors hover:bg-white sm:h-9 sm:w-9"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-amber-200/80 bg-[#fffdf6]/95 text-[#17382b] shadow-sm transition-colors hover:bg-white sm:h-9 sm:w-9"
                 >
                   {paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}
                 </button>
@@ -194,7 +197,7 @@ export function StorefrontHero({
                 type="button"
                 aria-label="Next featured book"
                 onClick={() => moveSlide(1)}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/80 bg-white/90 text-[#202044] shadow-sm transition-colors hover:bg-white sm:h-9 sm:w-9"
+                className="grid h-8 w-8 place-items-center rounded-full border border-amber-200/80 bg-[#fffdf6]/95 text-[#17382b] shadow-sm transition-colors hover:bg-white sm:h-9 sm:w-9"
               >
                 <ArrowRight size={16} aria-hidden="true" />
               </button>

@@ -358,7 +358,7 @@ export default function HomePage() {
               <Link
                 key={category.id}
                 href={`/categories/${encodeURIComponent(category.slug)}`}
-                className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-[#dddde6] bg-white px-4 text-sm font-medium text-[#202044] transition-colors hover:border-[#202044] hover:bg-[#fff2cf]"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-[#d9e3dc] bg-[#fffefa] px-4 text-sm font-medium text-[#17382b] transition-colors hover:border-[#2f7658] hover:bg-[#e3efe7]"
               >
                 {category.name}
               </Link>

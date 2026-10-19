@@ -113,7 +113,7 @@ export function Header() {
           >
             <ShoppingCart size={18} aria-hidden="true" />
             {totalItems > 0 && (
-              <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-amber-400 px-1 text-[10px] font-bold leading-none text-[#202044]">
+              <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-amber-300 px-1 text-[10px] font-bold leading-none text-[#12372a]">
                 {totalItems > 99 ? "99+" : totalItems}
               </span>
             )}

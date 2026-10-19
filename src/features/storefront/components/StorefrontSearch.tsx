@@ -127,7 +127,7 @@ export function StorefrontSearch({ variant = "icon" }: StorefrontSearchProps) {
         }}
         className={
           variant === "field"
-            ? "inline-flex min-h-12 w-full items-center gap-3 rounded-xl border border-[#d8d1c3] bg-white px-4 text-left text-sm text-muted-foreground shadow-sm transition-all hover:border-[#1d513e]/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            ? "inline-flex min-h-12 w-full items-center gap-3 rounded-xl border border-[#d7dfd8] bg-[#fffefa] px-4 text-left text-sm text-muted-foreground shadow-[0_8px_24px_rgba(3,20,13,0.16)] transition-all hover:border-[#48a77a] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         }
       >

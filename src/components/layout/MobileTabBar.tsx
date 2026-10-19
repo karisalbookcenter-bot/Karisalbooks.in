@@ -69,7 +69,7 @@ export function MobileTabBar() {
                     aria-hidden="true"
                   />
                   {href === "/cart" && totalItems > 0 && (
-                    <span aria-hidden="true" className="absolute right-1 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-amber-400 px-1 text-[9px] font-bold leading-none text-[#202044]">
+                    <span aria-hidden="true" className="absolute right-1 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-amber-300 px-1 text-[9px] font-bold leading-none text-[#12372a]">
                       {totalItems > 99 ? "99+" : totalItems}
                     </span>
                   )}
