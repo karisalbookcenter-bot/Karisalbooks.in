@@ -20,7 +20,6 @@ function OrderSuccessContent() {
   const orderId = searchParams.get("orderId");
   const prebookingId = searchParams.get("prebookingId");
   const mixedOrderId = searchParams.get("mixedOrderId");
-  const emailSent = searchParams.get("emailSent") === "true";
   const isPrebooking = Boolean(prebookingId);
   const isMixedOrder = Boolean(mixedOrderId);
 
@@ -47,12 +46,8 @@ function OrderSuccessContent() {
 
 
 
-        <p className="text-sm text-muted-foreground">
-          {isPrebooking
-            ? emailSent
-              ? "புத்தகம் விநியோகத்திற்குத் தயாரானதும் உங்களுக்கு மின்னஞ்சல் அனுப்புவோம்."
-              : "முன்பதிவு உறுதியாகியுள்ளது. மின்னஞ்சல் வரவில்லை என்றால் இந்த ID-ஐ ஆதரவுக் குழுவிடம் தெரிவிக்கவும்."
-            : "நாங்கள் விரைவில் உங்கள் ஆர்டரை செயல்படுத்துவோம்."}
+        <p className="max-w-xl text-sm text-muted-foreground">
+          உங்கள் Order ID-ஐ screenshot எடுத்து வைத்துக்கொள்ளுங்கள். ஆர்டர் விவரங்களை WhatsApp-ல் அனுப்பி இந்த screenshot-ஐ இணைக்கவும்.
         </p>
 
         {orderId && (

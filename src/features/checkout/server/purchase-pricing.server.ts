@@ -92,6 +92,8 @@ interface PricingBookRow {
   stock_quantity: number;
   status: string;
   publisher_id: string | null;
+  weight_kg?: number | null;
+  is_free_delivery?: boolean | null;
 
   prebooking_enabled?: boolean | null;
   prebooking_start_at?: string | null;
@@ -144,7 +146,7 @@ export function calculateMembershipCharge(
   };
 }
 
-function getCourierChargePaise(state: string) {
+function getCourierChargePaise(state: string, billableWeightKg = 1) {
   const normalizedState = state
     .trim()
     .toLowerCase()
@@ -157,7 +159,30 @@ function getCourierChargePaise(state: string) {
     "pondicherry",
   ].includes(normalizedState);
 
-  return tamilNaduOrPuducherry ? 6000 : 12000;
+  const billableKilograms =
+    billableWeightKg > 0
+      ? Math.ceil(Math.round(billableWeightKg * 1000) / 1000)
+      : 0;
+  const chargePerKilogram = tamilNaduOrPuducherry ? 6000 : 12000;
+
+  return chargePerKilogram * billableKilograms;
+}
+
+function getRegularBooksBillableWeightKg(
+  items: {
+    quantity: number;
+    weightKg: number;
+    isPrebooking?: boolean;
+    isFreeDelivery: boolean;
+  }[],
+) {
+  return items.reduce((total, item) => {
+    if (item.isPrebooking === true || item.isFreeDelivery) return total;
+    const weight = Number.isFinite(item.weightKg) && item.weightKg > 0
+      ? item.weightKg
+      : 1;
+    return total + weight * item.quantity;
+  }, 0);
 }
 
 export async function resolveDiscountCode(
@@ -443,6 +468,8 @@ export async function pricePurchase(input: PurchaseInput) {
         "stock_quantity",
         "status",
         "publisher_id",
+        "weight_kg",
+        "is_free_delivery",
         "prebooking_enabled",
         "prebooking_start_at",
         "prebooking_end_at",
@@ -471,7 +498,7 @@ export async function pricePurchase(input: PurchaseInput) {
     const legacyResult = await supabase
       .from("books")
       .select(
-        "id, category_id, title, price, stock_quantity, status, publisher_id",
+        "id, category_id, title, price, stock_quantity, status, publisher_id, weight_kg, is_free_delivery",
       )
       .in("id", [...requested.keys()]);
 
@@ -627,6 +654,8 @@ export async function pricePurchase(input: PurchaseInput) {
         title: book.title,
         price: customizePrice,
         quantity,
+        weightKg: Number(book.weight_kg ?? 0),
+        isFreeDelivery: book.is_free_delivery === true,
         professionalCourierCharge: 0,
         postalCharge: 0,
         publisherName: book.publisher_id
@@ -757,6 +786,8 @@ export async function pricePurchase(input: PurchaseInput) {
       title: book.title,
       price,
       quantity,
+      weightKg: Number(book.weight_kg ?? 0),
+      isFreeDelivery: book.is_free_delivery === true,
       professionalCourierCharge,
       postalCharge,
       publisherName: book.publisher_id
@@ -898,47 +929,49 @@ export async function pricePurchase(input: PurchaseInput) {
   const indiaPostCourierChargePaise =
     input.flow === "prebooking"
       ? items.reduce(
-          (sum, item) =>
-            sum +
-            Math.round(
-              item.postalCharge * 100,
-            ) *
-              item.quantity,
-          0,
-        )
+        (sum, item) =>
+          sum +
+          (item.isFreeDelivery
+            ? 0
+            : Math.round(item.postalCharge * 100) * item.quantity),
+        0,
+      )
       : input.flow === "mixed"
         ? items.reduce(
             (sum, item) =>
               sum +
-              (item.isPrebooking
+              (item.isPrebooking && !item.isFreeDelivery
                 ? Math.round(item.postalCharge * 100) *
                   item.quantity
                 : 0),
             items.some((item) => !item.isPrebooking)
-              ? getCourierChargePaise(deliveryState)
+              ? getCourierChargePaise(
+                  deliveryState,
+                  getRegularBooksBillableWeightKg(items),
+                )
               : 0,
           )
         : getCourierChargePaise(
-          deliveryState,
-        );
+            deliveryState,
+            getRegularBooksBillableWeightKg(items),
+          );
 
   const professionalCourierChargePaise =
     input.flow === "prebooking"
       ? items.reduce(
           (sum, item) =>
             sum +
-            Math.round(
-              item.professionalCourierCharge *
-                100,
-            ) *
-              item.quantity,
+            (item.isFreeDelivery
+              ? 0
+              : Math.round(item.professionalCourierCharge * 100) *
+                item.quantity),
           0,
         )
       : input.flow === "mixed"
         ? items.reduce(
             (sum, item) =>
               sum +
-              (item.isPrebooking
+              (item.isPrebooking && !item.isFreeDelivery
                 ? Math.round(item.professionalCourierCharge * 100) *
                   item.quantity
                 : 0),

@@ -266,7 +266,6 @@ export async function POST(request: Request) {
     if (
       !customer ||
       !customer.name ||
-      !customer.email?.trim() ||
       !customer.mobile ||
       !customer.address ||
       !customer.district ||
@@ -299,16 +298,6 @@ export async function POST(request: Request) {
             ? existingOrder.prebooking_id
             : undefined,
       });
-    }
-
-    if (purchase.flow === "prebooking" && !customer.email?.trim()) {
-      return NextResponse.json(
-        {
-          error:
-            "An email address is required for pre-booking confirmation.",
-        },
-        { status: 400 }
-      );
     }
 
     /* ------------------------------------------------------------------
@@ -392,58 +381,60 @@ export async function POST(request: Request) {
      * CUSTOMER PROFILE
      * ------------------------------------------------------------------ */
 
-    try {
-      const email = customer.email.trim().toLowerCase();
+    if (customer.email?.trim()) {
+      try {
+        const email = customer.email.trim().toLowerCase();
 
-      const { data: existingCustomer, error: customerLookupError } =
-        await supabase
-          .from("customers")
-          .select("id")
-          .ilike("email", email)
-          .maybeSingle();
-
-      if (customerLookupError) {
-        throw new Error(customerLookupError.message);
-      }
-
-      const customerFields = {
-        name: customer.name.trim(),
-        email,
-        phone: customer.mobile.trim(),
-        address: customer.address.trim(),
-        city: customer.district.trim(),
-        state: customer.state.trim(),
-        pincode: customer.pincode.trim(),
-        marketing_consent: customer.marketingConsent === true,
-        marketing_consent_at: customer.marketingConsent
-          ? new Date().toISOString()
-          : null,
-      };
-
-      const customerWrite = existingCustomer
-        ? await supabase
+        const { data: existingCustomer, error: customerLookupError } =
+          await supabase
             .from("customers")
-            .update(customerFields)
-            .eq("id", existingCustomer.id)
-        : await supabase.from("customers").insert({
-            ...customerFields,
-          });
+            .select("id")
+            .ilike("email", email)
+            .maybeSingle();
 
-      if (customerWrite.error) {
-        throw new Error(customerWrite.error.message);
+        if (customerLookupError) {
+          throw new Error(customerLookupError.message);
+        }
+
+        const customerFields = {
+          name: customer.name.trim(),
+          email,
+          phone: customer.mobile.trim(),
+          address: customer.address.trim(),
+          city: customer.district.trim(),
+          state: customer.state.trim(),
+          pincode: customer.pincode.trim(),
+          marketing_consent: customer.marketingConsent === true,
+          marketing_consent_at: customer.marketingConsent
+            ? new Date().toISOString()
+            : null,
+        };
+
+        const customerWrite = existingCustomer
+          ? await supabase
+              .from("customers")
+              .update(customerFields)
+              .eq("id", existingCustomer.id)
+          : await supabase.from("customers").insert({
+              ...customerFields,
+            });
+
+        if (customerWrite.error) {
+          throw new Error(customerWrite.error.message);
+        }
+      } catch (customerError) {
+        console.error(
+          "CUSTOMER PROFILE UPDATE FAILED",
+          customerError
+        );
       }
-    } catch (customerError) {
-      console.error(
-        "CUSTOMER PROFILE UPDATE FAILED",
-        customerError
-      );
     }
 
     /* ------------------------------------------------------------------
      * NOTIFICATIONS
      * ------------------------------------------------------------------ */
 
-    const notificationResult = await sendPurchaseNotifications({
+    await sendPurchaseNotifications({
       type:
         purchase.flow === "prebooking"
           ? "prebooking"
@@ -460,12 +451,6 @@ export async function POST(request: Request) {
       flow: purchase.flow,
       orderId: orderRow.id,
       prebookingId: orderRow.prebooking_id,
-
-      ...(purchase.flow === "prebooking"
-        ? {
-            emailSent: notificationResult.emailSent,
-          }
-        : {}),
     });
   } catch (error) {
     const message =

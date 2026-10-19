@@ -53,6 +53,7 @@ export interface BookFormValues {
   weightKg: string;
 
   coverImageUrl: string;
+  isFreeDelivery: boolean;
 
   status: RecordStatus;
 
@@ -90,6 +91,7 @@ export const DEFAULT_BOOK_FORM_VALUES: BookFormValues = {
   weightKg: "0",
 
   coverImageUrl: "",
+  isFreeDelivery: false,
 
   status: "active",
 

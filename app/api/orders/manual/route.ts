@@ -27,15 +27,15 @@ export async function POST(request: Request) {
     }
     if (
       !customer?.name?.trim() ||
-      !customer.email?.trim() ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim()) ||
+      (customer.email?.trim() &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim())) ||
       !customer.mobile?.trim() ||
       !customer.address?.trim() ||
       !customer.district?.trim() ||
       !customer.state?.trim() ||
       !customer.pincode?.trim()
     ) {
-      return NextResponse.json({ error: "Complete your name, email, phone, and delivery address before placing the order." }, { status: 400 });
+      return NextResponse.json({ error: "Complete your name, phone, and delivery address. Email is optional." }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       .from("orders")
       .insert({
         customer_name: customer.name.trim(),
-        customer_email: customer.email.trim().toLowerCase(),
+        customer_email: customer.email?.trim().toLowerCase() || null,
         mobile: customer.mobile.trim(),
         address: customer.address.trim(),
         district: customer.district.trim(),

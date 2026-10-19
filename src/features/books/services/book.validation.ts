@@ -94,6 +94,8 @@ export const bookInsertSchema = z.object({
     .nullable()
     .optional(),
 
+  is_free_delivery: z.boolean().optional(),
+
   /**
    * Homepage highlight settings.
    */

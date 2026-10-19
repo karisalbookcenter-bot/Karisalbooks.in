@@ -181,6 +181,18 @@ export function BookCard({
               Cover coming soon
             </span>
           )}
+          <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+            {isPrebooking && (
+              <span className="rounded-md border border-amber-300 bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-950 shadow-sm">
+                Pre-booking
+              </span>
+            )}
+            {book.is_free_delivery && (
+              <span className="rounded-md bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-900 shadow-sm">
+                Free delivery
+              </span>
+            )}
+          </div>
         </Link>
 
         <div className="flex h-[45%] min-h-0 flex-col px-2 pb-2 pt-1">
@@ -275,11 +287,18 @@ export function BookCard({
           />
         </button>
 
-        {isPrebooking && (
-          <span className="absolute left-2 top-2 rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
-            Pre-booking
-          </span>
-        )}
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+          {isPrebooking && (
+            <span className="rounded-md border border-amber-300 bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-950 shadow-sm">
+              Pre-booking
+            </span>
+          )}
+          {book.is_free_delivery && (
+            <span className="rounded-md bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-900 shadow-sm">
+              Free delivery
+            </span>
+          )}
+        </div>
 
         {isPrebooking && hasActiveOffer && (
           <span className="absolute bottom-2 left-2 rounded-md bg-emerald-700 px-2 py-1 text-xs font-semibold text-white">

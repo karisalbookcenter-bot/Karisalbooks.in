@@ -64,9 +64,6 @@ export function HomePageContent({ initialData }: HomePageContentProps) {
         <section className="container py-5 sm:py-7">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                Editor&apos;s picks
-              </p>
               <h2 className="mt-1 text-xl font-semibold sm:text-2xl">Featured books</h2>
             </div>
             <Link href="/recommendations" className="shrink-0 text-sm font-semibold text-primary hover:underline">
@@ -91,9 +88,6 @@ export function HomePageContent({ initialData }: HomePageContentProps) {
       <section className="container py-5 sm:py-7">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Just added
-            </p>
             <h2 className="mt-1 text-xl font-semibold sm:text-2xl">
               {site.arrivalsTitle}
             </h2>

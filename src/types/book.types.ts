@@ -41,6 +41,7 @@ export interface Book extends BaseEntity {
   weight_kg: number;
 
   cover_image_url: string | null;
+  is_free_delivery?: boolean;
 
   /**
    * Homepage highlight settings.
@@ -84,6 +85,7 @@ export interface BookInsert {
   weight_kg?: number;
 
   cover_image_url?: string | null;
+  is_free_delivery?: boolean;
 
   /**
    * Homepage highlight settings.

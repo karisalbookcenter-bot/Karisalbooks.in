@@ -78,6 +78,7 @@ function toBookInsert(values: BookFormValues): BookInsert {
     weight_kg: Number(values.weightKg),
 
     cover_image_url: values.coverImageUrl || null,
+    is_free_delivery: values.isFreeDelivery,
 
     status: values.status,
 

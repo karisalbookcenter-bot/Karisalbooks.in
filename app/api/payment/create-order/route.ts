@@ -32,32 +32,13 @@ export async function POST(request: Request) {
 
     if (
       purchase.flow !== "membership" &&
-      (
-        !body.customer?.email ||
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-          body.customer.email.trim()
-        )
-      )
+      body.customer?.email?.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.customer.email.trim())
     ) {
       return NextResponse.json(
-        { error: "A valid email address is required for book orders." },
+        { error: "Enter a valid email address or leave it blank." },
         { status: 400 }
       );
-    }
-
-    if (purchase.flow === "prebooking") {
-      if (
-        !process.env.RESEND_API_KEY ||
-        !process.env.ORDER_EMAIL_FROM
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "Pre-booking is temporarily unavailable because confirmation email is not configured.",
-          },
-          { status: 503 }
-        );
-      }
     }
 
     const priced = await pricePurchase(purchase);

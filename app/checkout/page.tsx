@@ -4,13 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useCart } from "@/features/cart/hooks/useCart";
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 import { GENERAL_BOOK_DISCOUNT_PERCENT } from "@/lib/helpers/book-pricing.helpers";
-import { DEFAULT_SITE_SETTINGS, type PublicSiteSettings } from "@/features/site-settings/site-settings.types";
+import {
+  DEFAULT_SITE_SETTINGS,
+  type PublicSiteSettings,
+  type PublicSocialLinks,
+} from "@/features/site-settings/site-settings.types";
+import { getWhatsAppPhoneNumber } from "@/features/site-settings/whatsapp.helpers";
 import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 interface DiscountResult {
@@ -46,7 +50,6 @@ interface VerificationResult {
   error?: string;
   orderId?: string;
   prebookingId?: string;
-  emailSent?: boolean;
 }
 
 interface ManualOrderResult {
@@ -66,6 +69,12 @@ interface ManualOrderConfirmation {
   whatsappHref: string;
 }
 
+interface PaidOrderConfirmation {
+  orderId: string;
+  total: number;
+  whatsappHref: string | null;
+}
+
 type ShippingMethod = "India Post" | "Professional Courier";
 
 const INDIAN_STATES = [
@@ -79,7 +88,6 @@ const INDIAN_STATES = [
 ];
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const { items, clearCart } = useCart();
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const hasPrebookingItems = items.some((item) => item.purchaseType === "prebooking");
@@ -107,24 +115,32 @@ export default function CheckoutPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState("");
   const [siteSettings, setSiteSettings] = useState<PublicSiteSettings>(DEFAULT_SITE_SETTINGS);
+  const [socialLinks, setSocialLinks] = useState<PublicSocialLinks | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [manualOrder, setManualOrder] = useState<ManualOrderConfirmation | null>(null);
+  const [paidOrder, setPaidOrder] = useState<PaidOrderConfirmation | null>(null);
   const isWhatsAppCheckout = purchaseFlow === "books" && siteSettings.whatsappOrdersEnabled;
 
   useEffect(() => {
     fetch("/api/site-settings", { cache: "no-store" })
       .then(async (response) => {
-        const result = await response.json() as { site?: PublicSiteSettings; error?: string };
+        const result = await response.json() as {
+          site?: PublicSiteSettings;
+          social?: PublicSocialLinks;
+          error?: string;
+        };
         if (!response.ok) throw new Error(result.error ?? "Unable to load checkout settings.");
         if (result.site) setSiteSettings({ ...DEFAULT_SITE_SETTINGS, ...result.site });
+        if (result.social) setSocialLinks(result.social);
       })
       .catch((settingsError: unknown) => {
         setError(settingsError instanceof Error ? settingsError.message : "Unable to load checkout settings.");
       })
       .finally(() => setSettingsLoading(false));
 
-    return subscribeToSiteSettingsUpdates(({ site }) => {
+    return subscribeToSiteSettingsUpdates(({ site, social }) => {
       setSiteSettings({ ...DEFAULT_SITE_SETTINGS, ...site });
+      setSocialLinks(social);
       setSettingsLoading(false);
     });
   }, []);
@@ -293,16 +309,32 @@ export default function CheckoutPage() {
             const result = (await verifyResponse.json()) as VerificationResult;
             if (!verifyResponse.ok) throw new Error(result.error ?? "Payment verification failed.");
             clearCart();
-            const params = new URLSearchParams({ orderId: result.orderId ?? "" });
-            if (result.prebookingId) {
-              if (purchaseFlow === "mixed") {
-                params.set("mixedOrderId", result.prebookingId);
-              } else {
-                params.set("prebookingId", result.prebookingId);
-                params.set("emailSent", String(result.emailSent === true));
-              }
-            }
-            router.push(`/order-success?${params.toString()}`);
+            const orderId = result.prebookingId ?? result.orderId ?? "";
+            const whatsappPhone = getWhatsAppPhoneNumber(
+              socialLinks?.whatsapp ?? "",
+            );
+            const whatsappMessage = [
+              "வணக்கம்! Karisal Books இணையதளத்தில் payment வெற்றிகரமாக முடிந்தது.",
+              `Order ID: ${orderId}`,
+              `Payment ID: ${payment.razorpay_payment_id}`,
+              "",
+              "புத்தகங்கள்:",
+              ...items.map((item) => `• ${item.title} × ${item.quantity}`),
+              "",
+              `பெயர்: ${customer.name}`,
+              `தொலைபேசி: ${customer.mobile}`,
+              `முகவரி: ${customer.address}, ${customer.district}, ${customer.state} - ${customer.pincode}`,
+              `மொத்தம்: ${formatCurrency(orderData.total)}`,
+              "",
+              "எனது order ID screenshot-ஐ இணைத்துள்ளேன். ஆர்டரை செயல்படுத்தவும்.",
+            ].join("\n");
+            setPaidOrder({
+              orderId,
+              total: orderData.total,
+              whatsappHref: whatsappPhone
+                ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`
+                : null,
+            });
           } catch (verificationError) {
             setError(
               verificationError instanceof Error
@@ -364,6 +396,42 @@ export default function CheckoutPage() {
     );
   }
 
+  if (paidOrder) {
+    return (
+      <MainLayout>
+        <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-5 py-12 text-center">
+          <h1 className="text-3xl font-bold text-primary">Payment successful · Order confirmed</h1>
+          <p className="max-w-xl text-muted-foreground">
+            உங்கள் payment வெற்றிகரமாக முடிந்து order பதிவு செய்யப்பட்டது. கீழே உள்ள Order ID-ஐ screenshot எடுத்து வைத்துக்கொள்ளுங்கள்.
+          </p>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-6 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Order ID · Screenshot this</p>
+            <p className="mt-1 break-all font-mono text-lg font-bold">{paidOrder.orderId}</p>
+          </div>
+          <p className="text-lg font-bold">Paid: {formatCurrency(paidOrder.total)}</p>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            உங்கள் order details-ஐ WhatsApp-ல் அனுப்பி order ID screenshot-ஐ இணைத்தால், நாங்கள் தொடர்ந்து செயல்படுத்துவோம்.
+          </p>
+          {paidOrder.whatsappHref ? (
+            <a
+              href={paidOrder.whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md bg-primary px-6 py-3 text-sm font-semibold text-white"
+            >
+              Send order details on WhatsApp
+            </a>
+          ) : (
+            <p role="status" className="max-w-xl text-sm text-muted-foreground">
+              Store WhatsApp contact is not configured. Please save this Order ID screenshot and contact the store directly.
+            </p>
+          )}
+          <Link href="/books" className="text-sm text-primary underline">Continue shopping</Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       {!isWhatsAppCheckout && <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />}
@@ -380,8 +448,8 @@ export default function CheckoutPage() {
               <input name="name" required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
             </label>
             <label className="space-y-1 text-sm font-medium">
-              Email for receipt
-              <input name="email" required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+              Email (optional)
+              <input name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
             </label>
             <label className="space-y-1 text-sm font-medium">
               Mobile
@@ -425,7 +493,7 @@ export default function CheckoutPage() {
                     ? quote
                       ? `${formatCurrency(method === "India Post" ? quote.indiaPostCourierCharge : quote.professionalCourierCharge)} total · quantity-based`
                       : "Per-copy rate; total calculated for your quantity"
-                    : "₹60 TN/Puducherry · ₹120 other states (up to 1 kg)"}
+                    : "₹60 TN/Puducherry · ₹120 other states per started kg"}
                 </span></span>
               </label>
             ))}
@@ -433,7 +501,7 @@ export default function CheckoutPage() {
               <p className="max-w-xl text-xs leading-5 text-muted-foreground">Pre-booking delivery charges are set separately for each title and multiplied by the quantity ordered. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.</p>
             ) : (
               <p className="max-w-xl text-xs leading-5 text-muted-foreground">
-                For other states, ₹120 is an estimate up to 1 kg. Final India Post charges may change based on actual parcel weight and destination. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.
+                Courier charges are calculated per started kilogram of non-free-delivery books; book weights marked for free delivery are excluded. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.
               </p>
             )}
           </fieldset>

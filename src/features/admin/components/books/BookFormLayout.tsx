@@ -49,6 +49,8 @@ function bookToFormValues(
     coverImageUrl:
       book.cover_image_url ?? "",
 
+    isFreeDelivery: book.is_free_delivery ?? false,
+
     status: book.status,
 
     // Homepage Highlight settings
@@ -497,6 +499,29 @@ export function BookFormLayout({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="rounded-lg border border-border p-4">
+        <label
+          htmlFor="book-free-delivery"
+          className="flex cursor-pointer items-start gap-3"
+        >
+          <input
+            id="book-free-delivery"
+            type="checkbox"
+            checked={values.isFreeDelivery}
+            onChange={(event) =>
+              setField("isFreeDelivery", event.target.checked)
+            }
+            className="mt-1 h-4 w-4 accent-primary"
+          />
+          <span>
+            <span className="block text-sm font-semibold">Free delivery for this book</span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Do not include this book&apos;s weight in the standard courier charge.
+            </span>
+          </span>
+        </label>
       </div>
       
             {/* Optional pre-booking shipping charges */}

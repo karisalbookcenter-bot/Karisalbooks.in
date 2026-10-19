@@ -36,6 +36,15 @@ export async function POST(request: Request) {
     });
     if (error) throw new Error(error.message);
     const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
+    if (assetType === "logo") {
+      const { error: settingsError } = await supabase
+        .from("site_settings")
+        .upsert(
+          { id: "public", site_logo_url: data.publicUrl, updated_by: user.id },
+          { onConflict: "id" },
+        );
+      if (settingsError) throw new Error(settingsError.message);
+    }
     return NextResponse.json({ url: data.publicUrl });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to upload logo." }, { status: 500 });

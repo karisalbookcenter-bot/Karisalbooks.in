@@ -95,10 +95,16 @@ export default function AdminSettingsPage() {
       const response = await fetch("/api/admin/site-assets", { method: "POST", body: form });
       const result = await response.json() as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error ?? `Unable to upload ${assetType === "logo" ? "the logo" : "the payment QR"}.`);
-      setSite((current) => assetType === "logo"
-        ? { ...current, logoUrl: result.url! }
-        : { ...current, paymentQrUrl: result.url! });
-      setAssetNotice("Image uploaded. Click Save settings to publish the change.");
+      const updatedSite = assetType === "logo"
+        ? { ...site, logoUrl: result.url }
+        : { ...site, paymentQrUrl: result.url };
+      setSite(updatedSite);
+      if (assetType === "logo") {
+        notifySiteSettingsUpdated({ social, site: updatedSite });
+        setAssetNotice("Logo uploaded and published to the storefront.");
+      } else {
+        setAssetNotice("Image uploaded. Click Save settings to publish the change.");
+      }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : `Unable to upload ${assetType === "logo" ? "the logo" : "the payment QR"}.`);
     } finally {

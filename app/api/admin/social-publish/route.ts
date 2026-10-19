@@ -4,6 +4,11 @@ import { authConfig } from "@/config/auth";
 import { isAtLeastRole } from "@/constants/roles.constants";
 import { getServerAuthUser } from "@/features/auth/services/session.service";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  calculateBookPrice,
+  isBookDiscountEligible,
+} from "@/lib/helpers/book-pricing.helpers";
+import { formatCurrency } from "@/lib/helpers/format.helpers";
 
 interface MetaResult {
   id?: string;
@@ -64,7 +69,7 @@ export async function POST(request: Request) {
     const supabase = createAdminClient();
     const { data: book, error } = await supabase
       .from("books")
-      .select("title, slug, description, cover_image_url, status")
+      .select("title, slug, description, cover_image_url, status, price, category_id, is_free_delivery")
       .eq("id", body.bookId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -81,6 +86,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: category, error: categoryError } = await supabase
+      .from("categories")
+      .select("name")
+      .eq("id", book.category_id)
+      .maybeSingle();
+    if (categoryError) throw new Error(categoryError.message);
+
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
     if (!siteUrl) {
       return NextResponse.json(
@@ -90,17 +102,30 @@ export async function POST(request: Request) {
     }
 
     const version = process.env.META_GRAPH_API_VERSION ?? "v22.0";
+    const price = calculateBookPrice(
+      Number(book.price),
+      isBookDiscountEligible(category?.name),
+    );
+    const bookUrl = `${siteUrl}/books/${book.slug}`;
+    const posterUrl = `${siteUrl}/api/social-poster/${body.bookId}`;
     const caption = [
+      "New at Karisal Books",
       book.title,
+      `${formatCurrency(price.discountedPrice)}${
+        price.discountAmount > 0
+          ? ` · ${Math.round((price.discountAmount / price.originalPrice) * 100)}% off`
+          : ""
+      }`,
+      book.is_free_delivery ? "Free delivery available." : "",
       book.description?.trim(),
-      `${siteUrl}/books/${book.slug}`,
+      `Order online: ${bookUrl}`,
     ]
       .filter(Boolean)
       .join("\n\n");
 
     const [facebook, instagram] = await Promise.allSettled([
       postToMeta(`https://graph.facebook.com/${version}/${pageId}/photos`, {
-        url: book.cover_image_url,
+        url: posterUrl,
         caption,
         access_token: token,
       }),
@@ -108,7 +133,7 @@ export async function POST(request: Request) {
         const container = await postToMeta(
           `https://graph.facebook.com/${version}/${instagramAccountId}/media`,
           {
-            image_url: book.cover_image_url,
+            image_url: posterUrl,
             caption,
             access_token: token,
           },

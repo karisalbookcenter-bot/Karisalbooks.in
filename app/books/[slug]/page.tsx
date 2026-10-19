@@ -340,7 +340,9 @@ function makeCartItem(itemQuantity: number): CartItem {
               <div className="flex flex-col p-5 sm:p-8">
                 <span
                   className={`mb-3 w-fit rounded-sm px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                    inStock
+                    isPrebooking
+                      ? "border border-amber-300 bg-amber-100 text-amber-950"
+                      : inStock
                       ? "bg-emerald-50 text-emerald-800"
                       : "bg-red-50 text-red-700"
                   }`}
@@ -355,6 +357,12 @@ function makeCartItem(itemQuantity: number): CartItem {
                 <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
                   {book.title}
                 </h1>
+
+                {book.is_free_delivery && (
+                  <span className="mt-3 w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
+                    Free delivery
+                  </span>
+                )}
 
                 {authorName && (
                   <p className="mt-2 text-sm text-muted-foreground">

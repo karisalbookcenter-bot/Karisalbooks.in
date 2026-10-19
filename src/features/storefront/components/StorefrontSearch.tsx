@@ -51,6 +51,10 @@ export function StorefrontSearch({ variant = "icon" }: StorefrontSearchProps) {
   }, [open, authorsLoaded]);
 
   useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
     const value = query.trim();
     const currentRequest = ++requestId.current;
 
@@ -62,26 +66,32 @@ export function StorefrontSearch({ variant = "icon" }: StorefrontSearchProps) {
     }
 
     setLoading(true);
-    if (!authorsLoaded) return;
     setError("");
     const timer = window.setTimeout(async () => {
-      const author = authors.find((item) =>
-        item.name.toLocaleLowerCase().includes(value.toLocaleLowerCase())
-      );
-
       try {
-        const [titleResults, authorResults] = await Promise.all([
-          listPublicBooks({ search: value, pageSize: 4 }),
-          author
-            ? listPublicBooks({ authorId: author.id, pageSize: 4 })
-            : Promise.resolve(null),
-        ]);
+        const titleResults = await listPublicBooks({
+          search: value,
+          pageSize: 5,
+        });
 
         if (currentRequest !== requestId.current) return;
 
-        const combined = [...titleResults.items, ...(authorResults?.items ?? [])];
-        const unique = combined.filter(
-          (book, index) => combined.findIndex((item) => item.id === book.id) === index
+        const author = authorsLoaded
+          ? authors.find((item) =>
+              item.name.toLocaleLowerCase().includes(value.toLocaleLowerCase())
+            )
+          : undefined;
+        const authorResults = author
+          ? await listPublicBooks({ authorId: author.id, pageSize: 4 })
+          : null;
+        if (currentRequest !== requestId.current) return;
+
+        const combined = [
+          ...titleResults.items,
+          ...(authorResults?.items ?? []),
+        ];
+        const unique = combined.filter((book, index) =>
+          combined.findIndex((item) => item.id === book.id) === index
         );
 
         setBooks(unique.slice(0, 5));
@@ -138,7 +148,7 @@ export function StorefrontSearch({ variant = "icon" }: StorefrontSearchProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[60] mt-2 w-[min(92vw,28rem)] rounded-xl border border-border bg-background p-3 shadow-xl sm:right-0">
+        <div className="fixed left-3 right-3 top-[4.5rem] z-[60] rounded-xl border border-border bg-background p-3 shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(92vw,28rem)]">
           <form id="storefront-search-form" onSubmit={submitSearch} role="search">
             <label className="relative block">
               <span className="sr-only">Search books and authors</span>
