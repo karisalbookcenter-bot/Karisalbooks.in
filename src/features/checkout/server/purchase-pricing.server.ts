@@ -69,7 +69,6 @@ export interface ResolvedDiscount {
 
 export const MEMBERSHIP_VALIDITY_DAYS = 350;
 export const MEMBERSHIP_TAX_PERCENT = 8;
-export const MEMBERSHIP_PLATFORM_FEE_PERCENT = 8;
 export const MEMBER_COURIER_DISCOUNT_PERCENT = 30;
 
 export const CUSTOMIZE_MINIMUM_QUANTITY = 200;
@@ -133,17 +132,11 @@ export function calculateMembershipCharge(
   const taxPaise = Math.round(
     (basePaise * MEMBERSHIP_TAX_PERCENT) / 100,
   );
-  const platformFeePaise = Math.round(
-    (basePaise * MEMBERSHIP_PLATFORM_FEE_PERCENT) / 100,
-  );
-
-  const totalPaise =
-    basePaise + taxPaise + platformFeePaise;
+  const totalPaise = basePaise + taxPaise;
 
   return {
     baseAmount: basePaise / 100,
     taxAmount: taxPaise / 100,
-    platformFee: platformFeePaise / 100,
     totalAmount: totalPaise / 100,
     totalPaise,
   };
@@ -353,7 +346,6 @@ export async function pricePurchase(input: PurchaseInput) {
         name: plan.name,
         price: charge.baseAmount,
         taxAmount: charge.taxAmount,
-        platformFee: charge.platformFee,
         totalAmount: charge.totalAmount,
         validityDays: MEMBERSHIP_VALIDITY_DAYS,
       },

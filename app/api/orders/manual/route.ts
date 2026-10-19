@@ -22,8 +22,16 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ManualOrderBody;
     const { purchase, customer } = body;
-    if (!purchase || purchase.flow !== "books") {
-      return NextResponse.json({ error: "WhatsApp checkout is currently available for book orders only." }, { status: 400 });
+    if (
+      !purchase ||
+      (purchase.flow !== "books" &&
+        purchase.flow !== "prebooking" &&
+        purchase.flow !== "mixed")
+    ) {
+      return NextResponse.json(
+        { error: "WhatsApp checkout supports book and pre-booking orders." },
+        { status: 400 },
+      );
     }
     if (
       !customer?.name?.trim() ||
@@ -82,8 +90,11 @@ export async function POST(request: Request) {
         payment_status: "pending",
         payment_method: qrPaymentEnabled ? "UPI QR" : "WhatsApp",
         status: "pending",
+        ...(purchase.flow === "prebooking" || purchase.flow === "mixed"
+          ? { purchase_type: purchase.flow }
+          : {}),
       })
-      .select("id, total_amount")
+      .select("id, total_amount, prebooking_id")
       .single();
     if (orderError) throw new Error(orderError.message);
 
@@ -94,6 +105,9 @@ export async function POST(request: Request) {
         title: item.title,
         price: item.price,
         quantity: item.quantity,
+        ...(purchase.flow === "prebooking" || purchase.flow === "mixed"
+          ? { is_prebooking: item.isPrebooking === true }
+          : {}),
       }))
     );
     if (itemsError) {
@@ -105,7 +119,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      orderId: order.id,
+      orderId: order.prebooking_id ?? order.id,
       total: Number(order.total_amount),
       whatsappPhone,
       qrPaymentEnabled,

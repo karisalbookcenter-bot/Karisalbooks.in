@@ -1,6 +1,6 @@
 "use client";
 
-import Script from "next/script";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ArrowRight, Check, Crown, ShieldCheck } from "lucide-react";
 
@@ -10,7 +10,6 @@ import type { MembershipPlan } from "@/types/membership.types";
 interface MembershipPlanOption extends MembershipPlan {
   baseAmount: number;
   taxAmount: number;
-  platformFee: number;
   totalAmount: number;
 }
 
@@ -23,18 +22,23 @@ interface ApplicantDetails {
   pincode: string;
 }
 
-interface PaymentOrderResponse {
+interface MembershipApplicationResponse {
   error?: string;
-  keyId: string;
-  order: { id: string; amount: number; currency: string };
+  membershipId: string;
+  planName: string;
   total: number;
+  whatsappHref: string;
+  qrPaymentEnabled: boolean;
+  paymentQrUrl: string | null;
 }
 
 interface MembershipPaymentResult {
-  error?: string;
-  membershipId?: string;
-  expiryDate?: string;
-  planName?: string;
+  membershipId: string;
+  planName: string;
+  total: number;
+  whatsappHref: string;
+  qrPaymentEnabled: boolean;
+  paymentQrUrl: string | null;
 }
 
 const INITIAL_APPLICANT: ApplicantDetails = {
@@ -88,77 +92,58 @@ export default function MembershipApplyPage() {
     setIsPaying(true);
 
     try {
-      const orderResponse = await fetch("/api/payment/create-order", {
+      const orderResponse = await fetch("/api/membership/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ purchase: { flow: "membership", planId } }),
+        body: JSON.stringify({ planId, customer: applicant }),
       });
-      const orderData = (await orderResponse.json()) as PaymentOrderResponse;
-      if (!orderResponse.ok) throw new Error(orderData.error ?? "Unable to start payment.");
-      if (!window.Razorpay) throw new Error("Payment window is still loading. Please try again.");
-
-      const checkout = new window.Razorpay({
-        key: orderData.keyId,
-        amount: orderData.order.amount,
-        currency: orderData.order.currency,
-        name: "Karisal Books",
-        description: `${selectedPlan?.name ?? "Membership"} membership`,
-        order_id: orderData.order.id,
-        prefill: {
-          name: applicant.name,
-          email: applicant.email,
-          contact: applicant.mobile,
-        },
-        theme: { color: "#1f6b54" },
-        modal: { ondismiss: () => setIsPaying(false) },
-        handler: async (payment) => {
-          try {
-            const verifyResponse = await fetch("/api/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                purchase: { flow: "membership", planId },
-                customer: applicant,
-                ...payment,
-              }),
-            });
-            const result = (await verifyResponse.json()) as MembershipPaymentResult;
-            if (!verifyResponse.ok) throw new Error(result.error ?? "Payment verification failed.");
-            setMembership(result);
-          } catch (verificationError) {
-            setError(
-              verificationError instanceof Error
-                ? verificationError.message
-                : "Payment succeeded, but membership confirmation failed. Contact support with your payment receipt."
-            );
-          } finally {
-            setIsPaying(false);
-          }
-        },
-      });
-      checkout.open();
+      const result = (await orderResponse.json()) as MembershipApplicationResponse;
+      if (!orderResponse.ok) throw new Error(result.error ?? "Unable to submit membership application.");
+      setMembership(result);
     } catch (paymentError) {
       setError(paymentError instanceof Error ? paymentError.message : "Unable to start payment.");
+    } finally {
       setIsPaying(false);
     }
   }
 
   return (
     <MainLayout>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       <section className="container max-w-3xl py-10">
-        {membership?.membershipId ? (
+        {membership ? (
           <div className="mx-auto max-w-xl space-y-4 border-t-4 border-primary py-8">
-            <p className="text-sm font-semibold uppercase text-primary">Payment complete</p>
-            <h1 className="text-3xl font-bold">Your membership is active</h1>
-            <p>{membership.planName} plan, valid through {membership.expiryDate}.</p>
+            <p className="text-sm font-semibold uppercase text-primary">Application received</p>
+            <h1 className="text-3xl font-bold">Complete payment in WhatsApp</h1>
+            <p>
+              {membership.planName} plan · ₹{membership.total.toFixed(2)}. Your membership will be usable after the store confirms your payment screenshot.
+            </p>
             <div className="border-y py-5">
-              <p className="text-sm text-muted-foreground">Your membership number</p>
+              <p className="text-sm text-muted-foreground">Membership reference</p>
               <p className="mt-1 text-2xl font-bold tracking-wide">{membership.membershipId}</p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Use this number at checkout to apply your member book discount.
-            </p>
+            {membership.qrPaymentEnabled && membership.paymentQrUrl && (
+              <div className="space-y-3 rounded-xl border p-4">
+                <Image
+                  src={membership.paymentQrUrl}
+                  alt="Store payment QR code"
+                  width={288}
+                  height={288}
+                  unoptimized
+                  className="mx-auto max-h-72 w-full max-w-72 object-contain"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Scan the QR, then send the payment screenshot and membership reference in WhatsApp.
+                </p>
+              </div>
+            )}
+            <a
+              href={membership.whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-bold text-white"
+            >
+              Continue in WhatsApp <ArrowRight size={17} aria-hidden="true" />
+            </a>
           </div>
         ) : (
           <div className="mx-auto max-w-xl">
@@ -227,9 +212,8 @@ export default function MembershipApplyPage() {
                 <dl className="space-y-2 border-y py-4 text-sm">
                   <div className="flex justify-between"><dt>Membership amount</dt><dd>₹{selectedPlan.baseAmount.toFixed(2)}</dd></div>
                   <div className="flex justify-between"><dt>Tax (8%)</dt><dd>₹{selectedPlan.taxAmount.toFixed(2)}</dd></div>
-                  <div className="flex justify-between"><dt>Payment platform fee (8%)</dt><dd>₹{selectedPlan.platformFee.toFixed(2)}</dd></div>
                   <div className="flex justify-between border-t pt-2 font-semibold"><dt>Total payable</dt><dd>₹{selectedPlan.totalAmount.toFixed(2)}</dd></div>
-                  <div className="pt-1 text-muted-foreground">Membership validity: 350 days from application.</div>
+                  <div className="pt-1 text-muted-foreground">Membership benefits start after payment confirmation.</div>
                 </dl>
               )}
 
@@ -271,7 +255,7 @@ export default function MembershipApplyPage() {
                   disabled={loadingPlans || isPaying || !selectedPlan}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-6 py-3 font-bold text-amber-950 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isPaying ? "Opening payment…" : "Join & activate membership"}
+                  {isPaying ? "Submitting application…" : "Continue to WhatsApp"}
                   {isPaying ? <ShieldCheck size={17} aria-hidden="true" /> : <ArrowRight size={17} aria-hidden="true" />}
                 </button>
               </div>

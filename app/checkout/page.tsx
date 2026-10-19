@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import Script from "next/script";
 import { useCallback, useEffect, useState } from "react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -12,9 +11,7 @@ import { GENERAL_BOOK_DISCOUNT_PERCENT } from "@/lib/helpers/book-pricing.helper
 import {
   DEFAULT_SITE_SETTINGS,
   type PublicSiteSettings,
-  type PublicSocialLinks,
 } from "@/features/site-settings/site-settings.types";
-import { getWhatsAppPhoneNumber } from "@/features/site-settings/whatsapp.helpers";
 import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 interface DiscountResult {
@@ -33,25 +30,6 @@ interface DiscountResult {
   total: number;
 }
 
-interface CreateOrderResult {
-  error?: string;
-  keyId: string;
-  order: { id: string; amount: number; currency: string };
-  subtotal: number;
-  discountAmount: number;
-  bookDiscountAmount: number;
-  courierCharge: number;
-  courierDiscount: number;
-  discountPercentage: number;
-  total: number;
-}
-
-interface VerificationResult {
-  error?: string;
-  orderId?: string;
-  prebookingId?: string;
-}
-
 interface ManualOrderResult {
   error?: string;
   orderId: string;
@@ -67,12 +45,6 @@ interface ManualOrderConfirmation {
   qrPaymentEnabled: boolean;
   paymentQrUrl: string | null;
   whatsappHref: string;
-}
-
-interface PaidOrderConfirmation {
-  orderId: string;
-  total: number;
-  whatsappHref: string | null;
 }
 
 type ShippingMethod = "India Post" | "Professional Courier";
@@ -115,32 +87,23 @@ export default function CheckoutPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState("");
   const [siteSettings, setSiteSettings] = useState<PublicSiteSettings>(DEFAULT_SITE_SETTINGS);
-  const [socialLinks, setSocialLinks] = useState<PublicSocialLinks | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [manualOrder, setManualOrder] = useState<ManualOrderConfirmation | null>(null);
-  const [paidOrder, setPaidOrder] = useState<PaidOrderConfirmation | null>(null);
-  const isWhatsAppCheckout = purchaseFlow === "books" && siteSettings.whatsappOrdersEnabled;
 
   useEffect(() => {
     fetch("/api/site-settings", { cache: "no-store" })
       .then(async (response) => {
-        const result = await response.json() as {
-          site?: PublicSiteSettings;
-          social?: PublicSocialLinks;
-          error?: string;
-        };
+        const result = await response.json() as { site?: PublicSiteSettings; error?: string };
         if (!response.ok) throw new Error(result.error ?? "Unable to load checkout settings.");
         if (result.site) setSiteSettings({ ...DEFAULT_SITE_SETTINGS, ...result.site });
-        if (result.social) setSocialLinks(result.social);
       })
       .catch((settingsError: unknown) => {
         setError(settingsError instanceof Error ? settingsError.message : "Unable to load checkout settings.");
       })
       .finally(() => setSettingsLoading(false));
 
-    return subscribeToSiteSettingsUpdates(({ site, social }) => {
+    return subscribeToSiteSettingsUpdates(({ site }) => {
       setSiteSettings({ ...DEFAULT_SITE_SETTINGS, ...site });
-      setSocialLinks(social);
       setSettingsLoading(false);
     });
   }, []);
@@ -244,111 +207,40 @@ export default function CheckoutPage() {
     };
 
     try {
-      if (isWhatsAppCheckout) {
-        const orderResponse = await fetch("/api/orders/manual", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ purchase, customer }),
-        });
-        const orderData = (await orderResponse.json()) as ManualOrderResult;
-        if (!orderResponse.ok) throw new Error(orderData.error ?? "Unable to place the WhatsApp order.");
-
-        const itemLines = items.map((item) => `• ${item.title} × ${item.quantity}`);
-        const whatsappMessage = [
-          "வணக்கம்! இணையதளத்தில் புத்தக ஆர்டர் செய்துள்ளேன்.",
-          `Order ID: ${orderData.orderId}`,
-          "",
-          ...itemLines,
-          "",
-          `பெயர்: ${customer.name}`,
-          `தொலைபேசி: ${customer.mobile}`,
-          `முகவரி: ${customer.address}, ${customer.district}, ${customer.state} - ${customer.pincode}`,
-          `மொத்தம்: ${formatCurrency(orderData.total)}`,
-          orderData.qrPaymentEnabled
-            ? "QR மூலம் பணம் செலுத்தி, payment screenshot-ஐ இந்த WhatsApp-ல் அனுப்புகிறேன்."
-            : "ஆர்டரை உறுதி செய்ய இந்த WhatsApp-ல் தொடர்பு கொள்கிறேன்.",
-        ].join("\n");
-        const whatsappHref = `https://wa.me/${orderData.whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
-        setManualOrder({
-          orderId: orderData.orderId,
-          total: orderData.total,
-          qrPaymentEnabled: orderData.qrPaymentEnabled,
-          paymentQrUrl: orderData.paymentQrUrl,
-          whatsappHref,
-        });
-        clearCart();
-        return;
-      }
-
-      const orderResponse = await fetch("/api/payment/create-order", {
+      const orderResponse = await fetch("/api/orders/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ purchase, customer }),
       });
-      const orderData = (await orderResponse.json()) as CreateOrderResult;
-      if (!orderResponse.ok) throw new Error(orderData.error ?? "Unable to start payment.");
-      if (!window.Razorpay) throw new Error("Payment window is still loading. Please try again.");
+      const orderData = (await orderResponse.json()) as ManualOrderResult;
+      if (!orderResponse.ok) throw new Error(orderData.error ?? "Unable to place the order.");
 
-      const checkout = new window.Razorpay({
-        key: orderData.keyId,
-        amount: orderData.order.amount,
-        currency: orderData.order.currency,
-        name: "Karisal Books",
-        description: "Book order",
-        order_id: orderData.order.id,
-        prefill: { name, email, contact: mobile },
-        theme: { color: "#1f6b54" },
-        modal: { ondismiss: () => setIsPaying(false) },
-        handler: async (payment) => {
-          try {
-            const verifyResponse = await fetch("/api/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ purchase, customer, ...payment }),
-            });
-            const result = (await verifyResponse.json()) as VerificationResult;
-            if (!verifyResponse.ok) throw new Error(result.error ?? "Payment verification failed.");
-            clearCart();
-            const orderId = result.prebookingId ?? result.orderId ?? "";
-            const whatsappPhone = getWhatsAppPhoneNumber(
-              socialLinks?.whatsapp ?? "",
-            );
-            const whatsappMessage = [
-              "வணக்கம்! Karisal Books இணையதளத்தில் payment வெற்றிகரமாக முடிந்தது.",
-              `Order ID: ${orderId}`,
-              `Payment ID: ${payment.razorpay_payment_id}`,
-              "",
-              "புத்தகங்கள்:",
-              ...items.map((item) => `• ${item.title} × ${item.quantity}`),
-              "",
-              `பெயர்: ${customer.name}`,
-              `தொலைபேசி: ${customer.mobile}`,
-              `முகவரி: ${customer.address}, ${customer.district}, ${customer.state} - ${customer.pincode}`,
-              `மொத்தம்: ${formatCurrency(orderData.total)}`,
-              "",
-              "எனது order ID screenshot-ஐ இணைத்துள்ளேன். ஆர்டரை செயல்படுத்தவும்.",
-            ].join("\n");
-            setPaidOrder({
-              orderId,
-              total: orderData.total,
-              whatsappHref: whatsappPhone
-                ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`
-                : null,
-            });
-          } catch (verificationError) {
-            setError(
-              verificationError instanceof Error
-                ? verificationError.message
-                : "Payment succeeded, but order confirmation failed. Keep your payment receipt and contact support."
-            );
-          } finally {
-            setIsPaying(false);
-          }
-        },
+      const itemLines = items.map((item) => `• ${item.title} × ${item.quantity}`);
+      const whatsappMessage = [
+        "வணக்கம்! இணையதளத்தில் புத்தக ஆர்டர் செய்துள்ளேன்.",
+        `Order ID: ${orderData.orderId}`,
+        "",
+        ...itemLines,
+        "",
+        `பெயர்: ${customer.name}`,
+        `தொலைபேசி: ${customer.mobile}`,
+        `முகவரி: ${customer.address}, ${customer.district}, ${customer.state} - ${customer.pincode}`,
+        `மொத்தம்: ${formatCurrency(orderData.total)}`,
+        orderData.qrPaymentEnabled
+          ? "QR மூலம் பணம் செலுத்தி, payment screenshot-ஐ இந்த WhatsApp-ல் அனுப்புகிறேன்."
+          : "பணம் செலுத்தும் விவரங்களை WhatsApp-ல் தெரிவிக்கவும். பணம் செலுத்தியதும் screenshot அனுப்புகிறேன்.",
+      ].join("\n");
+      const whatsappHref = `https://wa.me/${orderData.whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+      setManualOrder({
+        orderId: orderData.orderId,
+        total: orderData.total,
+        qrPaymentEnabled: orderData.qrPaymentEnabled,
+        paymentQrUrl: orderData.paymentQrUrl,
+        whatsappHref,
       });
-      checkout.open();
+      clearCart();
     } catch (paymentError) {
-      setError(paymentError instanceof Error ? paymentError.message : "Unable to start payment.");
+      setError(paymentError instanceof Error ? paymentError.message : "Unable to place the order.");
       setIsPaying(false);
     }
   }
@@ -396,45 +288,8 @@ export default function CheckoutPage() {
     );
   }
 
-  if (paidOrder) {
-    return (
-      <MainLayout>
-        <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-5 py-12 text-center">
-          <h1 className="text-3xl font-bold text-primary">Payment successful · Order confirmed</h1>
-          <p className="max-w-xl text-muted-foreground">
-            உங்கள் payment வெற்றிகரமாக முடிந்து order பதிவு செய்யப்பட்டது. கீழே உள்ள Order ID-ஐ screenshot எடுத்து வைத்துக்கொள்ளுங்கள்.
-          </p>
-          <div className="rounded-xl border border-primary/20 bg-primary/5 px-6 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Order ID · Screenshot this</p>
-            <p className="mt-1 break-all font-mono text-lg font-bold">{paidOrder.orderId}</p>
-          </div>
-          <p className="text-lg font-bold">Paid: {formatCurrency(paidOrder.total)}</p>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            உங்கள் order details-ஐ WhatsApp-ல் அனுப்பி order ID screenshot-ஐ இணைத்தால், நாங்கள் தொடர்ந்து செயல்படுத்துவோம்.
-          </p>
-          {paidOrder.whatsappHref ? (
-            <a
-              href={paidOrder.whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md bg-primary px-6 py-3 text-sm font-semibold text-white"
-            >
-              Send order details on WhatsApp
-            </a>
-          ) : (
-            <p role="status" className="max-w-xl text-sm text-muted-foreground">
-              Store WhatsApp contact is not configured. Please save this Order ID screenshot and contact the store directly.
-            </p>
-          )}
-          <Link href="/books" className="text-sm text-primary underline">Continue shopping</Link>
-        </div>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
-      {!isWhatsAppCheckout && <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />}
       <div className="container grid gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -512,17 +367,22 @@ export default function CheckoutPage() {
           </label>
 
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          {!settingsLoading && !siteSettings.whatsappOrdersEnabled && (
+            <p role="alert" className="text-sm text-destructive">
+              WhatsApp ordering is temporarily unavailable. Please contact the store.
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={!items.length || isPaying || isQuoting || !quote || settingsLoading}
+            disabled={!items.length || isPaying || isQuoting || !quote || settingsLoading || !siteSettings.whatsappOrdersEnabled}
             className="rounded-md bg-primary px-6 py-3 font-semibold text-white disabled:opacity-50"
           >
             {settingsLoading
               ? "Loading checkout…"
               : isPaying
-                ? isWhatsAppCheckout ? "Placing order…" : "Waiting for payment…"
-                : isWhatsAppCheckout ? `Place order · ${formatCurrency(displayedTotal)}` : `Pay ${formatCurrency(displayedTotal)}`}
+                ? "Placing order…"
+                : `Place order · ${formatCurrency(displayedTotal)}`}
           </button>
         </form>
 

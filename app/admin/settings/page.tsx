@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
           <div>
             <h2 className="text-base font-semibold">WhatsApp orders &amp; QR payments</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              WhatsApp orders are saved with payment pending. Customers can send their payment confirmation in WhatsApp.
+              Book, pre-booking, and membership payments are saved as pending for WhatsApp confirmation. Customers can pay with your QR code and send the payment screenshot.
             </p>
           </div>
           <label className="flex items-start gap-2 text-sm font-medium">
@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
               onChange={(event) => setSite((current) => ({ ...current, whatsappOrdersEnabled: event.target.checked }))}
               className="mt-0.5 h-4 w-4 accent-primary"
             />
-            Enable book orders through WhatsApp
+            Enable WhatsApp payments for orders and memberships
           </label>
           {site.whatsappOrdersEnabled && (
             <div className="space-y-3 rounded-md border p-4">
@@ -228,7 +228,7 @@ export default function AdminSettingsPage() {
         </section>
 
         <p className="border-l-2 border-primary pl-3 text-sm leading-6 text-muted-foreground">
-          Zoho and other existing payment settings are unchanged. Enter the store WhatsApp contact above in Social media links; never enter payment API secrets here.
+          Book, pre-booking, and membership payments use WhatsApp and your optional UPI QR; Razorpay keys are not needed. Zoho integration can be connected later. Enter the store WhatsApp contact above in Social media links.
         </p>
 
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
