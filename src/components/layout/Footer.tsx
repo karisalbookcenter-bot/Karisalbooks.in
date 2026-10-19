@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight, MapPin } from "lucide-react";
 import { ROUTES } from "@/constants/routes.constants";
 import { SocialLinks } from "./SocialLinks";
 
@@ -20,6 +21,16 @@ export function Footer() {
             <br />
             Tenkasi District - 627719
           </address>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Karisal+Book+Center%2C+1-337+East+Street%2C+Kalingapatti%2C+Tenkasi+District+627719"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-card px-3 text-xs font-semibold text-primary transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            <MapPin size={15} aria-hidden="true" />
+            Get directions
+            <ArrowUpRight size={13} aria-hidden="true" />
+          </a>
         </div>
 
         <nav aria-label="Shop" className="space-y-3">

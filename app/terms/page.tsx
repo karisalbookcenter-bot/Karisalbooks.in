@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 export default function TermsPage() {
   return (
     <MainLayout>
-      <main className="container max-w-3xl py-10 sm:py-14">
+      <section className="container max-w-3xl py-10 sm:py-14">
         <p className="text-xs font-semibold uppercase text-primary">Karisal Books</p>
         <h1 className="mt-2 text-3xl font-semibold">Terms &amp; Conditions</h1>
 
@@ -26,7 +26,7 @@ export default function TermsPage() {
             Membership discounts apply only to eligible books and active memberships. Only one membership number or coupon code may be used per order. Courier discounts apply to the displayed courier amount.
           </p>
         </section>
-      </main>
+      </section>
     </MainLayout>
   );
 }

@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpenCheck, Boxes, Sparkles } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PublicationQuoteForm } from "@/features/publication-services/components/PublicationQuoteForm";
+
+export const metadata: Metadata = {
+  title: "Book Publishing & Printing Services",
+  description:
+    "Get help preparing, designing and printing your book with Karisal Books publishing services.",
+  alternates: { canonical: "/publication-services" },
+};
 
 const services = [
   { icon: BookOpenCheck, title: "Thoughtful preparation", text: "We review your manuscript and production needs before recommending the right next steps." },

@@ -158,7 +158,7 @@ export function BookCard({
 
   if (compact) {
     return (
-      <article className="group flex aspect-[0.9] min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/40">
+      <article className="group flex aspect-[0.9] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
         <Link
           href={`/books/${book.slug}`}
           aria-label={`View details for ${book.title}`}
@@ -226,7 +226,7 @@ export function BookCard({
   }
 
   return (
-    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors duration-200 hover:border-primary/40">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
       {/* Book cover and wishlist */}
       <div className="relative">
         <Link
@@ -265,13 +265,13 @@ export function BookCard({
           aria-pressed={wishlisted}
           title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           onClick={() => toggleWishlist(makeCartItem())}
-          className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full border border-border/80 bg-white/95 shadow-md backdrop-blur transition-all hover:scale-105 hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Heart
             size={21}
             aria-hidden="true"
             fill={wishlisted ? "currentColor" : "none"}
-            className={wishlisted ? "text-primary" : "text-foreground"}
+            className={wishlisted ? "text-rose-600" : "text-slate-600"}
           />
         </button>
 
@@ -375,7 +375,7 @@ export function BookCard({
             type="button"
             disabled={!inStock}
             onClick={handleBuyNow}
-            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-primary bg-background px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-2 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
           >
             <Zap size={18} aria-hidden="true" />
             <span className="truncate">Buy Now</span>

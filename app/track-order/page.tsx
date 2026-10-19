@@ -1,7 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import { ArrowRight, PackageCheck, SearchCheck, Truck } from "lucide-react";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 import {
   getOrderTracking,
@@ -16,26 +18,13 @@ function StatusBadge({
 
   const styles:Record<string,string> = {
 
-    pending:
-      "bg-yellow-100 text-yellow-800",
-
-    confirmed:
-      "bg-blue-100 text-blue-800",
-
-    processing:
-      "bg-blue-100 text-blue-800",
-
-    packed:
-      "bg-orange-100 text-orange-800",
-
-    shipped:
-      "bg-purple-100 text-purple-800",
-
-    delivered:
-      "bg-green-100 text-green-800",
-
-    cancelled:
-      "bg-red-100 text-red-800",
+    pending: "bg-amber-100 text-amber-900",
+    confirmed: "bg-sky-100 text-sky-900",
+    processing: "bg-sky-100 text-sky-900",
+    packed: "bg-orange-100 text-orange-900",
+    shipped: "bg-violet-100 text-violet-900",
+    delivered: "bg-emerald-100 text-emerald-900",
+    cancelled: "bg-rose-100 text-rose-900",
 
   };
 
@@ -90,8 +79,8 @@ useEffect(()=>{
 
 
 
-  async function handleTrack(){
-
+  async function handleTrack(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
     try {
 
@@ -151,60 +140,57 @@ useEffect(()=>{
 
 
   return (
+    <section className="container max-w-xl py-10 sm:py-14">
+      <header className="mb-6">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-sky-100 text-sky-800">
+          <PackageCheck size={24} aria-hidden="true" />
+        </span>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Delivery updates</p>
+        <h1 className="mt-1 text-3xl font-bold">Track your order</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Enter the order ID and the mobile number used at checkout to see the latest status.
+        </p>
+      </header>
 
-    <div className="mx-auto max-w-xl space-y-6 p-6">
+      <form onSubmit={handleTrack} className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <label htmlFor="track-order-id" className="block text-sm font-semibold">
+          Order ID
+          <input
+            id="track-order-id"
+            required
+            autoComplete="off"
+            className="mt-1.5 min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            placeholder="Enter your order ID"
+            value={orderId}
+            onChange={(e) => setOrderId(e.target.value)}
+          />
+        </label>
 
-
-      <h1 className="text-3xl font-bold">
-        Track Your Order
-      </h1>
-
-
-
-      <div className="space-y-3 rounded-lg border p-5">
-
-
-        <input
-          className="w-full rounded border px-3 py-2"
-          placeholder="Order ID"
-          value={orderId}
-          onChange={(e)=>
-            setOrderId(e.target.value)
-          }
-        />
-
-
-        <input
-          className="w-full rounded border px-3 py-2"
-          placeholder="Mobile Number"
-          value={mobile}
-          onChange={(e)=>
-            setMobile(e.target.value)
-          }
-        />
-
-
+        <label htmlFor="track-mobile" className="block text-sm font-semibold">
+          Mobile number
+          <input
+            id="track-mobile"
+            required
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            className="mt-1.5 min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            placeholder="Mobile number used for the order"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+          />
+        </label>
 
         <button
-
-          onClick={handleTrack}
-
-          disabled={loading}
-
-          className="rounded bg-black px-5 py-2 text-white"
-
+          type="submit"
+          disabled={loading || !orderId.trim() || !mobile.trim()}
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
         >
-
-          {
-            loading
-            ? "Checking..."
-            : "Track Order"
-          }
-
+          <SearchCheck size={18} aria-hidden="true" />
+          {loading ? "Checking order…" : "Track my order"}
+          {!loading && <ArrowRight size={16} aria-hidden="true" />}
         </button>
-
-
-      </div>
+      </form>
 
 
 
@@ -212,7 +198,7 @@ useEffect(()=>{
 
       {message && (
 
-        <div className="rounded border p-4 text-center">
+        <div role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900">
 
           {message}
 
@@ -227,7 +213,7 @@ useEffect(()=>{
 
       {order && (
 
-        <div className="space-y-5 rounded-lg border p-5">
+        <div className="mt-5 space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
 
 
           <div className="flex items-center justify-between">
@@ -284,7 +270,7 @@ useEffect(()=>{
 
 
 
-          <div className="rounded border p-4">
+          <div className="rounded-xl border border-border bg-secondary/30 p-4">
 
 
             <h3 className="mb-3 font-semibold">
@@ -373,9 +359,10 @@ useEffect(()=>{
           {
             order.courier_name && (
 
-              <div className="rounded border p-4">
+              <div className="rounded-xl border border-border bg-secondary/30 p-4">
 
-                <h3 className="font-semibold">
+                <h3 className="flex items-center gap-2 font-semibold">
+                  <Truck size={17} className="text-primary" aria-hidden="true" />
                   Shipping Details
                 </h3>
 
@@ -398,25 +385,12 @@ useEffect(()=>{
 order.tracking_number && (
 
 <a
-
-href={`https://www.google.com/search?q=${order.tracking_number}`}
-
-target="_blank"
-
-className="
-mt-2
-inline-block
-rounded
-border
-px-3
-py-1
-text-sm
-"
-
+  href={`https://www.google.com/search?q=${encodeURIComponent(order.tracking_number)}`}
+  target="_blank"
+  rel="noreferrer"
+  className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full border border-primary/25 bg-card px-4 text-sm font-semibold text-primary hover:bg-primary/5"
 >
-
-Track Shipment
-
+  Track shipment <ArrowRight size={15} aria-hidden="true" />
 </a>
 
 )
@@ -471,15 +445,17 @@ Track Shipment
 
 
 
-    </div>
+    </section>
 
   );
 }
 
 export default function TrackOrderPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-center">Loading track order...</div>}>
-      <TrackOrderContent />
-    </Suspense>
+    <MainLayout>
+      <Suspense fallback={<div role="status" className="container py-16 text-center text-sm text-muted-foreground">Loading order tracking…</div>}>
+        <TrackOrderContent />
+      </Suspense>
+    </MainLayout>
   );
 }

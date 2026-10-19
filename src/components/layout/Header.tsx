@@ -3,31 +3,56 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
+  ArrowUpRight,
+  BookOpen,
   BookOpenCheck,
   CalendarClock,
   Crown,
   Heart,
   LogIn,
+  MapPin,
   MoreHorizontal,
+  PackageSearch,
   ShoppingCart,
+  Sparkles,
   Tag,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { StorefrontSearch } from "@/features/storefront/components/StorefrontSearch";
 import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
+
+const exploreLinks = [
+  { href: "/recommendations", label: "Handpicked recommendations", icon: Sparkles },
+  { href: "/competitive-exams", label: "Competitive exam books", icon: BookOpen },
+  { href: "/pre-booking", label: "Pre-booking", icon: CalendarClock },
+  { href: "/pre-booking?mode=bulk", label: "Bulk book orders", icon: PackageSearch },
+  { href: "/publication-services", label: "Publish your book", icon: BookOpenCheck },
+  { href: "/track-order", label: "Track an order", icon: PackageSearch },
+  { href: "/wishlist", label: "My wishlist", icon: Heart },
+  { href: "/login", label: "Sign in / My account", icon: LogIn },
+  { href: "/about", label: "About Karisal Books", icon: MapPin },
+];
+
+function closeExploreMenu(event: MouseEvent<HTMLAnchorElement>) {
+  const menu = event.currentTarget.closest("details");
+  if (menu) menu.open = false;
+}
 
 export function Header() {
   const [logoUrl, setLogoUrl] = useState("");
 
   useEffect(() => {
     let active = true;
-    const loadLogo = () => fetch("/api/site-settings", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const result = await response.json() as { site?: { logoUrl?: string } };
-        if (active) setLogoUrl(result.site?.logoUrl ?? "");
-      })
-      .catch(() => undefined);
+    const loadLogo = () =>
+      fetch("/api/site-settings", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) return;
+          const result = (await response.json()) as {
+            site?: { logoUrl?: string };
+          };
+          if (active) setLogoUrl(result.site?.logoUrl ?? "");
+        })
+        .catch(() => undefined);
 
     void loadLogo();
     const unsubscribe = subscribeToSiteSettingsUpdates(({ site }) => {
@@ -41,8 +66,8 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between gap-1">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/90">
+      <div className="container flex h-16 items-center justify-between gap-2">
         <Link
           href="/"
           aria-label="Karisal Books home"
@@ -50,58 +75,121 @@ export function Header() {
         >
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="Karisal Books" width={120} height={40} className="h-10 w-[120px] shrink-0 object-contain" />
+            <img
+              src={logoUrl}
+              alt="Karisal Books"
+              width={120}
+              height={40}
+              className="h-10 w-[120px] shrink-0 object-contain"
+            />
           ) : (
             <>
-              <Image src="/karisalbooks-mark.svg" alt="" width={32} height={32} priority className="h-8 w-8 shrink-0" />
+              <Image
+                src="/karisalbooks-mark.svg"
+                alt=""
+                width={36}
+                height={36}
+                priority
+                className="h-9 w-9 shrink-0"
+              />
               <span className="hidden text-sm min-[360px]:inline sm:hidden">Karisal</span>
               <span className="hidden text-lg sm:inline">Karisal Books</span>
             </>
           )}
         </Link>
 
-        <nav aria-label="Main navigation" className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm lg:gap-3">
+        <nav
+          aria-label="Quick actions"
+          className="flex shrink-0 items-center gap-1 text-sm"
+        >
           <StorefrontSearch />
-          <Link href="/books" className="inline-flex min-h-10 items-center px-1 transition-colors hover:text-foreground">Books</Link>
-          <Link href="/offer-zone" className="hidden min-h-10 items-center gap-1 px-1 transition-colors hover:text-foreground sm:inline-flex">
-            <Tag size={15} aria-hidden="true" /><span>Offers</span>
+          <Link
+            href="/membership/apply"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-400/70 bg-gradient-to-r from-amber-50 to-yellow-100 px-3 font-semibold text-amber-950 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:from-amber-950 dark:to-yellow-950 dark:text-amber-100 sm:px-4"
+          >
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-400 text-amber-950 shadow-sm">
+              <Crown size={15} aria-hidden="true" />
+            </span>
+            <span className="hidden sm:inline">Membership</span>
+            <ArrowUpRight
+              size={14}
+              className="hidden transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:block"
+              aria-hidden="true"
+            />
           </Link>
-          <Link href="/membership/apply" className="hidden min-h-10 items-center gap-1 px-1 transition-colors hover:text-foreground md:inline-flex">
-            <Crown size={15} aria-hidden="true" /><span>Membership</span>
+          <Link
+            href="/cart"
+            aria-label="Shopping cart"
+            title="Shopping cart"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full border border-border bg-card px-2 text-foreground transition-colors hover:border-primary/40 hover:bg-secondary sm:px-3"
+          >
+            <ShoppingCart size={18} aria-hidden="true" />
+            <span className="hidden lg:inline">Cart</span>
           </Link>
-          <Link href="/cart" aria-label="Cart" title="Cart" className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-md px-1 transition-colors hover:bg-secondary hover:text-foreground">
-            <ShoppingCart size={17} aria-hidden="true" /><span className="hidden sm:inline">Cart</span>
-          </Link>
-          <details className="relative">
+          <details className="group relative">
             <summary
-              aria-label="More navigation links"
-              className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-md hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden"
+              aria-label="Explore more links"
+              className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-full border border-border bg-card transition-colors hover:border-primary/40 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden"
             >
               <MoreHorizontal size={20} aria-hidden="true" />
             </summary>
-            <div className="absolute right-0 top-full z-[60] mt-2 w-60 rounded-xl border border-border bg-background p-2 text-sm shadow-xl">
-              <Link href="/recommendations" className="block rounded-lg px-3 py-3 hover:bg-secondary">Book recommendations</Link>
-              <Link href="/competitive-exams" className="block rounded-lg px-3 py-3 hover:bg-secondary">Competitive exam books</Link>
-              <Link href="/pre-booking" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
-                <CalendarClock size={16} aria-hidden="true" /> Pre-booking
+            <div className="absolute right-0 top-full z-[60] mt-2 w-[min(88vw,20rem)] rounded-2xl border border-border bg-background p-2 text-sm shadow-xl">
+              <p className="px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Explore Karisal Books
+              </p>
+              {exploreLinks.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={closeExploreMenu}
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 font-medium text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                >
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Icon size={16} aria-hidden="true" />
+                  </span>
+                  {label}
+                </Link>
+              ))}
+              <Link
+                href="/contact"
+                onClick={closeExploreMenu}
+                className="mt-1 flex min-h-11 items-center gap-3 rounded-xl border-t border-border px-3 pt-2 font-medium text-primary"
+              >
+                <MapPin size={16} aria-hidden="true" />
+                Contact &amp; store location
               </Link>
-              <Link href="/pre-booking?mode=bulk" className="block rounded-lg px-3 py-3 hover:bg-secondary">Bulk book orders</Link>
-              <Link href="/publication-services" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
-                <BookOpenCheck size={16} aria-hidden="true" /> Publish your book
-              </Link>
-              <Link href="/track-order" className="block rounded-lg px-3 py-3 hover:bg-secondary">Track an order</Link>
-              <Link href="/wishlist" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
-                <Heart size={16} aria-hidden="true" /> Wishlist
-              </Link>
-              <Link href="/login" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
-                <LogIn size={16} aria-hidden="true" /> Sign in / My account
-              </Link>
-              <Link href="/about" className="block rounded-lg px-3 py-3 hover:bg-secondary">About Karisal Books</Link>
-              <Link href="/contact" className="block rounded-lg px-3 py-3 hover:bg-secondary">Contact &amp; location</Link>
             </div>
           </details>
         </nav>
       </div>
+
+      <nav
+        aria-label="Shop and services"
+        className="hidden border-t border-border/80 bg-background/90 lg:block"
+      >
+        <div className="container flex h-11 items-center justify-center gap-1 text-sm font-medium">
+          <Link href="/books" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            Browse books
+          </Link>
+          <Link href="/competitive-exams" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            Exam books
+          </Link>
+          <Link href="/recommendations" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            Recommendations
+          </Link>
+          <Link href="/offer-zone" className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            <Tag size={14} aria-hidden="true" />
+            Offers
+          </Link>
+          <Link href="/pre-booking" className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            <CalendarClock size={14} aria-hidden="true" />
+            Pre-book
+          </Link>
+          <Link href="/publication-services" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            Publish a book
+          </Link>
+        </div>
+      </nav>
     </header>
   );
 }

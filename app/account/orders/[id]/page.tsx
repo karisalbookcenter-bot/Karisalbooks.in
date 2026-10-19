@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { Check } from "lucide-react";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,8 +29,8 @@ function StatusStep({
 
     <div className="flex gap-2 items-center">
 
-      <span>
-        {done ? "✅" : "○"}
+      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${done ? "bg-emerald-100 text-emerald-800" : "bg-muted text-muted-foreground"}`}>
+        {done ? <Check size={14} aria-hidden="true" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
       </span>
 
       <span>
@@ -127,7 +129,8 @@ export default async function CustomerOrderDetailPage({
 
   return (
 
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
+    <MainLayout>
+    <section className="container mx-auto max-w-3xl space-y-6 py-10 sm:py-14">
 
 
       <h1 className="text-3xl font-bold">
@@ -349,12 +352,8 @@ export default async function CustomerOrderDetailPage({
 
 
       </div>
-
-
-
-
-    </div>
-
+    </section>
+    </MainLayout>
   );
 
 

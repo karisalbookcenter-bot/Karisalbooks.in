@@ -90,7 +90,7 @@ export default function CartPage() {
 
   return (
     <MainLayout>
-      <main className="container mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <section className="container mx-auto max-w-6xl px-4 py-6 sm:py-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
@@ -398,7 +398,7 @@ export default function CartPage() {
             </aside>
           </div>
         )}
-      </main>
+      </section>
     </MainLayout>
   );
 }

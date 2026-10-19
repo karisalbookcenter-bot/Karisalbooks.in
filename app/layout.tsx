@@ -58,6 +58,39 @@ export const metadata: Metadata = {
   },
 };
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BookStore",
+      "@id": `${appConfig.url}/#bookstore`,
+      name: "Karisal Book Center",
+      url: appConfig.url,
+      logo: `${appConfig.url}/karisalbooks-mark.svg`,
+      image: `${appConfig.url}/karisalbooks-mark.svg`,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "1-337, East Street",
+        addressLocality: "Kalingapatti",
+        addressRegion: "Tamil Nadu",
+        postalCode: "627719",
+        addressCountry: "IN",
+      },
+      areaServed: {
+        "@type": "Country",
+        name: "India",
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${appConfig.url}/#website`,
+      name: appConfig.name,
+      url: appConfig.url,
+      publisher: { "@id": `${appConfig.url}/#bookstore` },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -66,10 +99,14 @@ export default function RootLayout({
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <body className={notoSansTamil.variable}>
-  <CartProvider>
-    {children}
-  </CartProvider>
-</body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          }}
+        />
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   );
 }

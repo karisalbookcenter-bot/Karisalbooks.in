@@ -2,6 +2,7 @@
 
 import Script from "next/script";
 import { useEffect, useState } from "react";
+import { ArrowRight, Check, Crown, ShieldCheck } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import type { MembershipPlan } from "@/types/membership.types";
@@ -161,15 +162,40 @@ export default function MembershipApplyPage() {
           </div>
         ) : (
           <div className="mx-auto max-w-xl">
-            <h1 className="text-3xl font-bold">Join Karisal Books Membership</h1>
-            <p className="mt-2 text-muted-foreground">உங்கள் உறுப்பினர் எண்ணைப் பெற, ஒரு திட்டத்தைத் தேர்ந்தெடுத்து பாதுகாப்பாகப் பணம் செலுத்துங்கள்.</p>
+            <div className="mb-7 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 shadow-sm sm:p-7">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-300 text-amber-950 shadow-sm">
+                <Crown size={25} aria-hidden="true" />
+              </span>
+              <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-amber-800">
+                A little extra for book lovers
+              </p>
+              <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Join Karisal Books Membership</h1>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                உங்கள் வாசிப்புப் பயணத்திற்கு ஏற்ற திட்டத்தைத் தேர்ந்தெடுத்து, உறுப்பினர் சலுகைகளைப் பெறுங்கள்.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-amber-900">
+                  <Check size={14} aria-hidden="true" /> Eligible book discounts
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-amber-900">
+                  <Check size={14} aria-hidden="true" /> Plan details upfront
+                </span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <fieldset disabled={loadingPlans || isPaying || plans.length === 0}>
                 <legend className="mb-3 text-sm font-semibold">Choose a plan</legend>
-                <div className="divide-y border-y">
+                <div className="space-y-2">
                   {plans.map((plan) => (
-                    <label key={plan.id} className="flex cursor-pointer items-start gap-3 py-4">
+                    <label
+                      key={plan.id}
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                        planId === plan.id
+                          ? "border-amber-400 bg-amber-50 shadow-sm"
+                          : "border-border bg-card hover:border-amber-300 hover:bg-amber-50/50"
+                      }`}
+                    >
                       <input
                         type="radio"
                         name="membership-plan"
@@ -210,27 +236,27 @@ export default function MembershipApplyPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1 text-sm font-medium">
                   Full name
-                  <input required autoComplete="name" value={applicant.name} onChange={(event) => updateApplicant("name", event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+                  <input required autoComplete="name" value={applicant.name} onChange={(event) => updateApplicant("name", event.target.value)} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500" />
                 </label>
                 <label className="space-y-1 text-sm font-medium">
                   Email
-                  <input required type="email" autoComplete="email" value={applicant.email} onChange={(event) => updateApplicant("email", event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+                  <input required type="email" autoComplete="email" value={applicant.email} onChange={(event) => updateApplicant("email", event.target.value)} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500" />
                 </label>
                 <label className="space-y-1 text-sm font-medium">
                   Mobile
-                  <input required type="tel" autoComplete="tel" value={applicant.mobile} onChange={(event) => updateApplicant("mobile", event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+                  <input required type="tel" autoComplete="tel" value={applicant.mobile} onChange={(event) => updateApplicant("mobile", event.target.value)} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500" />
                 </label>
                 <label className="space-y-1 text-sm font-medium">
                   District
-                  <input required value={applicant.district} onChange={(event) => updateApplicant("district", event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+                  <input required value={applicant.district} onChange={(event) => updateApplicant("district", event.target.value)} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500" />
                 </label>
                 <label className="space-y-1 text-sm font-medium sm:col-span-2">
                   Address
-                  <input required autoComplete="street-address" value={applicant.address} onChange={(event) => updateApplicant("address", event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+                  <input required autoComplete="street-address" value={applicant.address} onChange={(event) => updateApplicant("address", event.target.value)} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500" />
                 </label>
                 <label className="space-y-1 text-sm font-medium">
                   Pincode
-                  <input required inputMode="numeric" autoComplete="postal-code" value={applicant.pincode} onChange={(event) => updateApplicant("pincode", event.target.value)} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
+                  <input required inputMode="numeric" autoComplete="postal-code" value={applicant.pincode} onChange={(event) => updateApplicant("pincode", event.target.value)} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500" />
                 </label>
               </div>
 
@@ -243,9 +269,10 @@ export default function MembershipApplyPage() {
                 <button
                   type="submit"
                   disabled={loadingPlans || isPaying || !selectedPlan}
-                  className="rounded-md bg-primary px-5 py-3 font-semibold text-white disabled:opacity-50"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-6 py-3 font-bold text-amber-950 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isPaying ? "Opening payment…" : "Pay and activate membership"}
+                  {isPaying ? "Opening payment…" : "Join & activate membership"}
+                  {isPaying ? <ShieldCheck size={17} aria-hidden="true" /> : <ArrowRight size={17} aria-hidden="true" />}
                 </button>
               </div>
             </form>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowUpRight, MapPin } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 export const metadata: Metadata = {
@@ -28,6 +29,16 @@ export default function ContactPage() {
             <br />
             Tenkasi District - 627719
           </address>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Karisal+Book+Center%2C+1-337+East+Street%2C+Kalingapatti%2C+Tenkasi+District+627719"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <MapPin size={16} aria-hidden="true" />
+            Get directions
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
         </section>
 
         <div className="mt-6 flex flex-wrap gap-3">
