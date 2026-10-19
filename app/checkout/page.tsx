@@ -86,7 +86,11 @@ export default function CheckoutPage() {
   const hasRegularItems = items.some((item) => item.purchaseType !== "prebooking");
   const hasMixedPurchaseTypes = hasPrebookingItems && hasRegularItems;
   const isPrebooking = hasPrebookingItems && !hasRegularItems;
-  const purchaseFlow = isPrebooking ? "prebooking" : "books";
+  const purchaseFlow = hasMixedPurchaseTypes
+    ? "mixed"
+    : isPrebooking
+      ? "prebooking"
+      : "books";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -154,7 +158,13 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           flow: purchaseFlow,
           code: discountCode?.trim() || undefined,
-          items: items.map((item) => ({ book_id: item.id, quantity: item.quantity })),
+          items: items.map((item) => ({
+            book_id: item.id,
+            quantity: item.quantity,
+            ...(purchaseFlow === "mixed"
+              ? { is_prebooking: item.purchaseType === "prebooking" }
+              : {}),
+          })),
           shippingMethod,
           state,
         }),
@@ -172,10 +182,7 @@ export default function CheckoutPage() {
   }, [items, shippingMethod, state, purchaseFlow]);
 
   useEffect(() => {
-    if (hasMixedPurchaseTypes) {
-      setQuote(null);
-      setError("Pre-booking items must be purchased separately from regular books. Remove one type from your cart to continue.");
-    } else if (items.length && state) void loadQuote();
+    if (items.length && state) void loadQuote();
     else {
       setQuote(null);
       setError("");
@@ -190,7 +197,6 @@ export default function CheckoutPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (hasMixedPurchaseTypes) return;
     const formData = new FormData(event.currentTarget);
     const formValue = (field: string, fallback = "") => String(formData.get(field) ?? fallback).trim();
     const customer = {
@@ -209,10 +215,16 @@ export default function CheckoutPage() {
 
     const purchase = {
       flow: purchaseFlow,
-      items: items.map((item) => ({ book_id: item.id, quantity: item.quantity })),
+      items: items.map((item) => ({
+        book_id: item.id,
+        quantity: item.quantity,
+        ...(purchaseFlow === "mixed"
+          ? { is_prebooking: item.purchaseType === "prebooking" }
+          : {}),
+      })),
       shippingMethod: selectedShipping,
       state: customer.state,
-      ...(purchaseFlow === "books" ? { discountCode: quote?.code } : {}),
+      ...(purchaseFlow !== "prebooking" ? { discountCode: quote?.code } : {}),
     };
 
     try {
@@ -283,8 +295,12 @@ export default function CheckoutPage() {
             clearCart();
             const params = new URLSearchParams({ orderId: result.orderId ?? "" });
             if (result.prebookingId) {
-              params.set("prebookingId", result.prebookingId);
-              params.set("emailSent", String(result.emailSent === true));
+              if (purchaseFlow === "mixed") {
+                params.set("mixedOrderId", result.prebookingId);
+              } else {
+                params.set("prebookingId", result.prebookingId);
+                params.set("emailSent", String(result.emailSent === true));
+              }
             }
             router.push(`/order-success?${params.toString()}`);
           } catch (verificationError) {
@@ -431,7 +447,7 @@ export default function CheckoutPage() {
 
           <button
             type="submit"
-            disabled={!items.length || isPaying || isQuoting || !quote || hasMixedPurchaseTypes || settingsLoading}
+            disabled={!items.length || isPaying || isQuoting || !quote || settingsLoading}
             className="rounded-md bg-primary px-6 py-3 font-semibold text-white disabled:opacity-50"
           >
             {settingsLoading
@@ -488,7 +504,11 @@ export default function CheckoutPage() {
             {!!quote?.courierDiscount && <div className="flex justify-between text-primary"><dt>Member courier offer</dt><dd>-{formatCurrency(quote.courierDiscount)}</dd></div>}
             <div className="flex justify-between border-t pt-3 text-base font-bold"><dt>Total</dt><dd>{formatCurrency(displayedTotal)}</dd></div>
           </dl>
-          {isPrebooking ? (
+          {hasMixedPurchaseTypes ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Pre-booking and regular books are priced together; each item keeps its own price and delivery rules.
+            </p>
+          ) : isPrebooking ? (
             <p className="mt-3 text-xs text-muted-foreground">Pre-booking prices are special prices and cannot be combined with membership or coupon discounts.</p>
           ) : (
             <p className="mt-3 text-xs text-muted-foreground">Only one membership or coupon discount can be used per order.</p>

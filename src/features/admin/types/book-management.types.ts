@@ -46,7 +46,7 @@ export interface BookFormLayoutProps {
   subcategories: Subcategory[];
   authors: Author[];
   publishers: Publisher[];
-  onSuccess?: (book: Book) => void;
+  onSuccess?: (book: Book, statusMessage?: string) => void;
   onCancel?: () => void;
 }
 

@@ -62,7 +62,11 @@ export default async function AccountOrdersPage() {
 
                 <div>
                   <p className="font-semibold">
-                    {order.purchase_type === "prebooking" ? `Pre-booking ${order.prebooking_id ?? ""}` : `Order #${order.id.slice(0, 8)}`}
+                    {order.purchase_type === "prebooking"
+                      ? `Pre-booking ${order.prebooking_id ?? ""}`
+                      : order.purchase_type === "mixed"
+                        ? `Mixed order ${order.prebooking_id ?? `#${order.id.slice(0, 8)}`}`
+                        : `Order #${order.id.slice(0, 8)}`}
                   </p>
 
                   <p className="text-sm text-gray-500">

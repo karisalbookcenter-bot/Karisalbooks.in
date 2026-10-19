@@ -85,12 +85,10 @@ export default async function CustomerOrderDetailPage({
       order_items(
 
         id,
-
         title,
-
         quantity,
-
-        price
+        price,
+        is_prebooking
 
       )
 
@@ -103,7 +101,7 @@ export default async function CustomerOrderDetailPage({
 
     .single();
 
-  if (error?.code === "42703" && /purchase_type|prebooking_id/.test(error.message)) {
+  if (error?.code === "42703" && /purchase_type|prebooking_id|is_prebooking/.test(error.message)) {
     const fallback = await supabase
       .from("orders")
       .select(`id, customer_name, total_amount, status, created_at, courier_name, tracking_number, shipped_at, order_items(id, title, quantity, price)`)
@@ -155,8 +153,11 @@ export default async function CustomerOrderDetailPage({
 
         </p>
 
-        {order.purchase_type === "prebooking" && order.prebooking_id && (
-          <p>Pre-booking ID: <span className="font-mono font-semibold">{order.prebooking_id}</span></p>
+        {(order.purchase_type === "prebooking" || order.purchase_type === "mixed") && order.prebooking_id && (
+          <p>
+            {order.purchase_type === "mixed" ? "Pre-booking reference" : "Pre-booking ID"}:{" "}
+            <span className="font-mono font-semibold">{order.prebooking_id}</span>
+          </p>
         )}
 
 
@@ -330,6 +331,11 @@ export default async function CustomerOrderDetailPage({
               >
 
                 {item.title}
+                {item.is_prebooking && (
+                  <span className="ml-2 text-xs font-medium text-amber-700">
+                    Pre-booking
+                  </span>
+                )}
 
                 {" × "}
 

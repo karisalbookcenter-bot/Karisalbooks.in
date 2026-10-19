@@ -80,7 +80,6 @@ export function PreBookingCatalog() {
 
   const [customizeQuantities, setCustomizeQuantities] =
     useState<Record<string, number>>({});
-
   const hasRegularItems = items.some(
     (item) => item.purchaseType !== "prebooking",
   );
@@ -162,23 +161,7 @@ export function PreBookingCatalog() {
     [customizeQuantities],
   );
 
-  function ensurePrebookingCart() {
-    if (hasRegularItems) {
-      setError(
-        "Your cart contains regular books. Complete that order or remove those books before starting a pre-booking order.",
-      );
-
-      return false;
-    }
-
-    return true;
-  }
-
   function addPrebooking(book: Book, quantity = 1) {
-    if (!ensurePrebookingCart()) {
-      return;
-    }
-
     if (!Number.isInteger(quantity) || quantity < 1) {
       setError("Enter a valid quantity.");
       return;
@@ -262,7 +245,10 @@ export function PreBookingCatalog() {
   }
 
   function addCustomizeBooks() {
-    if (!ensurePrebookingCart()) {
+    if (hasRegularItems) {
+      setError(
+        "Customize orders must be purchased separately from regular books.",
+      );
       return;
     }
 

@@ -20,6 +20,18 @@ export interface PrebookingPurchaseInput {
   state?: string;
 }
 
+export interface MixedPurchaseInput {
+  flow: "mixed";
+  items: {
+    book_id: string;
+    quantity: number;
+    is_prebooking: boolean;
+  }[];
+  shippingMethod?: ShippingMethod;
+  state?: string;
+  discountCode?: string;
+}
+
 export interface CustomizePurchaseInput {
   flow: "customize";
   items: {
@@ -43,6 +55,7 @@ export interface MembershipPurchaseInput {
 export type PurchaseInput =
   | BookPurchaseInput
   | PrebookingPurchaseInput
+  | MixedPurchaseInput
   | CustomizePurchaseInput
   | MembershipPurchaseInput;
 
@@ -333,10 +346,18 @@ export async function pricePurchase(input: PurchaseInput) {
     );
   }
 
-  const requested = new Map<string, number>();
+  const requested = new Map<
+    string,
+    { quantity: number; isPrebooking: boolean }
+  >();
 
   for (const item of input.items) {
     const isCustomize = input.flow === "customize";
+    const isPrebooking =
+      input.flow === "prebooking" ||
+      (input.flow === "mixed" &&
+        "is_prebooking" in item &&
+        item.is_prebooking === true);
 
     const validQuantity =
       typeof item.quantity === "number" &&
@@ -346,6 +367,9 @@ export async function pricePurchase(input: PurchaseInput) {
 
     if (
       typeof item.book_id !== "string" ||
+      (input.flow === "mixed" &&
+        (!("is_prebooking" in item) ||
+          typeof item.is_prebooking !== "boolean")) ||
       !validQuantity
     ) {
       throw new Error(
@@ -355,11 +379,16 @@ export async function pricePurchase(input: PurchaseInput) {
       );
     }
 
-    requested.set(
-      item.book_id,
-      (requested.get(item.book_id) ?? 0) +
-        item.quantity,
-    );
+    const existing = requested.get(item.book_id);
+    if (existing && existing.isPrebooking !== isPrebooking) {
+      throw new Error(
+        "A book cannot be added as both a regular and pre-booking item.",
+      );
+    }
+    requested.set(item.book_id, {
+      quantity: (existing?.quantity ?? 0) + item.quantity,
+      isPrebooking,
+    });
   }
 
   /*
@@ -531,8 +560,12 @@ export async function pricePurchase(input: PurchaseInput) {
    * Resolve each cart item from the database.
    */
   const items = books.map((book) => {
-    const quantity =
-      requested.get(book.id) ?? 0;
+    const requestedItem = requested.get(book.id);
+    const quantity = requestedItem?.quantity ?? 0;
+    const isPrebookingItem =
+      input.flow === "prebooking" ||
+      (input.flow === "mixed" &&
+        requestedItem?.isPrebooking === true);
 
     /*
      * CUSTOMIZE
@@ -653,7 +686,7 @@ export async function pricePurchase(input: PurchaseInput) {
       offerEnd >= now;
 
     if (
-      input.flow === "prebooking" &&
+      isPrebookingItem &&
       !bookingOpen
     ) {
       throw new Error(
@@ -662,7 +695,7 @@ export async function pricePurchase(input: PurchaseInput) {
     }
 
     if (
-      input.flow === "books" &&
+      !isPrebookingItem &&
       Boolean(book.prebooking_enabled) &&
       bookingEnd > now
     ) {
@@ -672,7 +705,7 @@ export async function pricePurchase(input: PurchaseInput) {
     }
 
     const price =
-      input.flow === "prebooking"
+      isPrebookingItem
         ? Number(
             offerOpen
               ? book.prebooking_offer_price
@@ -682,7 +715,7 @@ export async function pricePurchase(input: PurchaseInput) {
 
     if (
       book.status !== "active" ||
-      (input.flow === "books" &&
+      (!isPrebookingItem &&
         book.stock_quantity <
           quantityForBook) ||
       !Number.isFinite(price) ||
@@ -704,7 +737,7 @@ export async function pricePurchase(input: PurchaseInput) {
     );
 
     if (
-      input.flow === "prebooking" &&
+      isPrebookingItem &&
       (
         !Number.isFinite(
           professionalCourierCharge,
@@ -735,6 +768,7 @@ export async function pricePurchase(input: PurchaseInput) {
         discountEligibleCategoryIds.has(
           book.category_id,
         ),
+      isPrebooking: isPrebookingItem,
     };
   });
 
@@ -834,10 +868,14 @@ export async function pricePurchase(input: PurchaseInput) {
 
   const discountEligibleItems =
     input.flow === "books"
-      ? items.filter(
-          (item) => item.discountEligible,
-        )
-      : [];
+      ? items.filter((item) => item.discountEligible)
+      : input.flow === "mixed"
+        ? items.filter(
+            (item) =>
+              item.discountEligible &&
+              !item.isPrebooking,
+          )
+        : [];
 
   const discountEligibleSubtotalPaise =
     discountEligibleItems.reduce(
@@ -849,7 +887,7 @@ export async function pricePurchase(input: PurchaseInput) {
     );
 
   const discount =
-    input.flow === "books" &&
+    (input.flow === "books" || input.flow === "mixed") &&
     input.discountCode &&
     discountEligibleItems.length > 0
       ? await resolveDiscountCode(
@@ -868,7 +906,19 @@ export async function pricePurchase(input: PurchaseInput) {
               item.quantity,
           0,
         )
-      : getCourierChargePaise(
+      : input.flow === "mixed"
+        ? items.reduce(
+            (sum, item) =>
+              sum +
+              (item.isPrebooking
+                ? Math.round(item.postalCharge * 100) *
+                  item.quantity
+                : 0),
+            items.some((item) => !item.isPrebooking)
+              ? getCourierChargePaise(deliveryState)
+              : 0,
+          )
+        : getCourierChargePaise(
           deliveryState,
         );
 
@@ -884,7 +934,19 @@ export async function pricePurchase(input: PurchaseInput) {
               item.quantity,
           0,
         )
-      : getCourierChargePaise(
+      : input.flow === "mixed"
+        ? items.reduce(
+            (sum, item) =>
+              sum +
+              (item.isPrebooking
+                ? Math.round(item.professionalCourierCharge * 100) *
+                  item.quantity
+                : 0),
+            items.some((item) => !item.isPrebooking)
+              ? getCourierChargePaise(deliveryState)
+              : 0,
+          )
+        : getCourierChargePaise(
           deliveryState,
         );
 
@@ -936,7 +998,7 @@ export async function pricePurchase(input: PurchaseInput) {
   let courierDiscountPaise = 0;
 
   if (
-    input.flow === "books" &&
+    (input.flow === "books" || input.flow === "mixed") &&
     discount?.kind === "coupon"
   ) {
     bookDiscountPaise +=
@@ -945,7 +1007,7 @@ export async function pricePurchase(input: PurchaseInput) {
         discount.percentage,
       );
   } else if (
-    input.flow === "books" &&
+    (input.flow === "books" || input.flow === "mixed") &&
     discount?.tier === "premium"
   ) {
     bookDiscountPaise +=
@@ -960,7 +1022,7 @@ export async function pricePurchase(input: PurchaseInput) {
         100,
     );
   } else if (
-    input.flow === "books" &&
+    (input.flow === "books" || input.flow === "mixed") &&
     discount?.tier === "standard"
   ) {
     if (

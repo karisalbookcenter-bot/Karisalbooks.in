@@ -84,7 +84,9 @@ export async function listPublicBooks(
       .from("books")
       .select("*", { count: "exact" })
       .eq("status", PUBLIC_VISIBLE_STATUS);
-    if (filterPrebookings) query = query.or(`prebooking_enabled.eq.false,prebooking_end_at.lte.${new Date().toISOString()}`);
+    if (filterPrebookings && !search?.trim()) {
+      query = query.or(`prebooking_enabled.eq.false,prebooking_end_at.lte.${new Date().toISOString()}`);
+    }
     if (search?.trim()) query = query.ilike("title", `%${search.trim()}%`);
     if (categoryId) query = query.eq("category_id", categoryId);
     if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
@@ -121,13 +123,12 @@ export async function listPublicBooks(
 
 export async function getPublicBookBySlug(slug: string): Promise<Book | null> {
   const supabase = createClient();
-  const findBook = (filterPrebookings: boolean) => {
-    let query = supabase.from("books").select("*").eq("slug", slug).eq("status", PUBLIC_VISIBLE_STATUS);
-    if (filterPrebookings) query = query.or(`prebooking_enabled.eq.false,prebooking_end_at.lte.${new Date().toISOString()}`);
-    return query.maybeSingle();
-  };
-  let result = await findBook(true);
-  if (result.error && isMissingPrebookingSchema(result.error)) result = await findBook(false);
+  const result = await supabase
+    .from("books")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", PUBLIC_VISIBLE_STATUS)
+    .maybeSingle();
   if (result.error) throw result.error;
   if (!result.data) return null;
   return (await addCategoryNames([result.data as Book]))[0];

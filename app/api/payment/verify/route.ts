@@ -339,6 +339,9 @@ export async function POST(request: Request) {
         ...(purchase.flow === "prebooking"
           ? { purchase_type: "prebooking" }
           : {}),
+        ...(purchase.flow === "mixed"
+          ? { purchase_type: "mixed" }
+          : {}),
         ...(purchase.flow === "customize"
           ? { purchase_type: "customize" }
           : {}),
@@ -367,8 +370,9 @@ export async function POST(request: Request) {
           price: item.price,
           quantity: item.quantity,
 
-          ...(purchase.flow === "prebooking"
-            ? { is_prebooking: true }
+          ...(purchase.flow === "prebooking" ||
+          purchase.flow === "mixed"
+            ? { is_prebooking: item.isPrebooking === true }
             : {}),
 
           ...(purchase.flow === "customize"

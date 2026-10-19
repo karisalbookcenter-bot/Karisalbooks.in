@@ -89,6 +89,13 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 ```
 
+To automatically publish newly added active books with a cover image to
+Facebook and Instagram, configure `META_ACCESS_TOKEN`, `META_PAGE_ID`, and
+`META_INSTAGRAM_ACCOUNT_ID` as server-only environment variables. The connected
+Instagram professional account must be linked to that Facebook Page, and the
+Meta token must have permission to publish Page photos and Instagram content.
+Set `NEXT_PUBLIC_SITE_URL` to the public storefront URL for the book links.
+
 3. **Run the dev server**
 
 ```
@@ -108,6 +115,8 @@ npm run dev
    `0015_category_management_rls.sql` enables public active-row reads and
    admin-only catalog management. Apply `0016_whatsapp_qr_checkout.sql` to
    enable the WhatsApp/QR checkout settings.
+   Apply `0017_mixed_prebooking_orders.sql` to allow a regular book and
+   pre-booking titles in the same order.
    Apply each migration only once; do not rerun already-applied migrations.
 
 ## shadcn/ui

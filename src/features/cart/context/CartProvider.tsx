@@ -63,21 +63,14 @@ export function CartProvider({
 
     setItems((current) => {
 
-      const existing =
-        current.find(
-          (x) => x.id === item.id
-        );
+      const existing = current.find((x) => x.id === item.id);
 
 
       if (existing) {
 
         return current.map((x) =>
           x.id === item.id
-            ? {
-                ...x,
-                quantity:
-                  x.quantity + item.quantity,
-              }
+            ? { ...item, quantity: x.quantity + item.quantity }
             : x
         );
 

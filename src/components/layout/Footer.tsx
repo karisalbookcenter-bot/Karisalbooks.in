@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes.constants";
 import { SocialLinks } from "./SocialLinks";
 
 export function Footer() {
@@ -10,6 +11,8 @@ export function Footer() {
           <SocialLinks />
           <div className="flex items-center gap-4">
             <Link href="/terms" className="hover:text-foreground">Terms &amp; Conditions</Link>
+            <Link href={ROUTES.REFUND_POLICY} className="hover:text-foreground">Refund Policy</Link>
+            <Link href={ROUTES.PRIVACY_POLICY} className="hover:text-foreground">Privacy Policy</Link>
             <p>தமிழ் நூல்கள் · இந்தியா முழுவதும்</p>
           </div>
         </div>

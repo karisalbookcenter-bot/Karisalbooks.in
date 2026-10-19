@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       (
         purchase.flow !== "books" &&
         purchase.flow !== "prebooking" &&
+        purchase.flow !== "mixed" &&
         purchase.flow !== "customize" &&
         purchase.flow !== "membership"
       )

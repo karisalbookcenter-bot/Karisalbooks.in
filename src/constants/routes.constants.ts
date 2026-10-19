@@ -19,6 +19,8 @@ export const ROUTES = {
   PRE_BOOKING: "/pre-booking",
   CONTACT: "/contact",
   ABOUT: "/about",
+  REFUND_POLICY: "/refund-policy",
+  PRIVACY_POLICY: "/privacy-policy",
 
   // Auth-related redirect targets (Sprint 05). These are path constants
   // only — the login page, unauthorized page, etc. are NOT created in

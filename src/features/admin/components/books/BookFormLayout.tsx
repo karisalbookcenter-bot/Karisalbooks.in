@@ -91,6 +91,7 @@ export function BookFormLayout({
 
   const [manualEntryError, setManualEntryError] =
     useState<string | null>(null);
+  const [isPublishingSocial, setIsPublishingSocial] = useState(false);
 
   const {
     values,
@@ -132,6 +133,7 @@ export function BookFormLayout({
 
   const handleSave = async () => {
     setManualEntryError(null);
+    setIsPublishingSocial(false);
 
     try {
       let authorId = values.authorId;
@@ -168,7 +170,52 @@ export function BookFormLayout({
       });
 
       if (result?.data) {
-        onSuccess?.(result.data);
+        let statusMessage = "Book saved.";
+        if (mode === "create") {
+          if (result.data.status !== "active" || !result.data.cover_image_url) {
+            statusMessage =
+              "Book saved. Automatic social posting requires an active book with a cover image.";
+          } else {
+            setIsPublishingSocial(true);
+            try {
+              const response = await fetch("/api/admin/social-publish", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bookId: result.data.id }),
+              });
+              const publication = (await response.json()) as {
+                error?: string;
+                facebook?: { published: boolean; error?: string };
+                instagram?: { published: boolean; error?: string };
+              };
+              if (!response.ok) {
+                throw new Error(
+                  publication.error ?? "Automatic social posting failed.",
+                );
+              }
+
+              const platformStatus = (
+                platform: "facebook" | "instagram",
+                label: string,
+              ) => {
+                const result = publication[platform];
+                return result?.published
+                  ? `${label} posted`
+                  : `${label} failed: ${result?.error ?? "No result returned."}`;
+              };
+              statusMessage = `Book saved. ${platformStatus("facebook", "Facebook")}; ${platformStatus("instagram", "Instagram")}.`;
+            } catch (socialError) {
+              statusMessage = `Book saved, but social posting failed: ${
+                socialError instanceof Error
+                  ? socialError.message
+                  : "Unknown error."
+              }`;
+            } finally {
+              setIsPublishingSocial(false);
+            }
+          }
+        }
+        onSuccess?.(result.data, statusMessage);
       }
     } catch (error) {
       setManualEntryError(
@@ -957,9 +1004,11 @@ export function BookFormLayout({
         <Button
           type="button"
           onClick={handleSave}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isPublishingSocial}
         >
-          {isSubmitting
+          {isPublishingSocial
+            ? "Publishing to social media…"
+            : isSubmitting
             ? "Saving…"
             : mode === "create"
               ? "Add Book"

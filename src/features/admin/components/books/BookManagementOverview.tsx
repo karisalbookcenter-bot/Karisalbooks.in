@@ -62,6 +62,7 @@ export function BookManagementOverview() {
   const [filters, setFilters] = useState<BookFilterState>(initialFilters);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingBook, setEditingBook] = useState<Book | null | "new">(null);
+  const [bookActionMessage, setBookActionMessage] = useState("");
 
   const loadBooks = useCallback(async () => {
     setLoading(true);
@@ -210,12 +211,19 @@ export function BookManagementOverview() {
             authors={authors}
             publishers={publishers}
             onCancel={() => setEditingBook(null)}
-            onSuccess={() => {
+            onSuccess={(_book, statusMessage) => {
               setEditingBook(null);
+              setBookActionMessage(statusMessage ?? "");
               loadBooks();
             }}
           />
         </div>
+      )}
+
+      {bookActionMessage && (
+        <p role="status" className="rounded-md border border-border bg-card px-4 py-3 text-sm">
+          {bookActionMessage}
+        </p>
       )}
 
       {loading ? (

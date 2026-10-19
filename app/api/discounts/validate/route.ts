@@ -10,6 +10,7 @@ export async function POST(request: Request) {
       items?: {
         book_id: string;
         quantity: number;
+        is_prebooking?: boolean;
         customizationDetails?: string;
       }[];
       shippingMethod?: "India Post" | "Professional Courier";
@@ -31,11 +32,23 @@ export async function POST(request: Request) {
       body.flow !== undefined &&
       body.flow !== "books" &&
       body.flow !== "prebooking" &&
+      body.flow !== "mixed" &&
       body.flow !== "customize"
     ) {
       return NextResponse.json(
         { error: "Invalid purchase type." },
         { status: 400 }
+      );
+    }
+    if (
+      body.flow === "mixed" &&
+      body.items.some(
+        (item) => typeof item.is_prebooking !== "boolean",
+      )
+    ) {
+      return NextResponse.json(
+        { error: "The cart contains an invalid purchase type." },
+        { status: 400 },
       );
     }
 
@@ -82,19 +95,34 @@ export async function POST(request: Request) {
               shippingMethod: body.shippingMethod,
               state: body.state,
             })
-          : await pricePurchase({
-              flow: "books",
-              items: body.items.map((item) => ({
-                book_id: item.book_id,
-                quantity: item.quantity,
-              })),
-              shippingMethod: body.shippingMethod,
-              state: body.state,
-              discountCode:
-                typeof body.code === "string"
-                  ? body.code
-                  : undefined,
-            });
+          : body.flow === "mixed"
+            ? await pricePurchase({
+                flow: "mixed",
+                items: body.items.map((item) => ({
+                  book_id: item.book_id,
+                  quantity: item.quantity,
+                  is_prebooking: item.is_prebooking === true,
+                })),
+                shippingMethod: body.shippingMethod,
+                state: body.state,
+                discountCode:
+                  typeof body.code === "string"
+                    ? body.code
+                    : undefined,
+              })
+            : await pricePurchase({
+                flow: "books",
+                items: body.items.map((item) => ({
+                  book_id: item.book_id,
+                  quantity: item.quantity,
+                })),
+                shippingMethod: body.shippingMethod,
+                state: body.state,
+                discountCode:
+                  typeof body.code === "string"
+                    ? body.code
+                    : undefined,
+              });
 
     return NextResponse.json({
       code: priced.discount?.code,

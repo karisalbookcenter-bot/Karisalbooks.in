@@ -17,6 +17,7 @@ type OrderItem = {
   title: string;
   price: number;
   quantity: number;
+  is_prebooking?: boolean;
 };
 
 
@@ -197,7 +198,11 @@ export default function AdminOrdersPage() {
 
                       <p className="text-sm font-semibold">
 
-                        {order.purchase_type === "prebooking" ? `Pre-booking ${order.prebooking_id ?? ""}` : `Order #${order.id.slice(0, 8)}`}
+                        {order.purchase_type === "prebooking"
+                          ? `Pre-booking ${order.prebooking_id ?? ""}`
+                          : order.purchase_type === "mixed"
+                            ? `Mixed order ${order.prebooking_id ?? `#${order.id.slice(0, 8)}`}`
+                            : `Order #${order.id.slice(0, 8)}`}
 
                       </p>
 
@@ -294,10 +299,13 @@ export default function AdminOrdersPage() {
                             <span>
 
                               {item.title}
-
                               {" x "}
-
                               {item.quantity}
+                              {item.is_prebooking && (
+                                <span className="ml-2 text-xs font-medium text-amber-700">
+                                  Pre-booking
+                                </span>
+                              )}
 
                             </span>
 
