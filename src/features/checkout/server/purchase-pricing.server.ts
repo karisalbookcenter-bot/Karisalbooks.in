@@ -74,13 +74,16 @@ export const MEMBER_COURIER_DISCOUNT_PERCENT = 30;
 
 export const CUSTOMIZE_MINIMUM_QUANTITY = 200;
 
-function isMissingPrebookingSchema(error: {
+function isMissingOptionalBookSchema(error: {
   code?: string;
   message?: string;
 }) {
   return (
     error.code === "42703" &&
-    Boolean(error.message?.includes("prebooking_"))
+    Boolean(
+      error.message?.includes("prebooking_") ||
+        error.message?.includes("is_free_delivery"),
+    )
   );
 }
 
@@ -457,55 +460,69 @@ export async function pricePurchase(input: PurchaseInput) {
    * Customize price and eligibility are read directly from
    * the database. Customer-supplied prices are never trusted.
    */
-  const booksResult = await supabase
-    .from("books")
-    .select(
-      [
-        "id",
-        "category_id",
-        "title",
-        "price",
-        "stock_quantity",
-        "status",
-        "publisher_id",
-        "weight_kg",
-        "is_free_delivery",
-        "prebooking_enabled",
-        "prebooking_start_at",
-        "prebooking_end_at",
-        "prebooking_price",
-        "prebooking_offer_price",
-        "prebooking_offer_start_at",
-        "prebooking_offer_end_at",
-        "prebooking_professional_courier_charge",
-        "prebooking_postal_charge",
-        "prebooking_customize_enabled",
-        "customize_price",
-      ].join(", "),
-    )
-    .in("id", [...requested.keys()]);
-
-  let books: PricingBookRow[] | null =
-    booksResult.data as PricingBookRow[] | null;
-
-  let booksError = booksResult.error;
-
-  if (
-    input.flow === "books" &&
-    booksResult.error &&
-    isMissingPrebookingSchema(booksResult.error)
-  ) {
-    const legacyResult = await supabase
+  const baseBookFields = [
+    "id",
+    "category_id",
+    "title",
+    "price",
+    "stock_quantity",
+    "status",
+    "publisher_id",
+    "weight_kg",
+  ];
+  const prebookingBookFields = [
+    "prebooking_enabled",
+    "prebooking_start_at",
+    "prebooking_end_at",
+    "prebooking_price",
+    "prebooking_offer_price",
+    "prebooking_offer_start_at",
+    "prebooking_offer_end_at",
+    "prebooking_professional_courier_charge",
+    "prebooking_postal_charge",
+    "prebooking_customize_enabled",
+    "customize_price",
+  ];
+  let includeFreeDelivery = true;
+  let includePrebookingFields = true;
+  const queryBooks = (fields: string[]) =>
+    supabase
       .from("books")
-      .select(
-        "id, category_id, title, price, stock_quantity, status, publisher_id, weight_kg, is_free_delivery",
-      )
+      .select(fields.join(", "))
       .in("id", [...requested.keys()]);
+  let booksResult = await queryBooks([
+    ...baseBookFields,
+    "is_free_delivery",
+    ...prebookingBookFields,
+  ]);
 
-    books =
-      legacyResult.data as PricingBookRow[] | null;
-    booksError = legacyResult.error;
+  for (let attempt = 0; attempt < 2 && booksResult.error; attempt += 1) {
+    if (!isMissingOptionalBookSchema(booksResult.error)) break;
+
+    if (booksResult.error.message.includes("is_free_delivery")) {
+      includeFreeDelivery = false;
+      console.warn(
+        "BOOK FREE-DELIVERY MIGRATION PENDING: applying standard weight-based delivery until migration 0018 is applied.",
+      );
+    } else if (
+      input.flow === "books" &&
+      booksResult.error.message.includes("prebooking_")
+    ) {
+      includePrebookingFields = false;
+    } else {
+      break;
+    }
+
+    booksResult = await queryBooks([
+      ...baseBookFields,
+      ...(includeFreeDelivery ? ["is_free_delivery"] : []),
+      ...(includePrebookingFields ? prebookingBookFields : []),
+    ]);
   }
+
+  const books: PricingBookRow[] | null =
+    booksResult.data as PricingBookRow[] | null;
+  const booksError = booksResult.error;
 
   if (booksError) {
     throw new Error(booksError.message);
