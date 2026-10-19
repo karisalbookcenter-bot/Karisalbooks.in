@@ -201,17 +201,17 @@ export function BookCard({
               disabled={!inStock}
               onClick={handleAddToCart}
               aria-label={`Add ${book.title} to cart`}
-              className="inline-flex min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md bg-primary px-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-md bg-primary px-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-8"
             >
               <ShoppingCart size={13} aria-hidden="true" />
-              <span className="truncate">Add to cart</span>
+              <span className="truncate">Add</span>
             </button>
             <button
               type="button"
               disabled={!inStock}
               onClick={handleBuyNow}
               aria-label={`Buy ${book.title} now`}
-              className="inline-flex min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md border border-primary px-1 text-[11px] font-semibold text-primary hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="hidden min-h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-md border border-primary px-1 text-[11px] font-semibold text-primary hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex"
             >
               <Zap size={13} aria-hidden="true" />
               <span className="truncate">Buy now</span>
@@ -291,7 +291,7 @@ export function BookCard({
       {/* Book information */}
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         {publisherName && (
-          <p className="mb-1 line-clamp-1 text-xs font-semibold text-primary">
+          <p className="mb-1 hidden line-clamp-1 text-xs font-semibold text-primary sm:block">
             {publisherName}
           </p>
         )}
@@ -306,7 +306,7 @@ export function BookCard({
         </h3>
 
         {authorName && (
-          <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
+          <p className="mt-1 line-clamp-1 text-xs leading-4 text-muted-foreground sm:text-sm sm:leading-5">
             {authorName}
           </p>
         )}
@@ -326,21 +326,21 @@ export function BookCard({
           </div>
 
           {isPrebooking && hasActiveOffer && (
-            <p className="mt-1 text-xs font-medium text-emerald-700">
+            <p className="mt-1 hidden text-xs font-medium text-emerald-700 sm:block">
               Pre-booking offer · Save{" "}
               {formatCurrency(price.discountAmount)}
             </p>
           )}
 
           {!isPrebooking && price.discountAmount > 0 && (
-            <p className="mt-1 text-xs font-medium text-emerald-700">
+            <p className="mt-1 hidden text-xs font-medium text-emerald-700 sm:block">
               {GENERAL_BOOK_DISCOUNT_PERCENT}% off · Save{" "}
               {formatCurrency(price.discountAmount)}
             </p>
           )}
 
           <p
-            className={`mt-2 text-sm font-medium ${
+            className={`mt-2 hidden text-sm font-medium sm:block ${
               inStock ? "text-emerald-700" : "text-destructive"
             }`}
           >
@@ -353,7 +353,7 @@ export function BookCard({
         </div>
 
         {/* Add to Cart and Buy Now */}
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <div className="mt-3 flex gap-2">
           <button
             type="button"
             disabled={!inStock}
@@ -363,11 +363,11 @@ export function BookCard({
                 ? `${book.title} added to cart`
                 : `Add ${book.title} to cart`
             }
-            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-2 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+            className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-2 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:px-3"
           >
             <ShoppingCart size={18} aria-hidden="true" />
             <span className="truncate">
-              {added ? "Added ✓" : "Add to Cart"}
+              {added ? "Added ✓" : <><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to Cart</span></>}
             </span>
           </button>
 
@@ -375,7 +375,7 @@ export function BookCard({
             type="button"
             disabled={!inStock}
             onClick={handleBuyNow}
-            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-2 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+            className="hidden min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-2 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex sm:px-3"
           >
             <Zap size={18} aria-hidden="true" />
             <span className="truncate">Buy Now</span>

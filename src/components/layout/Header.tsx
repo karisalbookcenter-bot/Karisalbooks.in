@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowUpRight,
   BookOpen,
   BookOpenCheck,
   CalendarClock,
@@ -19,11 +18,13 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type MouseEvent } from "react";
 import { StorefrontSearch } from "@/features/storefront/components/StorefrontSearch";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { subscribeToSiteSettingsUpdates } from "@/features/site-settings/site-settings.events";
 
 const exploreLinks = [
   { href: "/recommendations", label: "Handpicked recommendations", icon: Sparkles },
   { href: "/competitive-exams", label: "Competitive exam books", icon: BookOpen },
+  { href: "/membership/apply", label: "Membership benefits", icon: Crown },
   { href: "/pre-booking", label: "Pre-booking", icon: CalendarClock },
   { href: "/pre-booking?mode=bulk", label: "Bulk book orders", icon: PackageSearch },
   { href: "/publication-services", label: "Publish your book", icon: BookOpenCheck },
@@ -40,6 +41,7 @@ function closeExploreMenu(event: MouseEvent<HTMLAnchorElement>) {
 
 export function Header() {
   const [logoUrl, setLogoUrl] = useState("");
+  const { totalItems } = useCart();
 
   useEffect(() => {
     let active = true;
@@ -104,26 +106,17 @@ export function Header() {
         >
           <StorefrontSearch />
           <Link
-            href="/membership/apply"
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-400/70 bg-gradient-to-r from-amber-50 to-yellow-100 px-3 font-semibold text-amber-950 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:from-amber-950 dark:to-yellow-950 dark:text-amber-100 sm:px-4"
-          >
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-400 text-amber-950 shadow-sm">
-              <Crown size={15} aria-hidden="true" />
-            </span>
-            <span className="hidden sm:inline">Membership</span>
-            <ArrowUpRight
-              size={14}
-              className="hidden transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:block"
-              aria-hidden="true"
-            />
-          </Link>
-          <Link
             href="/cart"
-            aria-label="Shopping cart"
+            aria-label={totalItems ? `Shopping cart, ${totalItems} items` : "Shopping cart"}
             title="Shopping cart"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full border border-border bg-card px-2 text-foreground transition-colors hover:border-primary/40 hover:bg-secondary sm:px-3"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full border border-border bg-card px-2 text-foreground transition-colors hover:border-primary/40 hover:bg-secondary sm:px-3"
           >
             <ShoppingCart size={18} aria-hidden="true" />
+            {totalItems > 0 && (
+              <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-amber-400 px-1 text-[10px] font-bold leading-none text-[#202044]">
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
+            )}
             <span className="hidden lg:inline">Cart</span>
           </Link>
           <details className="group relative">
@@ -134,9 +127,6 @@ export function Header() {
               <MoreHorizontal size={20} aria-hidden="true" />
             </summary>
             <div className="absolute right-0 top-full z-[60] mt-2 w-[min(88vw,20rem)] rounded-2xl border border-border bg-background p-2 text-sm shadow-xl">
-              <p className="px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Explore Karisal Books
-              </p>
               {exploreLinks.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
@@ -164,29 +154,22 @@ export function Header() {
       </div>
 
       <nav
-        aria-label="Shop and services"
+        aria-label="Bookshop navigation"
         className="hidden border-t border-border/80 bg-background/90 lg:block"
       >
-        <div className="container flex h-11 items-center justify-center gap-1 text-sm font-medium">
+        <div className="container flex h-11 items-center justify-center gap-2 text-sm font-medium">
           <Link href="/books" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
-            Browse books
-          </Link>
-          <Link href="/competitive-exams" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
-            Exam books
+            Shop books
           </Link>
           <Link href="/recommendations" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
             Recommendations
           </Link>
+          <Link href="/competitive-exams" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
+            Exam &amp; study
+          </Link>
           <Link href="/offer-zone" className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
             <Tag size={14} aria-hidden="true" />
             Offers
-          </Link>
-          <Link href="/pre-booking" className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
-            <CalendarClock size={14} aria-hidden="true" />
-            Pre-book
-          </Link>
-          <Link href="/publication-services" className="rounded-full px-4 py-2 transition-colors hover:bg-secondary hover:text-primary">
-            Publish a book
           </Link>
         </div>
       </nav>

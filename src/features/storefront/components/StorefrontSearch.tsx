@@ -11,7 +11,11 @@ import {
 import { listPublicBooks } from "@/features/storefront/services/book.storefront";
 import type { Book } from "@/types/book.types";
 
-export function StorefrontSearch() {
+interface StorefrontSearchProps {
+  variant?: "icon" | "field";
+}
+
+export function StorefrontSearch({ variant = "icon" }: StorefrontSearchProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -121,9 +125,16 @@ export function StorefrontSearch() {
           setOpen((value) => !value);
           if (!open) window.setTimeout(() => inputRef.current?.focus(), 0);
         }}
-        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className={
+          variant === "field"
+            ? "inline-flex min-h-12 w-full items-center gap-3 rounded-xl border border-[#d8d1c3] bg-white px-4 text-left text-sm text-muted-foreground shadow-sm transition-all hover:border-[#1d513e]/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        }
       >
         {open ? <X size={19} aria-hidden="true" /> : <Search size={19} aria-hidden="true" />}
+        {variant === "field" && (
+          <span className="flex-1">Search books</span>
+        )}
       </button>
 
       {open && (

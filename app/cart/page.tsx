@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -34,6 +35,11 @@ export default function CartPage() {
 
   const hasNonCustomizeItems = items.some(
     (item) => item.purchaseType !== "customize",
+  );
+  const hasRegularBooks = items.some((item) => item.purchaseType === "books");
+  const itemSavings = items.reduce(
+    (total, item) => total + Math.max(0, item.discountAmount ?? 0) * item.quantity,
+    0,
   );
 
   function handleQuantityChange(
@@ -344,6 +350,11 @@ export default function CartPage() {
                   </span>
                 </div>
               </div>
+              {itemSavings > 0 && (
+                <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium leading-5 text-emerald-800">
+                  You save {formatCurrency(itemSavings)} on these books — already reflected in the prices above.
+                </p>
+              )}
 
               <div className="flex items-start justify-between gap-4 py-4">
                 <span className="text-base font-bold">
@@ -359,6 +370,25 @@ export default function CartPage() {
                 Shipping charges, if applicable, will be calculated during
                 checkout.
               </p>
+
+              {hasRegularBooks && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-sm font-semibold text-amber-950">
+                    Have a membership number or offer code?
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-amber-900/80">
+                    Enter it at checkout to check for extra savings on eligible books. Pre-booking prices follow separate offer rules.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-amber-950">
+                    <Link href="/membership/apply" className="underline underline-offset-2">
+                      Membership details
+                    </Link>
+                    <Link href="/offer-zone" className="underline underline-offset-2">
+                      View current offers
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {hasCustomizeItems && hasNonCustomizeItems && (
                 <div
