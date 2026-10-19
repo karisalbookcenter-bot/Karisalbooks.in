@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { MainLayout } from "@/components/layout/MainLayout";
+
+export const metadata: Metadata = {
+  title: "About Karisal Books",
+  description:
+    "Learn about Karisal Books and find our book center in Kalingapatti, Tenkasi District, Tamil Nadu.",
+};
 
 export default function AboutPage() {
   return (
     <MainLayout>
-      <main className="container max-w-3xl py-10 sm:py-14">
+      <section className="container max-w-3xl py-10 sm:py-14">
         <p className="text-xs font-semibold uppercase text-primary">Karisal Books</p>
         <h1 className="mt-2 text-3xl font-semibold">About Us</h1>
 
@@ -17,7 +24,7 @@ export default function AboutPage() {
             Tenkasi District - 627719
           </address>
         </section>
-      </main>
+      </section>
     </MainLayout>
   );
 }

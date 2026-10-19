@@ -48,6 +48,14 @@ export default function CategoryPage() {
         listPublicPublisherNames(),
       ]);
       setSubcategories(subs);
+      const requestedSubcategoryId = new URLSearchParams(window.location.search).get(
+        "subcategoryId"
+      );
+      setSubcategoryId(
+        subs.some((subcategory) => subcategory.id === requestedSubcategoryId)
+          ? requestedSubcategoryId
+          : null
+      );
       setAuthorNamesById(buildNameMap(authors));
       setPublisherNamesById(buildNameMap(publishers));
       setLoadingCategory(false);
@@ -103,7 +111,24 @@ export default function CategoryPage() {
           {category.description && <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>}
         </div>
 
-        <SubcategoryChips subcategories={subcategories} selectedId={subcategoryId} onSelect={setSubcategoryId} />
+        <div id="subcategories">
+          <SubcategoryChips
+            subcategories={subcategories}
+            selectedId={subcategoryId}
+            onSelect={(id) => {
+              setSubcategoryId(id);
+              const searchParams = new URLSearchParams(window.location.search);
+              if (id) searchParams.set("subcategoryId", id);
+              else searchParams.delete("subcategoryId");
+              const query = searchParams.toString();
+              window.history.replaceState(
+                null,
+                "",
+                `${window.location.pathname}${query ? `?${query}` : ""}`
+              );
+            }}
+          />
+        </div>
 
         {loadingBooks ? (
           <p className="text-sm text-muted-foreground">Loading…</p>

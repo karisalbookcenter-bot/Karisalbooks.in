@@ -10,6 +10,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: appConfig.url, lastModified, changeFrequency: "weekly", priority: 1 },
     { url: `${appConfig.url}/books`, lastModified, changeFrequency: "daily", priority: 0.9 },
     { url: `${appConfig.url}/membership/apply`, lastModified, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${appConfig.url}/about`, lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${appConfig.url}/contact`, lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${appConfig.url}/competitive-exams`, lastModified, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${appConfig.url}/offer-zone`, lastModified, changeFrequency: "daily", priority: 0.7 },
+    { url: `${appConfig.url}/pre-booking`, lastModified, changeFrequency: "daily", priority: 0.7 },
+    { url: `${appConfig.url}/publication-services`, lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${appConfig.url}/recommendations`, lastModified, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${appConfig.url}/terms`, lastModified, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${appConfig.url}/refund-policy`, lastModified, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${appConfig.url}/privacy-policy`, lastModified, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   try {

@@ -21,13 +21,19 @@ export const ROUTES = {
   ABOUT: "/about",
   REFUND_POLICY: "/refund-policy",
   PRIVACY_POLICY: "/privacy-policy",
+  TERMS: "/terms",
+  CART: "/cart",
+  WISHLIST: "/wishlist",
+  LOGIN: "/login",
+  ACCOUNT: "/account",
+  TRACK_ORDER: "/track-order",
+  MEMBERSHIP_APPLY: "/membership/apply",
 
   // Auth-related redirect targets (Sprint 05). These are path constants
   // only — the login page, unauthorized page, etc. are NOT created in
   // this milestone. Added here because the middleware architecture built
   // today needs somewhere to redirect an unauthenticated/unauthorized
   // request to; the pages themselves come later.
-  LOGIN: "/login",
   UNAUTHORIZED: "/unauthorized",
 
   // Admin route constants used by the admin sidebar and page links.

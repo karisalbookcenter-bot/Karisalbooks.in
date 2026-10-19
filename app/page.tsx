@@ -21,6 +21,7 @@ import {
 } from "@/features/storefront/services/book.storefront";
 
 import { listPublicCategories } from "@/features/storefront/services/category.storefront";
+import { listPublicSubcategories } from "@/features/storefront/services/subcategory.storefront";
 
 import {
   listPublicAuthorNames,
@@ -29,6 +30,7 @@ import {
 
 import type { Book } from "@/types/book.types";
 import type { Category } from "@/types/category.types";
+import type { Subcategory } from "@/types/subcategory.types";
 
 import {
   DEFAULT_SITE_SETTINGS,
@@ -41,6 +43,9 @@ export default function HomePage() {
   const [highlightedBooks, setHighlightedBooks] = useState<Book[]>([]);
   const [makkalBooks, setMakkalBooks] = useState<Book[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategoriesByCategoryId, setSubcategoriesByCategoryId] = useState<
+    Record<string, Subcategory[]>
+  >({});
 
   const [authorNamesById, setAuthorNamesById] = useState<
     Record<string, string>
@@ -53,6 +58,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [siteSettingsLoading, setSiteSettingsLoading] = useState(true);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [subcategoryError, setSubcategoryError] = useState<string | null>(null);
   const [makkalBooksError, setMakkalBooksError] = useState<string | null>(null);
 
   const [site, setSite] =
@@ -113,6 +119,22 @@ export default function HomePage() {
       try {
         const publicCategories = await listPublicCategories();
         setCategories(publicCategories);
+
+        try {
+          const publicSubcategories = await listPublicSubcategories();
+          setSubcategoriesByCategoryId(
+            publicSubcategories.reduce<Record<string, Subcategory[]>>(
+              (grouped, subcategory) => {
+                (grouped[subcategory.category_id] ??= []).push(subcategory);
+                return grouped;
+              },
+              {}
+            )
+          );
+        } catch (error) {
+          console.error("Unable to load homepage subcategories:", error);
+          setSubcategoryError("Unable to load subcategories.");
+        }
 
         const makkalCategory = publicCategories.find(
           (category) => category.name.trim() === NO_DISCOUNT_CATEGORY_NAME
@@ -276,6 +298,135 @@ export default function HomePage() {
         </div>
       </section>
 
+      {categoryError ? (
+        <section className="container py-5 sm:py-7">
+          <p role="alert" className="text-sm text-destructive">
+            Unable to load categories: {categoryError}
+          </p>
+        </section>
+      ) : categories.length > 0 ? (
+        <section className="container py-6 sm:py-8" aria-labelledby="shop-categories">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                Find it faster
+              </p>
+              <h2 id="shop-categories" className="mt-1 text-xl font-semibold sm:text-2xl">
+                Shop by category
+              </h2>
+            </div>
+            <Link href="/books" className="text-sm font-semibold text-primary hover:underline">
+              Browse all books <ArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          {subcategoryError && (
+            <p role="alert" className="mb-3 text-sm text-destructive">
+              {subcategoryError}
+            </p>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category) => {
+              const subcategories = subcategoriesByCategoryId[category.id] ?? [];
+              return (
+                <article
+                  key={category.id}
+                  className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/35 hover:bg-secondary/40"
+                >
+                  <Link
+                    href={`/categories/${encodeURIComponent(category.slug)}`}
+                    className="text-base font-semibold text-foreground hover:text-primary"
+                  >
+                    {category.name}
+                  </Link>
+                  {category.description && (
+                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                      {category.description}
+                    </p>
+                  )}
+                  {subcategories.length > 0 && (
+                    <ul className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                      {subcategories.map((subcategory) => (
+                        <li key={subcategory.id}>
+                          <Link
+                            href={`/categories/${encodeURIComponent(category.slug)}?subcategoryId=${encodeURIComponent(subcategory.id)}`}
+                            className="inline-flex min-h-9 items-center rounded-full bg-secondary px-3 text-xs font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                          >
+                            {subcategory.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="container py-6 sm:py-8" aria-labelledby="more-from-karisal">
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            More to explore
+          </p>
+          <h2 id="more-from-karisal" className="mt-1 text-xl font-semibold sm:text-2xl">
+            Services and shortcuts
+          </h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              href: "/membership/apply",
+              title: "Membership",
+              description: "Join and use your member discount on eligible books.",
+            },
+            {
+              href: "/pre-booking",
+              title: "Pre-booking",
+              description: "Reserve books available for advance booking.",
+            },
+            {
+              href: "/pre-booking?mode=bulk",
+              title: "Bulk book orders",
+              description: "Choose titles and quantities for a bulk order.",
+            },
+            {
+              href: "/publication-services",
+              title: "Publish your book",
+              description: "Get help planning printing and publishing.",
+            },
+            {
+              href: "/recommendations",
+              title: "Book recommendations",
+              description: "Explore curated books selected for readers.",
+            },
+            {
+              href: "/customize",
+              title: "Customize an order",
+              description: "See the available book customization options.",
+            },
+          ].map(({ href, title, description }) => (
+            <Link
+              key={title}
+              href={href}
+              className="group rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+            >
+              <span className="flex items-center justify-between gap-3 font-semibold">
+                {title}
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 text-primary transition-transform group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
+              </span>
+              <span className="mt-2 block text-sm leading-6 text-muted-foreground">
+                {description}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* =====================================================
           HOMEPAGE HIGHLIGHTS
           ===================================================== */}
@@ -377,58 +528,6 @@ export default function HomePage() {
           CATEGORIES
           ===================================================== */}
 
-      {(categories.length > 0 || categoryError) && (
-        <section className="container py-8">
-          <h2 className="mb-4 text-xl font-semibold">
-            Shop by category
-          </h2>
-
-          {categoryError ? (
-            <p
-              role="alert"
-              className="text-sm text-destructive"
-            >
-              Unable to load categories: {categoryError}
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/categories/${category.id}`}
-                  className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-secondary"
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* =====================================================
-          BOTTOM PROMOTIONAL SECTIONS
-          ===================================================== */}
-
-      <section className="border-y border-border bg-card">
-        <div className="container grid grid-cols-2 gap-2 py-4 sm:grid-cols-4 sm:gap-3 sm:py-6">
-          {[
-            { href: "/recommendations", label: "For Readers" },
-            { href: "/publication-services", label: "For New Writers" },
-            { href: "/pre-booking?mode=bulk", label: "Bulk Booking" },
-            { href: "/customize", label: "Customize" },
-          ].map(({ href, label }) => (
-            <Link
-              key={label}
-              href={href}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-center text-xs font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-secondary sm:text-sm"
-            >
-              {label}
-              <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
     </MainLayout>
   );
 }

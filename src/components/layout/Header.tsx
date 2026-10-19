@@ -3,7 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
+  BookOpenCheck,
   CalendarClock,
+  Crown,
   Heart,
   LogIn,
   MoreHorizontal,
@@ -58,38 +60,44 @@ export function Header() {
           )}
         </Link>
 
-        <nav aria-label="Main navigation" className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
+        <nav aria-label="Main navigation" className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm lg:gap-3">
           <StorefrontSearch />
           <Link href="/books" className="inline-flex min-h-10 items-center px-1 transition-colors hover:text-foreground">Books</Link>
+          <Link href="/offer-zone" className="hidden min-h-10 items-center gap-1 px-1 transition-colors hover:text-foreground sm:inline-flex">
+            <Tag size={15} aria-hidden="true" /><span>Offers</span>
+          </Link>
+          <Link href="/membership/apply" className="hidden min-h-10 items-center gap-1 px-1 transition-colors hover:text-foreground md:inline-flex">
+            <Crown size={15} aria-hidden="true" /><span>Membership</span>
+          </Link>
           <Link href="/cart" aria-label="Cart" title="Cart" className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-md px-1 transition-colors hover:bg-secondary hover:text-foreground">
             <ShoppingCart size={17} aria-hidden="true" /><span className="hidden sm:inline">Cart</span>
           </Link>
-          <div className="hidden items-center gap-4 sm:flex">
-          <Link href="/offer-zone" aria-label="Offers" title="Offers" className="inline-flex min-h-10 items-center gap-1 px-1 transition-colors hover:text-foreground"><Tag size={15} aria-hidden="true" /><span>Offers</span></Link>
-          <Link href="/publication-services" className="inline-flex min-h-10 items-center transition-colors hover:text-foreground">Publish</Link>
-          <Link href="/pre-booking" aria-label="Pre-book a book" title="Pre-book" className="inline-flex min-h-10 items-center gap-1 px-1 transition-colors hover:text-foreground">
-            <CalendarClock size={15} aria-hidden="true" /><span className="hidden sm:inline">Pre-book</span>
-          </Link>
-          <Link href="/wishlist" aria-label="Wishlist" title="Wishlist" className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1 px-1 transition-colors hover:text-foreground">
-            <Heart size={17} aria-hidden="true" /><span className="hidden sm:inline">Wishlist</span>
-          </Link>
-          <Link href="/login" aria-label="Login" title="Login" className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1 px-1 transition-colors hover:text-foreground">
-            <LogIn size={17} aria-hidden="true" /><span className="hidden sm:inline">Login</span>
-          </Link>
-          </div>
-          <details className="relative sm:hidden">
+          <details className="relative">
             <summary
               aria-label="More navigation links"
-              className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-md hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-md hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden"
             >
               <MoreHorizontal size={20} aria-hidden="true" />
             </summary>
-            <div className="absolute right-0 top-full z-[60] mt-2 w-52 rounded-xl border border-border bg-background p-2 text-sm shadow-xl">
-              <Link href="/offer-zone" className="block rounded-lg px-3 py-3 hover:bg-secondary">Offers</Link>
-              <Link href="/publication-services" className="block rounded-lg px-3 py-3 hover:bg-secondary">Publish</Link>
-              <Link href="/pre-booking" className="block rounded-lg px-3 py-3 hover:bg-secondary">Pre-book</Link>
-              <Link href="/wishlist" className="block rounded-lg px-3 py-3 hover:bg-secondary">Wishlist</Link>
-              <Link href="/login" className="block rounded-lg px-3 py-3 hover:bg-secondary">Login</Link>
+            <div className="absolute right-0 top-full z-[60] mt-2 w-60 rounded-xl border border-border bg-background p-2 text-sm shadow-xl">
+              <Link href="/recommendations" className="block rounded-lg px-3 py-3 hover:bg-secondary">Book recommendations</Link>
+              <Link href="/competitive-exams" className="block rounded-lg px-3 py-3 hover:bg-secondary">Competitive exam books</Link>
+              <Link href="/pre-booking" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
+                <CalendarClock size={16} aria-hidden="true" /> Pre-booking
+              </Link>
+              <Link href="/pre-booking?mode=bulk" className="block rounded-lg px-3 py-3 hover:bg-secondary">Bulk book orders</Link>
+              <Link href="/publication-services" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
+                <BookOpenCheck size={16} aria-hidden="true" /> Publish your book
+              </Link>
+              <Link href="/track-order" className="block rounded-lg px-3 py-3 hover:bg-secondary">Track an order</Link>
+              <Link href="/wishlist" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
+                <Heart size={16} aria-hidden="true" /> Wishlist
+              </Link>
+              <Link href="/login" className="flex items-center gap-2 rounded-lg px-3 py-3 hover:bg-secondary">
+                <LogIn size={16} aria-hidden="true" /> Sign in / My account
+              </Link>
+              <Link href="/about" className="block rounded-lg px-3 py-3 hover:bg-secondary">About Karisal Books</Link>
+              <Link href="/contact" className="block rounded-lg px-3 py-3 hover:bg-secondary">Contact &amp; location</Link>
             </div>
           </details>
         </nav>

@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { MainLayout } from "@/components/layout/MainLayout";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Learn how Karisal Books uses information provided through the store.",
+};
 
 export default function PrivacyPolicyPage() {
   return (
     <MainLayout>
-      <main className="container max-w-3xl py-10 sm:py-14">
+      <section className="container max-w-3xl py-10 sm:py-14">
         <p className="text-xs font-semibold uppercase text-primary">Karisal Books</p>
         <h1 className="mt-2 text-3xl font-semibold">Privacy Policy</h1>
 
@@ -39,7 +45,7 @@ export default function PrivacyPolicyPage() {
             Tenkasi District - 627719
           </address>
         </section>
-      </main>
+      </section>
     </MainLayout>
   );
 }
