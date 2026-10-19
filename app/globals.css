@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Noto Sans Tamil";
+  src: url("/font/NotoSansTamil-VariableFont_wdth,wght.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 @keyframes storefront-book-in {
   from {
     opacity: 0.55;
@@ -83,7 +91,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-noto-sans-tamil), Latha, system-ui, sans-serif;
+    font-family: "Noto Sans Tamil", Latha, system-ui, sans-serif;
     text-rendering: optimizeLegibility;
   }
 
