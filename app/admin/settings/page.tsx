@@ -33,6 +33,7 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
+  const [savingQrToggle, setSavingQrToggle] = useState(false);
   const [site, setSite] = useState<PublicSiteSettings>(DEFAULT_SITE_SETTINGS);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -103,13 +104,40 @@ export default function AdminSettingsPage() {
         notifySiteSettingsUpdated({ social, site: updatedSite });
         setAssetNotice("Logo uploaded and published to the storefront.");
       } else {
-        setAssetNotice("Image uploaded. Click Save settings to publish the change.");
+        notifySiteSettingsUpdated({ social, site: updatedSite });
+        setAssetNotice("Payment QR uploaded and saved.");
       }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : `Unable to upload ${assetType === "logo" ? "the logo" : "the payment QR"}.`);
     } finally {
       if (assetType === "logo") setUploadingLogo(false);
       else setUploadingQr(false);
+    }
+
+  }
+
+  async function updateQrPaymentEnabled(enabled: boolean) {
+    setError("");
+    setSaved(false);
+    setSavingQrToggle(true);
+    try {
+      const response = await fetch("/api/site-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qrPaymentEnabled: enabled }),
+      });
+      const result = await response.json() as { qrPaymentEnabled?: boolean; error?: string };
+      if (!response.ok || typeof result.qrPaymentEnabled !== "boolean") {
+        throw new Error(result.error ?? "Unable to update QR payment settings.");
+      }
+      const updatedSite = { ...site, qrPaymentEnabled: result.qrPaymentEnabled };
+      setSite(updatedSite);
+      notifySiteSettingsUpdated({ social, site: updatedSite });
+      setAssetNotice(result.qrPaymentEnabled ? "QR payment is now shown at checkout." : "QR payment is hidden at checkout.");
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : "Unable to update QR payment settings.");
+    } finally {
+      setSavingQrToggle(false);
     }
   }
 
@@ -198,12 +226,13 @@ export default function AdminSettingsPage() {
                 <input
                   type="checkbox"
                   checked={site.qrPaymentEnabled}
-                  disabled={loading || saving || !site.paymentQrUrl}
-                  onChange={(event) => setSite((current) => ({ ...current, qrPaymentEnabled: event.target.checked }))}
+                  disabled={loading || saving || savingQrToggle || !site.paymentQrUrl}
+                  onChange={(event) => void updateQrPaymentEnabled(event.target.checked)}
                   className="mt-0.5 h-4 w-4 accent-primary"
                 />
                 Show QR payment option at checkout
               </label>
+              {savingQrToggle && <p className="text-xs text-muted-foreground">Saving QR payment setting…</p>}
               {!site.paymentQrUrl && <p className="text-xs text-muted-foreground">Upload your payment QR before enabling QR payments.</p>}
             </div>
           )}

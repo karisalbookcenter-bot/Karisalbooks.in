@@ -36,11 +36,17 @@ export async function POST(request: Request) {
     });
     if (error) throw new Error(error.message);
     const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
-    if (assetType === "logo") {
+    if (assetType === "logo" || assetType === "payment-qr") {
       const { error: settingsError } = await supabase
         .from("site_settings")
         .upsert(
-          { id: "public", site_logo_url: data.publicUrl, updated_by: user.id },
+          {
+            id: "public",
+            ...(assetType === "logo"
+              ? { site_logo_url: data.publicUrl }
+              : { payment_qr_url: data.publicUrl }),
+            updated_by: user.id,
+          },
           { onConflict: "id" },
         );
       if (settingsError) throw new Error(settingsError.message);

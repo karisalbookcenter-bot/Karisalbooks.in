@@ -128,3 +128,43 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  const user = await getServerAuthUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  if (!isAtLeastRole(user.role, ROLES.ADMIN)) {
+    return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+  }
+
+  try {
+    const body = (await request.json()) as { qrPaymentEnabled?: unknown };
+    if (typeof body.qrPaymentEnabled !== "boolean") {
+      return NextResponse.json({ error: "Choose whether to show QR payment at checkout." }, { status: 400 });
+    }
+
+    const supabase = createAdminClient();
+    const { data: settings, error: readError } = await supabase
+      .from("site_settings")
+      .select("payment_qr_url")
+      .eq("id", "public")
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!settings) {
+      return NextResponse.json({ error: "Site settings are not initialized. Apply the pending Supabase migrations." }, { status: 503 });
+    }
+    if (body.qrPaymentEnabled && !settings.payment_qr_url?.trim()) {
+      return NextResponse.json({ error: "Upload your payment QR image before enabling QR payments." }, { status: 400 });
+    }
+
+    const { error: updateError } = await supabase
+      .from("site_settings")
+      .update({ qr_payment_enabled: body.qrPaymentEnabled, updated_by: user.id })
+      .eq("id", "public");
+    if (updateError) throw new Error(updateError.message);
+
+    return NextResponse.json({ qrPaymentEnabled: body.qrPaymentEnabled });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update QR payment settings.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
