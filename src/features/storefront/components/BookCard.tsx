@@ -14,6 +14,7 @@ import {
 } from "@/lib/helpers/book-pricing.helpers";
 import { useCart } from "@/features/cart/hooks/useCart";
 import type { Book } from "@/types/book.types";
+import { ShareBookButton } from "./ShareBookButton";
 
 export const BOOK_GRID_IMAGE_SIZES =
   "(max-width: 639px) calc((100vw - 4.75rem) / 2), (max-width: 767px) 282px, (max-width: 1023px) 224px, (max-width: 1279px) 228px, (max-width: 1399px) 289px, 319px";
@@ -218,6 +219,7 @@ export function BookCard({
               <ShoppingCart size={13} aria-hidden="true" />
               <span className="truncate">Add</span>
             </button>
+            <ShareBookButton title={book.title} slug={book.slug} compact />
             <button
               type="button"
               disabled={!inStock}
@@ -286,6 +288,10 @@ export function BookCard({
             className={wishlisted ? "text-rose-600" : "text-slate-600"}
           />
         </button>
+
+        <div className="absolute right-2 top-14">
+          <ShareBookButton title={book.title} slug={book.slug} />
+        </div>
 
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           {isPrebooking && (

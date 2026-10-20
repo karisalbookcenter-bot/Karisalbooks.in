@@ -17,6 +17,7 @@ import {
 } from "@/features/storefront/services/book.storefront";
 
 import { BookCard } from "@/features/storefront/components/BookCard";
+import { ShareBookButton } from "@/features/storefront/components/ShareBookButton";
 
 import {
   getPublicAuthorName,
@@ -482,6 +483,12 @@ function makeCartItem(itemQuantity: number): CartItem {
                       fill={wishlisted ? "currentColor" : "none"}
                     />
                   </button>
+
+                  <ShareBookButton
+                    title={book.title}
+                    slug={book.slug}
+                    compact
+                  />
 
                   <button
                     type="button"
