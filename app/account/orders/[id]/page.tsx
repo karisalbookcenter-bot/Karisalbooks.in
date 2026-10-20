@@ -67,6 +67,7 @@ export default async function CustomerOrderDetailPage({
       id,
 
       purchase_type,
+      combo_offer_price,
 
       prebooking_id,
 
@@ -90,7 +91,8 @@ export default async function CustomerOrderDetailPage({
         title,
         quantity,
         price,
-        is_prebooking
+        is_prebooking,
+        is_combo_offer
 
       )
 
@@ -103,7 +105,7 @@ export default async function CustomerOrderDetailPage({
 
     .single();
 
-  if (error?.code === "42703" && /purchase_type|prebooking_id|is_prebooking/.test(error.message)) {
+  if (error?.code === "42703" && /purchase_type|prebooking_id|is_prebooking|combo_offer_price|is_combo_offer/.test(error.message)) {
     const fallback = await supabase
       .from("orders")
       .select(`id, customer_name, total_amount, status, created_at, courier_name, tracking_number, shipped_at, order_items(id, title, quantity, price)`)
@@ -188,6 +190,11 @@ export default async function CustomerOrderDetailPage({
           ₹{order.total_amount}
 
         </p>
+        {order.purchase_type === "combo" && (
+          <p className="font-medium text-amber-800">
+            Combo price : ₹{order.combo_offer_price ?? order.total_amount} per bundle, delivery included.
+          </p>
+        )}
 
 
       </div>
@@ -283,13 +290,8 @@ export default async function CustomerOrderDetailPage({
 
 
           <p>
-
-            Courier:
-
-            {" "}
-
-            {order.courier_name}
-
+            Courier: {order.courier_name}
+            {order.purchase_type === "combo" && " · delivery included in combo price"}
           </p>
 
 
@@ -337,6 +339,11 @@ export default async function CustomerOrderDetailPage({
                 {item.is_prebooking && (
                   <span className="ml-2 text-xs font-medium text-amber-700">
                     Pre-booking
+                  </span>
+                )}
+                {item.is_combo_offer && (
+                  <span className="ml-2 text-xs font-medium text-amber-800">
+                    Included in combo price
                   </span>
                 )}
 

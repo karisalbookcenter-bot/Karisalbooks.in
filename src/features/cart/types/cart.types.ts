@@ -13,7 +13,11 @@ export interface CartItem {
 
   quantity: number;
 
-  purchaseType?: "books" | "prebooking" | "customize";
+  purchaseType?: "books" | "prebooking" | "customize" | "combo";
+
+  comboOfferId?: string;
+
+  comboOfferPrice?: number;
 
   coverImageUrl?: string | null;
 
@@ -37,6 +41,8 @@ export interface CartContextType {
   wishlistItems: CartItem[];
 
   addItem: (item: CartItem) => void;
+
+  replaceItems: (items: CartItem[]) => void;
 
   toggleWishlist: (item: CartItem) => void;
 

@@ -5,6 +5,7 @@ type InvoiceItem = {
   title: string;
   quantity: number;
   price: number;
+  is_combo_offer?: boolean;
 };
 
 type InvoiceOrder = {
@@ -15,6 +16,8 @@ type InvoiceOrder = {
   district: string;
   pincode: string;
   total_amount: number;
+  purchase_type?: string | null;
+  combo_offer_price?: number | null;
   subtotal_amount?: number | null;
   discount_amount?: number | null;
   courier_charge: number | null;
@@ -91,7 +94,7 @@ export function generateInvoicePDF(
     body: order.order_items.map((item) => [
       item.title,
       item.quantity.toString(),
-      `₹${item.price}`,
+      item.is_combo_offer ? "Included in combo price" : `₹${item.price}`,
     ]),
   });
 
@@ -107,29 +110,37 @@ export function generateInvoicePDF(
     ? order.subtotal_amount
     : order.total_amount - courier + bookDiscount;
 
-  pdf.text(
-    `Books Subtotal : ₹${booksSubtotal}`,
-    14,
-    finalY
-  );
+  if (order.purchase_type === "combo") {
+    pdf.text(
+      `Combo Price (delivery included) : ₹${order.combo_offer_price ?? order.total_amount}`,
+      14,
+      finalY
+    );
+  } else {
+    pdf.text(
+      `Books Subtotal : ₹${booksSubtotal}`,
+      14,
+      finalY
+    );
 
-  pdf.text(
-    `Book Discount : -₹${bookDiscount}`,
-    14,
-    finalY + 8
-  );
+    pdf.text(
+      `Book Discount : -₹${bookDiscount}`,
+      14,
+      finalY + 8
+    );
 
-  pdf.text(
-    `Courier Charge : ₹${courier + courierDiscount}`,
-    14,
-    finalY + 16
-  );
+    pdf.text(
+      `Courier Charge : ₹${courier + courierDiscount}`,
+      14,
+      finalY + 16
+    );
 
-  pdf.text(
-    `Member Courier Discount : -₹${courierDiscount}`,
-    14,
-    finalY + 24
-  );
+    pdf.text(
+      `Member Courier Discount : -₹${courierDiscount}`,
+      14,
+      finalY + 24
+    );
+  }
 
   pdf.setFontSize(13);
 

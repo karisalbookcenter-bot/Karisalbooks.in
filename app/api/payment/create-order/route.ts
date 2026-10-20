@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         purchase.flow !== "prebooking" &&
         purchase.flow !== "mixed" &&
         purchase.flow !== "customize" &&
+        purchase.flow !== "combo" &&
         purchase.flow !== "membership"
       )
     ) {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
             : purchase.flow,
         shipping_method:
           purchase.flow !== "membership"
-            ? purchase.shippingMethod ?? "India Post"
+            ? priced.shippingMethod ?? "India Post"
             : "none",
       },
     });

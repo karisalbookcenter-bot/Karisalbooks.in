@@ -28,7 +28,8 @@ export default async function OrderDetailPage({
         book_id,
         title,
         quantity,
-        price
+        price,
+        is_combo_offer
       )
     `)
     .eq("id", id)
@@ -66,6 +67,11 @@ export default async function OrderDetailPage({
         <p className="text-xl font-bold">
           Total : ₹{order.total_amount}
         </p>
+        {order.purchase_type === "combo" && (
+          <p className="font-medium text-amber-800">
+            Combo offer total : ₹{order.combo_offer_price} per bundle, delivery included. No separate courier charge or book discount applies.
+          </p>
+        )}
 
         <p>
           Payment status : {order.payment_status ?? "unknown"}
@@ -148,7 +154,7 @@ export default async function OrderDetailPage({
                   </td>
 
                   <td className="border-t p-2 text-center">
-                    ₹{item.price}
+                    {item.is_combo_offer ? "Included in combo price" : `₹${item.price}`}
                   </td>
 
                 </tr>

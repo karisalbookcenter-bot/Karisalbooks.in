@@ -26,10 +26,11 @@ export async function POST(request: Request) {
       !purchase ||
       (purchase.flow !== "books" &&
         purchase.flow !== "prebooking" &&
-        purchase.flow !== "mixed")
+        purchase.flow !== "mixed" &&
+        purchase.flow !== "combo")
     ) {
       return NextResponse.json(
-        { error: "WhatsApp checkout supports book and pre-booking orders." },
+        { error: "WhatsApp checkout supports book, combo, and pre-booking orders." },
         { status: 400 },
       );
     }
@@ -87,6 +88,15 @@ export async function POST(request: Request) {
         discount_amount: priced.bookDiscountPaise / 100,
         courier_charge: (priced.courierChargePaise - priced.courierDiscountPaise) / 100,
         courier_discount: priced.courierDiscountPaise / 100,
+        ...(purchase.flow === "combo"
+          ? {
+              purchase_type: "combo",
+              combo_offer_id: purchase.comboOfferId,
+              combo_offer_price:
+                priced.totalPaise /
+                (100 * purchase.items[0].quantity),
+            }
+          : {}),
         payment_status: "pending",
         payment_method: qrPaymentEnabled ? "UPI QR" : "WhatsApp",
         status: "pending",
@@ -108,6 +118,7 @@ export async function POST(request: Request) {
         ...(purchase.flow === "prebooking" || purchase.flow === "mixed"
           ? { is_prebooking: item.isPrebooking === true }
           : {}),
+        ...(purchase.flow === "combo" ? { is_combo_offer: true } : {}),
       }))
     );
     if (itemsError) {

@@ -26,6 +26,7 @@ import {
 import {
   OfferFormLayout,
 } from "./OfferFormLayout";
+import { ComboOfferManagement } from "./ComboOfferManagement";
 
 
 export function OfferManagementOverview() {
@@ -222,7 +223,7 @@ export function OfferManagementOverview() {
 
       />
 
-
+      <ComboOfferManagement />
 
     </PageContainer>
 

@@ -334,6 +334,15 @@ export async function POST(request: Request) {
         ...(purchase.flow === "customize"
           ? { purchase_type: "customize" }
           : {}),
+        ...(purchase.flow === "combo"
+          ? {
+              purchase_type: "combo",
+              combo_offer_id: purchase.comboOfferId,
+              combo_offer_price:
+                priced.totalPaise /
+                (100 * purchase.items[0].quantity),
+            }
+          : {}),
       })
       .select("*")
       .single();
@@ -367,8 +376,14 @@ export async function POST(request: Request) {
           ...(purchase.flow === "customize"
             ? {
                 customization_details:
-                  item.customizationDetails,
+                  purchase.items.find(
+                    (purchaseItem) =>
+                      purchaseItem.book_id === item.book_id,
+                  )?.customizationDetails,
               }
+            : {}),
+          ...(purchase.flow === "combo"
+            ? { is_combo_offer: true }
             : {}),
         }))
       );

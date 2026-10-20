@@ -16,7 +16,8 @@ export async function getAdminOrders() {
         title,
         price,
         quantity,
-        is_prebooking
+        is_prebooking,
+        is_combo_offer
       )
     `)
     .order(

@@ -25,6 +25,7 @@ export default function CartPage() {
     removeItem,
     updateQuantity,
     totalPrice,
+    clearCart,
   } = useCart();
 
   const [checkoutError, setCheckoutError] = useState("");
@@ -37,6 +38,8 @@ export default function CartPage() {
     (item) => item.purchaseType !== "customize",
   );
   const hasRegularBooks = items.some((item) => item.purchaseType === "books");
+  const hasComboItems = items.some((item) => item.purchaseType === "combo");
+  const hasMixedComboItems = hasComboItems && items.some((item) => item.purchaseType !== "combo");
   const itemSavings = items.reduce(
     (total, item) => total + Math.max(0, item.discountAmount ?? 0) * item.quantity,
     0,
@@ -75,6 +78,11 @@ export default function CartPage() {
       setCheckoutError(
         "Customize orders cannot be combined with regular books or pre-booking items. Please complete them separately.",
       );
+      return;
+    }
+
+    if (hasMixedComboItems) {
+      setCheckoutError("Combo offers must be checked out separately from regular books and pre-booking items.");
       return;
     }
 
@@ -161,6 +169,7 @@ export default function CartPage() {
 
                 const isPrebooking =
                   item.purchaseType === "prebooking";
+                const isCombo = item.purchaseType === "combo";
 
                 const originalPrice =
                   item.originalPrice ??
@@ -189,6 +198,11 @@ export default function CartPage() {
                               Pre-booking
                             </span>
                           )}
+                          {isCombo && (
+                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+                              Combo · delivery included
+                            </span>
+                          )}
                         </div>
 
                         {item.authorName && (
@@ -199,10 +213,10 @@ export default function CartPage() {
 
                         <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                           <span className="text-lg font-bold tabular-nums text-primary">
-                            {formatCurrency(item.price)}
+                            {isCombo ? "Included in combo" : formatCurrency(item.price)}
                           </span>
 
-                          {!isCustomize &&
+                          {!isCustomize && !isCombo &&
                             (item.discountAmount ?? 0) > 0 && (
                               <span className="text-sm tabular-nums text-muted-foreground line-through">
                                 {formatCurrency(originalPrice)}
@@ -216,7 +230,7 @@ export default function CartPage() {
                           )}
                         </div>
 
-                        {!isCustomize &&
+                        {!isCustomize && !isCombo &&
                           (item.discountAmount ?? 0) > 0 && (
                             <p className="mt-1 text-sm font-medium text-emerald-700">
                               You save{" "}
@@ -243,7 +257,8 @@ export default function CartPage() {
                           </div>
                         )}
 
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                        {!isCombo && (
+                          <div className="mt-4 flex flex-wrap items-center gap-3">
                           <span className="text-sm font-medium">
                             Quantity
                           </span>
@@ -291,7 +306,8 @@ export default function CartPage() {
                               <Plus size={18} aria-hidden="true" />
                             </button>
                           </div>
-                        </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between gap-4 border-t pt-3 sm:min-w-36 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0">
@@ -301,18 +317,18 @@ export default function CartPage() {
                           </p>
 
                           <p className="mt-1 text-lg font-bold tabular-nums">
-                            {formatCurrency(item.price * item.quantity)}
+                            {isCombo ? "Included" : formatCurrency(item.price * item.quantity)}
                           </p>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => handleRemove(item.id)}
-                          aria-label={`Remove ${item.title} from cart`}
+                          onClick={() => isCombo ? clearCart() : handleRemove(item.id)}
+                          aria-label={isCombo ? "Remove combo offer from cart" : `Remove ${item.title} from cart`}
                           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                         >
                           <Trash2 size={17} aria-hidden="true" />
-                          Remove
+                          {isCombo ? "Remove combo" : "Remove"}
                         </button>
                       </div>
                     </div>
@@ -342,7 +358,7 @@ export default function CartPage() {
 
                 <div className="flex items-start justify-between gap-4 text-sm">
                   <span className="text-muted-foreground">
-                    Subtotal
+                    {hasComboItems ? "Combo price (delivery included)" : "Subtotal"}
                   </span>
 
                   <span className="text-right font-semibold tabular-nums">
@@ -367,11 +383,12 @@ export default function CartPage() {
               </div>
 
               <p className="mb-4 text-xs leading-5 text-muted-foreground">
-                Shipping charges, if applicable, will be calculated during
-                checkout.
+                {hasComboItems
+                  ? "The manually configured combo price includes delivery. No catalog discount or additional courier charge applies."
+                  : "Shipping charges, if applicable, will be calculated during checkout."}
               </p>
 
-              {hasRegularBooks && (
+              {hasRegularBooks && !hasComboItems && (
                 <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
                   <p className="text-sm font-semibold text-amber-950">
                     Have a membership number or offer code?
@@ -398,6 +415,11 @@ export default function CartPage() {
                   Customize orders must be checked out separately from
                   regular books and pre-booking orders. Remove one order
                   type to continue.
+                </div>
+              )}
+              {hasMixedComboItems && (
+                <div role="alert" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm leading-6 text-amber-900">
+                  Combo offers must be checked out separately from regular books and pre-booking items. Remove the combo or the other items.
                 </div>
               )}
 

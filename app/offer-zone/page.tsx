@@ -6,6 +6,9 @@ import Image from "next/image";
 import { ArrowRight, CalendarClock, Crown, Sparkles, Tag } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { createClient } from "@/lib/supabase/client";
+import { useCart } from "@/features/cart/hooks/useCart";
+import { formatCurrency } from "@/lib/helpers/format.helpers";
+import type { CartItem } from "@/features/cart/types/cart.types";
 
 interface PublicOffer {
   id: string;
@@ -19,10 +22,41 @@ interface PublicOffer {
   campaign_price_details?: string | null;
 }
 
+interface PublicComboOffer {
+  id: string;
+  title: string;
+  description: string | null;
+  offer_price: number;
+  books: {
+    id: string;
+    title: string;
+    slug: string;
+    price: number;
+    cover_image_url: string | null;
+  }[];
+}
+
 export default function OfferZonePage() {
+  const { items: cartItems, replaceItems } = useCart();
   const [offers, setOffers] = useState<PublicOffer[]>([]);
+  const [combos, setCombos] = useState<PublicComboOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [comboError, setComboError] = useState("");
+  const [cartMessage, setCartMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/offer-zone/combos")
+      .then(async (response) => {
+        const result = await response.json() as { offers?: PublicComboOffer[]; error?: string };
+        if (!response.ok) throw new Error(result.error ?? "Unable to load combo offers.");
+        setCombos(result.offers ?? []);
+      })
+      .catch((loadError: unknown) => {
+        console.error("Unable to load combo offers:", loadError);
+        setComboError("Combo offers could not be loaded. Please try again shortly.");
+      });
+  }, []);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -70,6 +104,29 @@ export default function OfferZonePage() {
     void loadOffers();
   }, []);
 
+  function addComboToCart(offer: PublicComboOffer) {
+    if (
+      cartItems.length &&
+      !window.confirm("Starting this combo replaces the current cart so the combo price and delivery stay separate. Continue?")
+    ) {
+      return;
+    }
+
+    const comboItems: CartItem[] = offer.books.map((book) => ({
+      id: book.id,
+      title: book.title,
+      slug: book.slug,
+      price: 0,
+      quantity: 1,
+      purchaseType: "combo",
+      comboOfferId: offer.id,
+      comboOfferPrice: Number(offer.offer_price),
+      coverImageUrl: book.cover_image_url,
+    }));
+    replaceItems(comboItems);
+    setCartMessage(`${offer.title} added. Its manual combo price includes delivery.`);
+  }
+
   return (
     <MainLayout>
       <section className="overflow-hidden border-b border-amber-200 bg-gradient-to-br from-amber-50 via-background to-rose-50">
@@ -104,6 +161,42 @@ export default function OfferZonePage() {
             See books to pre-book <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </article>
+      </section>
+
+      <section className="border-t border-border bg-background">
+        <div className="container py-8">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Manual bundle pricing</p>
+              <h2 className="mt-1 text-xl font-semibold">Combo offers</h2>
+            </div>
+            <p className="text-xs text-muted-foreground">One price for the selected books, delivery included</p>
+          </div>
+          {cartMessage && <p role="status" className="mb-4 rounded-md border border-border bg-secondary/50 p-3 text-sm">{cartMessage} <Link href="/checkout" className="font-semibold underline">Continue to checkout</Link></p>}
+          {comboError ? (
+            <p role="alert" className="py-5 text-sm text-destructive">{comboError}</p>
+          ) : combos.length ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {combos.map((combo) => (
+                <article key={combo.id} className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
+                  <p className="inline-flex rounded-full bg-amber-200 px-3 py-1 text-xs font-bold uppercase text-amber-950">Combo · delivery included</p>
+                  <h3 className="mt-3 text-lg font-semibold">{combo.title}</h3>
+                  {combo.description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{combo.description}</p>}
+                  <ul className="mt-3 space-y-1 text-sm">
+                    {combo.books.map((book) => <li key={book.id}>• {book.title}</li>)}
+                  </ul>
+                  <p className="mt-4 text-xl font-bold">{formatCurrency(Number(combo.offer_price))}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Manual combo total. No additional courier or catalog discount is applied.</p>
+                  <button type="button" onClick={() => addComboToCart(combo)} className="mt-4 min-h-11 w-full rounded-full bg-amber-500 px-5 text-sm font-bold text-amber-950 hover:bg-amber-400">
+                    Select this combo
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="py-5 text-sm text-muted-foreground">There are no active combo offers right now.</p>
+          )}
+        </div>
       </section>
 
       <section className="border-t border-border bg-card">

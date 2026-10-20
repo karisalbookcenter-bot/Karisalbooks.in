@@ -76,7 +76,6 @@ export function CartProvider({
 
       }
 
-
       return [
         ...current,
         item,
@@ -84,6 +83,10 @@ export function CartProvider({
 
     });
 
+  }
+
+  function replaceItems(nextItems: CartItem[]) {
+    setItems(nextItems);
   }
 
   function toggleWishlist(item: CartItem) {
@@ -128,11 +131,17 @@ export function CartProvider({
 
 
     setItems((current)=>
-      current.map((x)=>
-        x.id === id
-        ? {...x, quantity}
-        : x
-      )
+      current.map((x) => {
+        const selected = current.find((item) => item.id === id);
+        if (
+          selected?.purchaseType === "combo" &&
+          x.purchaseType === "combo" &&
+          x.comboOfferId === selected.comboOfferId
+        ) {
+          return { ...x, quantity };
+        }
+        return x.id === id ? { ...x, quantity } : x;
+      })
     );
 
   }
@@ -157,12 +166,10 @@ export function CartProvider({
     );
 
 
-  const totalPrice =
-    items.reduce(
-      (sum,item)=>
-        sum + item.price * item.quantity,
-      0
-    );
+  const comboItems = items.filter((item) => item.purchaseType === "combo");
+  const totalPrice = comboItems.length === items.length && comboItems.length > 0
+    ? Number(comboItems[0].comboOfferPrice ?? 0) * comboItems[0].quantity
+    : items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
 
 
@@ -173,6 +180,7 @@ export function CartProvider({
         items,
         wishlistItems,
         addItem,
+        replaceItems,
         toggleWishlist,
         removeWishlistItem,
         isWishlisted,

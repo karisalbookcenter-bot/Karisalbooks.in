@@ -18,6 +18,7 @@ type OrderItem = {
   price: number;
   quantity: number;
   is_prebooking?: boolean;
+  is_combo_offer?: boolean;
 };
 
 
@@ -202,6 +203,8 @@ export default function AdminOrdersPage() {
                           ? `Pre-booking ${order.prebooking_id ?? ""}`
                           : order.purchase_type === "mixed"
                             ? `Mixed order ${order.prebooking_id ?? `#${order.id.slice(0, 8)}`}`
+                            : order.purchase_type === "combo"
+                              ? `Combo offer #${order.id.slice(0, 8)}`
                             : `Order #${order.id.slice(0, 8)}`}
 
                       </p>
@@ -306,6 +309,11 @@ export default function AdminOrdersPage() {
                                   Pre-booking
                                 </span>
                               )}
+                              {item.is_combo_offer && (
+                                <span className="ml-2 text-xs font-medium text-amber-800">
+                                  Included in combo price
+                                </span>
+                              )}
 
                             </span>
 
@@ -314,9 +322,9 @@ export default function AdminOrdersPage() {
                             <span>
 
                               {
-                                formatCurrency(
-                                  item.price * item.quantity
-                                )
+                                item.is_combo_offer
+                                  ? "Included"
+                                  : formatCurrency(item.price * item.quantity)
                               }
 
                             </span>

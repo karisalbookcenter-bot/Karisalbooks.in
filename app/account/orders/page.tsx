@@ -81,6 +81,8 @@ export default async function AccountOrdersPage() {
                       ? `Pre-booking ${order.prebooking_id ?? ""}`
                       : order.purchase_type === "mixed"
                         ? `Mixed order ${order.prebooking_id ?? `#${order.id.slice(0, 8)}`}`
+                        : order.purchase_type === "combo"
+                          ? `Combo offer #${order.id.slice(0, 8)}`
                         : `Order #${order.id.slice(0, 8)}`}
                   </p>
 

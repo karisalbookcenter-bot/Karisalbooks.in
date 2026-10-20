@@ -43,6 +43,14 @@ export interface CustomizePurchaseInput {
   state?: string;
 }
 
+export interface ComboPurchaseInput {
+  flow: "combo";
+  comboOfferId: string;
+  items: { book_id: string; quantity: number }[];
+  shippingMethod?: ShippingMethod;
+  state?: string;
+}
+
 export type ShippingMethod =
   | "India Post"
   | "Professional Courier";
@@ -57,6 +65,7 @@ export type PurchaseInput =
   | PrebookingPurchaseInput
   | MixedPurchaseInput
   | CustomizePurchaseInput
+  | ComboPurchaseInput
   | MembershipPurchaseInput;
 
 export interface ResolvedDiscount {
@@ -350,6 +359,130 @@ export async function pricePurchase(input: PurchaseInput) {
         validityDays: MEMBERSHIP_VALIDITY_DAYS,
       },
       items: [],
+    };
+  }
+
+  if (input.flow === "combo") {
+    if (
+      typeof input.comboOfferId !== "string" ||
+      !input.comboOfferId ||
+      !Array.isArray(input.items) ||
+      input.items.length < 2 ||
+      input.items.length > 50
+    ) {
+      throw new Error("Choose a valid combo offer and its books.");
+    }
+    const comboDeliveryState = input.state?.trim();
+    if (!comboDeliveryState) {
+      throw new Error("Select your delivery state.");
+    }
+    const comboShippingMethod = input.shippingMethod ?? "India Post";
+    if (
+      comboShippingMethod !== "India Post" &&
+      comboShippingMethod !== "Professional Courier"
+    ) {
+      throw new Error("Choose a valid shipping method.");
+    }
+
+    const requestedBooks = new Map<string, number>();
+    for (const item of input.items) {
+      if (
+        typeof item.book_id !== "string" ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > 99 ||
+        requestedBooks.has(item.book_id)
+      ) {
+        throw new Error("The combo contains invalid books or quantities.");
+      }
+      requestedBooks.set(item.book_id, item.quantity);
+    }
+
+    const quantities = [...requestedBooks.values()];
+    if (!quantities.every((quantity) => quantity === quantities[0])) {
+      throw new Error("Every book in a combo must have the same bundle quantity.");
+    }
+
+    const { data: offer, error: offerError } = await supabase
+      .from("combo_offers")
+      .select("id, offer_price, status, combo_offer_books(book_id)")
+      .eq("id", input.comboOfferId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (offerError) throw new Error(offerError.message);
+    if (!offer) throw new Error("This combo offer is no longer available.");
+
+    const offerBookIds = (offer.combo_offer_books ?? [])
+      .map((entry) => entry.book_id)
+      .sort();
+    const requestedBookIds = [...requestedBooks.keys()].sort();
+
+    if (
+      offerBookIds.length < 2 ||
+      offerBookIds.length !== requestedBookIds.length ||
+      offerBookIds.some((bookId, index) => bookId !== requestedBookIds[index])
+    ) {
+      throw new Error("The books in your cart do not match this combo offer. Please select the combo again.");
+    }
+
+    const { data: books, error: booksError } = await supabase
+      .from("books")
+      .select("id, title, stock_quantity, status")
+      .in("id", requestedBookIds)
+      .eq("status", "active");
+
+    if (booksError) throw new Error(booksError.message);
+    if (!books || books.length !== requestedBookIds.length) {
+      throw new Error("One or more combo books are unavailable.");
+    }
+
+    const quantity = quantities[0];
+    const unavailableBook = books.find((book) => book.stock_quantity < quantity);
+    if (unavailableBook) {
+      throw new Error(`${unavailableBook.title} is unavailable in the requested quantity.`);
+    }
+
+    const bundlePricePaise = Math.round(Number(offer.offer_price) * 100);
+    const totalPaise = bundlePricePaise * quantity;
+    if (
+      !Number.isSafeInteger(bundlePricePaise) ||
+      bundlePricePaise < 100 ||
+      !Number.isSafeInteger(totalPaise)
+    ) {
+      throw new Error("This combo offer has an invalid price.");
+    }
+
+    return {
+      flow: input.flow,
+      subtotalPaise: totalPaise,
+      discountPaise: 0,
+      bookDiscountPaise: 0,
+      automaticBookDiscountPaise: 0,
+      courierChargePaise: 0,
+      courierDiscountPaise: 0,
+      indiaPostCourierChargePaise: 0,
+      professionalCourierChargePaise: 0,
+      shippingMethod: comboShippingMethod,
+      deliveryState: comboDeliveryState,
+      totalPaise,
+      discount: null,
+      comboOfferId: offer.id,
+      comboOfferPricePaise: bundlePricePaise,
+      plan: null,
+      items: books.map((book) => ({
+        book_id: book.id,
+        title: book.title,
+        price: 0,
+        quantity,
+        weightKg: 0,
+        isFreeDelivery: true,
+        professionalCourierCharge: 0,
+        postalCharge: 0,
+        publisherName: "",
+        discountEligible: false,
+        isPrebooking: false,
+      })),
     };
   }
 

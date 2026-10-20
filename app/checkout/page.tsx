@@ -62,15 +62,26 @@ const INDIAN_STATES = [
 export default function CheckoutPage() {
   const { items, clearCart } = useCart();
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const hasComboItems = items.some((item) => item.purchaseType === "combo");
+  const hasNonComboItems = items.some((item) => item.purchaseType !== "combo");
+  const isCombo = hasComboItems && !hasNonComboItems;
+  const comboOfferId = items.find((item) => item.purchaseType === "combo")?.comboOfferId;
+  const hasInvalidComboCart = hasComboItems && (
+    hasNonComboItems ||
+    !comboOfferId ||
+    items.some((item) => item.comboOfferId !== comboOfferId)
+  );
   const hasPrebookingItems = items.some((item) => item.purchaseType === "prebooking");
-  const hasRegularItems = items.some((item) => item.purchaseType !== "prebooking");
-  const hasMixedPurchaseTypes = hasPrebookingItems && hasRegularItems;
+  const hasRegularItems = items.some((item) => item.purchaseType !== "prebooking" && item.purchaseType !== "combo");
+  const hasMixedPurchaseTypes = (hasPrebookingItems && hasRegularItems) || (hasComboItems && hasNonComboItems);
   const isPrebooking = hasPrebookingItems && !hasRegularItems;
-  const purchaseFlow = hasMixedPurchaseTypes
-    ? "mixed"
-    : isPrebooking
-      ? "prebooking"
-      : "books";
+  const purchaseFlow = hasComboItems
+    ? "combo"
+    : hasMixedPurchaseTypes
+      ? "mixed"
+      : isPrebooking
+        ? "prebooking"
+        : "books";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -128,6 +139,11 @@ export default function CheckoutPage() {
   }, []);
 
   const loadQuote = useCallback(async (discountCode?: string) => {
+    if (hasInvalidComboCart) {
+      setQuote(null);
+      setError("Combo books cannot be mixed with other books. Select the combo again or remove the other items.");
+      return;
+    }
     setError("");
     setIsQuoting(true);
     try {
@@ -136,6 +152,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           flow: purchaseFlow,
+          ...(hasComboItems && comboOfferId ? { comboOfferId } : {}),
           code: discountCode?.trim() || undefined,
           items: items.map((item) => ({
             book_id: item.id,
@@ -158,7 +175,7 @@ export default function CheckoutPage() {
     } finally {
       setIsQuoting(false);
     }
-  }, [items, shippingMethod, state, purchaseFlow]);
+  }, [items, shippingMethod, state, purchaseFlow, hasComboItems, hasInvalidComboCart, comboOfferId]);
 
   useEffect(() => {
     if (items.length && state) void loadQuote();
@@ -176,6 +193,10 @@ export default function CheckoutPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (hasInvalidComboCart) {
+      setError("Combo books cannot be mixed with other books. Select the combo again or remove the other items.");
+      return;
+    }
     const formData = new FormData(event.currentTarget);
     const formValue = (field: string, fallback = "") => String(formData.get(field) ?? fallback).trim();
     const customer = {
@@ -194,6 +215,7 @@ export default function CheckoutPage() {
 
     const purchase = {
       flow: purchaseFlow,
+      ...(hasComboItems && comboOfferId ? { comboOfferId } : {}),
       items: items.map((item) => ({
         book_id: item.id,
         quantity: item.quantity,
@@ -203,7 +225,7 @@ export default function CheckoutPage() {
       })),
       shippingMethod: selectedShipping,
       state: customer.state,
-      ...(purchaseFlow !== "prebooking" ? { discountCode: quote?.code } : {}),
+      ...(purchaseFlow !== "prebooking" && purchaseFlow !== "combo" ? { discountCode: quote?.code } : {}),
     };
 
     try {
@@ -352,7 +374,9 @@ export default function CheckoutPage() {
                 </span></span>
               </label>
             ))}
-            {isPrebooking ? (
+            {isCombo ? (
+              <p className="max-w-xl text-xs leading-5 text-muted-foreground">Delivery is included in the combo offer price. Selecting a courier does not add a charge; the selected service is used for fulfillment.</p>
+            ) : isPrebooking ? (
               <p className="max-w-xl text-xs leading-5 text-muted-foreground">Pre-booking delivery charges are set separately for each title and multiplied by the quantity ordered. See <a href="/terms" className="underline underline-offset-2">Terms &amp; Conditions</a>.</p>
             ) : (
               <p className="max-w-xl text-xs leading-5 text-muted-foreground">
@@ -375,7 +399,7 @@ export default function CheckoutPage() {
 
           <button
             type="submit"
-            disabled={!items.length || isPaying || isQuoting || !quote || settingsLoading || !siteSettings.whatsappOrdersEnabled}
+            disabled={!items.length || isPaying || isQuoting || !quote || hasInvalidComboCart || settingsLoading || !siteSettings.whatsappOrdersEnabled}
             className="rounded-md bg-primary px-6 py-3 font-semibold text-white disabled:opacity-50"
           >
             {settingsLoading
@@ -392,12 +416,12 @@ export default function CheckoutPage() {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between gap-4 py-3 text-sm">
                 <span>{item.title} × {item.quantity}</span>
-                <span className="shrink-0">{formatCurrency(item.price * item.quantity)}</span>
+                <span className="shrink-0">{isCombo ? "Included" : formatCurrency(item.price * item.quantity)}</span>
               </div>
             ))}
           </div>
 
-          {!isPrebooking && <div className="mt-5 border-y py-4">
+          {!isPrebooking && !isCombo && <div className="mt-5 border-y py-4">
             <label htmlFor="discount-code" className="text-sm font-semibold">
               Membership number or coupon
             </label>
@@ -425,14 +449,22 @@ export default function CheckoutPage() {
           </div>}
 
           <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between"><dt>{isPrebooking ? "Pre-booking subtotal" : "Books subtotal"}</dt><dd>{formatCurrency(quote?.subtotal ?? subtotal)}</dd></div>
-            <div className="flex justify-between"><dt>Courier charge</dt><dd>{formatCurrency(quote?.courierCharge ?? 0)}</dd></div>
+            <div className="flex justify-between"><dt>{isCombo ? "Combo price (delivery included)" : isPrebooking ? "Pre-booking subtotal" : "Books subtotal"}</dt><dd>{formatCurrency(quote?.subtotal ?? subtotal)}</dd></div>
+            {!isCombo && <div className="flex justify-between"><dt>Courier charge</dt><dd>{formatCurrency(quote?.courierCharge ?? 0)}</dd></div>}
             {!!quote?.automaticBookDiscountAmount && <div className="flex justify-between text-primary"><dt>Book discount ({GENERAL_BOOK_DISCOUNT_PERCENT}%)</dt><dd>-{formatCurrency(quote.automaticBookDiscountAmount)}</dd></div>}
             {!!quote && quote.bookDiscountAmount > quote.automaticBookDiscountAmount && <div className="flex justify-between text-primary"><dt>Membership / coupon</dt><dd>-{formatCurrency(quote.bookDiscountAmount - quote.automaticBookDiscountAmount)}</dd></div>}
             {!!quote?.courierDiscount && <div className="flex justify-between text-primary"><dt>Member courier offer</dt><dd>-{formatCurrency(quote.courierDiscount)}</dd></div>}
             <div className="flex justify-between border-t pt-3 text-base font-bold"><dt>Total</dt><dd>{formatCurrency(displayedTotal)}</dd></div>
           </dl>
-          {hasMixedPurchaseTypes ? (
+          {hasComboItems && !isCombo ? (
+            <p role="alert" className="mt-3 text-xs text-destructive">
+              Combo books cannot be mixed with regular or pre-booking books. Remove the other items to keep combo and courier pricing separate.
+            </p>
+          ) : isCombo ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              This is one manually configured combo price, including delivery. Catalog discounts, membership discounts, and extra courier charges do not apply.
+            </p>
+          ) : hasMixedPurchaseTypes ? (
             <p className="mt-3 text-xs text-muted-foreground">
               Pre-booking and regular books are priced together; each item keeps its own price and delivery rules.
             </p>

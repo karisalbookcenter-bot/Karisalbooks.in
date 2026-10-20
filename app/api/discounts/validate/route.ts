@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       code?: unknown;
       flow?: unknown;
+      comboOfferId?: string;
       items?: {
         book_id: string;
         quantity: number;
@@ -33,7 +34,8 @@ export async function POST(request: Request) {
       body.flow !== "books" &&
       body.flow !== "prebooking" &&
       body.flow !== "mixed" &&
-      body.flow !== "customize"
+      body.flow !== "customize" &&
+      body.flow !== "combo"
     ) {
       return NextResponse.json(
         { error: "Invalid purchase type." },
@@ -72,8 +74,25 @@ export async function POST(request: Request) {
       );
     }
 
+    if (body.flow === "combo" && body.code !== undefined) {
+      return NextResponse.json(
+        { error: "Combo prices cannot be combined with membership or coupon discounts." },
+        { status: 400 },
+      );
+    }
+
     const priced =
-      body.flow === "prebooking"
+      body.flow === "combo"
+        ? await pricePurchase({
+            flow: "combo",
+            comboOfferId: body.comboOfferId ?? "",
+            items: body.items.map((item) => ({
+              book_id: item.book_id,
+              quantity: item.quantity,
+            })),
+            state: body.state,
+          })
+        : body.flow === "prebooking"
         ? await pricePurchase({
             flow: "prebooking",
             items: body.items.map((item) => ({
