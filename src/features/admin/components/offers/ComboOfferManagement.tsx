@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 
 interface ComboBook {
@@ -15,6 +17,7 @@ interface ComboOffer {
   title: string;
   description: string | null;
   offer_price: number;
+  poster_url: string | null;
   status: "active" | "inactive";
   combo_offer_books: { book_id: string }[];
 }
@@ -23,6 +26,7 @@ interface ComboOfferForm {
   title: string;
   description: string;
   offerPrice: string;
+  posterUrl: string;
   status: "active" | "inactive";
   bookIds: string[];
 }
@@ -31,6 +35,7 @@ const emptyForm: ComboOfferForm = {
   title: "",
   description: "",
   offerPrice: "",
+  posterUrl: "",
   status: "inactive",
   bookIds: [],
 };
@@ -42,6 +47,7 @@ export function ComboOfferManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPoster, setUploadingPoster] = useState(false);
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
@@ -73,6 +79,7 @@ export function ComboOfferManagement() {
       title: offer.title,
       description: offer.description ?? "",
       offerPrice: String(offer.offer_price),
+      posterUrl: offer.poster_url ?? "",
       status: offer.status,
       bookIds: offer.combo_offer_books.map((entry) => entry.book_id),
     });
@@ -83,6 +90,30 @@ export function ComboOfferManagement() {
     setEditingId(null);
     setForm(emptyForm);
     setMessage("");
+  }
+
+  async function uploadPoster(file: File | undefined) {
+    if (!file) return;
+    setMessage("");
+    setUploadingPoster(true);
+    try {
+      const upload = new FormData();
+      upload.set("file", file);
+      upload.set("assetType", "combo-poster");
+      const response = await fetch("/api/admin/site-assets", {
+        method: "POST",
+        body: upload,
+      });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        throw new Error(result.error ?? "Unable to upload combo poster.");
+      }
+      setForm((current) => ({ ...current, posterUrl: result.url! }));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to upload combo poster.");
+    } finally {
+      setUploadingPoster(false);
+    }
   }
 
   async function saveOffer(event: React.FormEvent<HTMLFormElement>) {
@@ -134,8 +165,11 @@ export function ComboOfferManagement() {
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Combo offers</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Select two or more books and enter one manual combo price. This amount includes delivery and never uses catalog discounts or courier calculations.
+          Select two or more books and enter one manual combo price. This amount includes delivery and never uses catalog discounts or courier calculations. Active combos appear in the Combo offers section of Offer Zone, above current coupon offers.
         </p>
+        <Link href="/offer-zone" target="_blank" className="mt-2 inline-flex text-sm font-semibold text-primary underline underline-offset-2">
+          View Offer Zone
+        </Link>
       </div>
 
       {message && <p role="status" className="mb-4 rounded-md border border-border bg-secondary/50 p-3 text-sm">{message}</p>}
@@ -153,6 +187,30 @@ export function ComboOfferManagement() {
           Description (optional)
           <textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows={2} className="w-full rounded-md border bg-background px-3 py-2 font-normal" />
         </label>
+        <div className="space-y-2 text-sm font-medium md:col-span-2">
+          <label htmlFor="combo-offer-poster">Combo offer poster (optional)</label>
+          <input
+            id="combo-offer-poster"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={uploadingPoster}
+            onChange={(event) => {
+              void uploadPoster(event.target.files?.[0]);
+              event.currentTarget.value = "";
+            }}
+            className="block w-full rounded-md border bg-background px-3 py-2 font-normal"
+          />
+          <p className="text-xs font-normal text-muted-foreground">JPG, PNG, or WEBP · maximum 5 MB. This poster will appear on Offer Zone and in the shared combo link.</p>
+          {uploadingPoster && <p role="status" className="text-xs text-muted-foreground">Uploading poster…</p>}
+          {form.posterUrl && (
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative h-28 w-40 overflow-hidden rounded-md border bg-secondary">
+                <Image src={form.posterUrl} alt={`${form.title || "Combo offer"} poster preview`} fill sizes="160px" className="object-contain" />
+              </div>
+              <button type="button" onClick={() => setForm({ ...form, posterUrl: "" })} className="rounded-md border px-3 py-2 text-sm">Remove poster</button>
+            </div>
+          )}
+        </div>
         <label className="space-y-1 text-sm font-medium">
           Offer status
           <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as "active" | "inactive" })} className="w-full rounded-md border bg-background px-3 py-2 font-normal">
@@ -204,6 +262,11 @@ export function ComboOfferManagement() {
                   {offer.combo_offer_books.length} books · {formatCurrency(Number(offer.offer_price))} total, delivery included
                 </p>
               </div>
+              {offer.poster_url && (
+                <div className="relative h-20 w-28 overflow-hidden rounded-md border bg-secondary">
+                  <Image src={offer.poster_url} alt={`${offer.title} poster`} fill sizes="112px" className="object-contain" />
+                </div>
+              )}
               <div className="flex gap-2">
                 <button type="button" onClick={() => startEditing(offer)} className="rounded-md border px-3 py-2 text-sm">Edit</button>
                 <button type="button" onClick={() => void deleteOffer(offer)} className="rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive">Delete</button>

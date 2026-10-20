@@ -11,6 +11,7 @@ export async function GET() {
         title,
         description,
         offer_price,
+        poster_url,
         combo_offer_books(book_id)
       `)
       .eq("status", "active")

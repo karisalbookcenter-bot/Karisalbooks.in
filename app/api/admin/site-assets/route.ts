@@ -22,14 +22,29 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const file = form.get("file");
-  const assetType = form.get("assetType") === "payment-qr" ? "payment-qr" : "logo";
+  const requestedAssetType = form.get("assetType");
+  const assetType =
+    requestedAssetType === "payment-qr" || requestedAssetType === "combo-poster"
+      ? requestedAssetType
+      : "logo";
   if (!(file instanceof File) || !MIME_EXTENSIONS[file.type] || file.size > MAX_BYTES) {
-    return NextResponse.json({ error: `Upload a JPG, PNG, or WEBP ${assetType === "logo" ? "logo" : "payment QR"} up to 5 MB.` }, { status: 400 });
+    const assetLabel = assetType === "logo"
+      ? "logo"
+      : assetType === "combo-poster"
+        ? "combo poster"
+        : "payment QR";
+    return NextResponse.json({ error: `Upload a JPG, PNG, or WEBP ${assetLabel} up to 5 MB.` }, { status: 400 });
   }
 
   try {
     const supabase = createAdminClient();
-    const path = `${assetType === "logo" ? "logos" : "payment-qr"}/${crypto.randomUUID()}.${MIME_EXTENSIONS[file.type]}`;
+    const pathPrefix =
+      assetType === "logo"
+        ? "logos"
+        : assetType === "combo-poster"
+          ? "combo-posters"
+          : "payment-qr";
+    const path = `${pathPrefix}/${crypto.randomUUID()}.${MIME_EXTENSIONS[file.type]}`;
     const { error } = await supabase.storage.from("site-assets").upload(path, new Uint8Array(await file.arrayBuffer()), {
       contentType: file.type,
       upsert: false,

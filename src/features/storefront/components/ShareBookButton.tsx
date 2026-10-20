@@ -5,13 +5,15 @@ import { Check, Share2 } from "lucide-react";
 
 interface ShareBookButtonProps {
   title: string;
-  slug: string;
+  slug?: string;
+  url?: string;
   compact?: boolean;
 }
 
 export function ShareBookButton({
   title,
   slug,
+  url,
   compact = false,
 }: ShareBookButtonProps) {
   const [message, setMessage] = useState("");
@@ -37,29 +39,31 @@ export function ShareBookButton({
     }
 
     setCopied(true);
-    setMessage("Book link copied.");
+    setMessage("Link copied.");
     window.setTimeout(() => setCopied(false), 2000);
   }
 
   async function shareBook() {
-    const url = new URL(`/books/${encodeURIComponent(slug)}`, window.location.origin).toString();
+    const shareUrl = url
+      ? new URL(url, window.location.origin).toString()
+      : new URL(`/books/${encodeURIComponent(slug ?? "")}`, window.location.origin).toString();
     setMessage("");
 
-    if (navigator.share) {
+    if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title, text: `Take a look at ${title}`, url });
-        setMessage("Book shared.");
+        await navigator.share({ title, text: `Take a look at ${title}`, url: shareUrl });
+        setMessage("Link shared.");
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setMessage(error instanceof Error ? error.message : "Unable to share this book.");
+        setMessage(error instanceof Error ? error.message : "Unable to share this link.");
       }
       return;
     }
 
     try {
-      await copyLink(url);
+      await copyLink(shareUrl);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to copy the book link.");
+      setMessage(error instanceof Error ? error.message : "Unable to copy the link.");
     }
   }
 

@@ -7,6 +7,7 @@ import { ArrowRight, CalendarClock, Crown, Sparkles, Tag } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/features/cart/hooks/useCart";
+import { ShareBookButton } from "@/features/storefront/components/ShareBookButton";
 import { formatCurrency } from "@/lib/helpers/format.helpers";
 import type { CartItem } from "@/features/cart/types/cart.types";
 
@@ -27,6 +28,7 @@ interface PublicComboOffer {
   title: string;
   description: string | null;
   offer_price: number;
+  poster_url: string | null;
   books: {
     id: string;
     title: string;
@@ -57,6 +59,14 @@ export default function OfferZonePage() {
         setComboError("Combo offers could not be loaded. Please try again shortly.");
       });
   }, []);
+
+  useEffect(() => {
+    if (!combos.length || !window.location.hash.startsWith("#combo-")) return;
+    const targetId = window.location.hash.slice(1);
+    window.requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" });
+    });
+  }, [combos]);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -178,18 +188,38 @@ export default function OfferZonePage() {
           ) : combos.length ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {combos.map((combo) => (
-                <article key={combo.id} className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
-                  <p className="inline-flex rounded-full bg-amber-200 px-3 py-1 text-xs font-bold uppercase text-amber-950">Combo · delivery included</p>
-                  <h3 className="mt-3 text-lg font-semibold">{combo.title}</h3>
-                  {combo.description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{combo.description}</p>}
-                  <ul className="mt-3 space-y-1 text-sm">
-                    {combo.books.map((book) => <li key={book.id}>• {book.title}</li>)}
-                  </ul>
-                  <p className="mt-4 text-xl font-bold">{formatCurrency(Number(combo.offer_price))}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Manual combo total. No additional courier or catalog discount is applied.</p>
-                  <button type="button" onClick={() => addComboToCart(combo)} className="mt-4 min-h-11 w-full rounded-full bg-amber-500 px-5 text-sm font-bold text-amber-950 hover:bg-amber-400">
-                    Select this combo
-                  </button>
+                <article id={`combo-${combo.id}`} key={combo.id} className="scroll-mt-6 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/60 shadow-sm">
+                  {combo.poster_url && (
+                    <div className="relative h-56 w-full bg-white">
+                      <Image
+                        src={combo.poster_url}
+                        alt={`${combo.title} combo offer poster`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="inline-flex rounded-full bg-amber-200 px-3 py-1 text-xs font-bold uppercase text-amber-950">Combo · delivery included</p>
+                      <ShareBookButton
+                        title={combo.title}
+                        url={`/offer-zone#combo-${combo.id}`}
+                        compact
+                      />
+                    </div>
+                    <h3 className="mt-3 text-lg font-semibold">{combo.title}</h3>
+                    {combo.description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{combo.description}</p>}
+                    <ul className="mt-3 space-y-1 text-sm">
+                      {combo.books.map((book) => <li key={book.id}>• {book.title}</li>)}
+                    </ul>
+                    <p className="mt-4 text-xl font-bold">{formatCurrency(Number(combo.offer_price))}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Manual combo total. No additional courier or catalog discount is applied.</p>
+                    <button type="button" onClick={() => addComboToCart(combo)} className="mt-4 min-h-11 w-full rounded-full bg-amber-500 px-5 text-sm font-bold text-amber-950 hover:bg-amber-400">
+                      Select this combo
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>

@@ -28,7 +28,7 @@ export async function GET() {
           .order("title"),
         supabase
           .from("combo_offers")
-          .select("id, title, description, offer_price, status, combo_offer_books(book_id)")
+          .select("id, title, description, offer_price, poster_url, status, combo_offer_books(book_id)")
           .order("created_at", { ascending: false }),
       ]);
 
@@ -54,6 +54,7 @@ export async function POST(request: Request) {
       title?: string;
       description?: string;
       offerPrice?: number;
+      posterUrl?: string | null;
       status?: "active" | "inactive";
       bookIds?: string[];
     };
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
     const title = input.title?.trim();
     const bookIds = Array.isArray(input.bookIds) ? [...new Set(input.bookIds)] : [];
     const offerPrice = Number(input.offerPrice);
+    const posterUrl = input.posterUrl?.trim() || null;
 
     if (
       !title ||
@@ -70,6 +72,7 @@ export async function POST(request: Request) {
       Math.abs(Math.round(offerPrice * 100) - offerPrice * 100) > 0.000001 ||
       bookIds.length < 2 ||
       bookIds.some((id) => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)) ||
+      (posterUrl !== null && (!/^https?:\/\//i.test(posterUrl) || posterUrl.length > 2048)) ||
       (input.status !== "active" && input.status !== "inactive")
     ) {
       return NextResponse.json(
@@ -94,6 +97,7 @@ export async function POST(request: Request) {
       title,
       description: input.description?.trim() || null,
       offer_price: offerPrice,
+      poster_url: posterUrl,
       status: input.status,
     };
 
